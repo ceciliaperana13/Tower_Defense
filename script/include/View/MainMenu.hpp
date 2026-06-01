@@ -7,7 +7,6 @@
 #include <memory>
 #include <string>
 
-
 enum class MenuAction {
     NewGame,
     Scoreboard,
@@ -17,15 +16,23 @@ enum class MenuAction {
 };
 
 struct MenuButton {
-    sf::RectangleShape        shape;
-    sf::Texture               texture;
-    sf::Texture               hoverTexture;   // même texture, teinte différente
-    MenuAction                action { MenuAction::None };
+    sf::RectangleShape shape;
+    sf::Texture        texture;
+    MenuAction         action { MenuAction::None };
 
     bool contains(sf::Vector2f point) const;
     void setHovered(bool hovered);
 };
 
+struct WalkingCharacter {
+    sf::Texture        frames[2];
+    sf::RectangleShape shape;
+    int                currentFrame { 0 };
+    float              animTimer    { 0.f };
+    float              animSpeed    { 0.3f };
+    float              speed        { 0.f };
+    bool               flipped      { false };
+};
 
 class MainMenu {
 public:
@@ -37,10 +44,13 @@ public:
 private:
     void loadAssets();
     void buildButtons();
+    void loadCharacters();
 
     void handleEvents(MenuAction& result);
-    void update(sf::Vector2f mousePos);
+    void update(sf::Vector2f mousePos, float dt);
+    void updateCharacters(float dt);
     void render();
+    void renderCharacters();
 
     MenuButton makeButton(const std::string& texturePath,
                           float cx, float cy,
@@ -49,23 +59,20 @@ private:
 
     sf::RenderWindow& m_window;
 
-    // Background
-    sf::Texture                m_bgTexture;
-    std::optional<sf::Sprite>  m_bgSprite;
+    sf::Texture               m_bgTexture;
+    std::optional<sf::Sprite> m_bgSprite;
 
-    // Settings icon (coin haut-gauche)
-    sf::Texture                m_settingsTexture;
-    std::optional<sf::Sprite>  m_settingsSprite;
+    sf::Texture               m_settingsTexture;
+    std::optional<sf::Sprite> m_settingsSprite;
 
-    // Titre
-    sf::Font                   m_font;
-    std::optional<sf::Text>    m_title;
+    sf::Font                  m_font;
+    std::optional<sf::Text>   m_title;
 
-    // Boutons
-    std::vector<MenuButton>    m_buttons;
+    std::vector<MenuButton>       m_buttons;
+    std::vector<WalkingCharacter> m_characters;
 
-    // Musique
-    std::unique_ptr<sf::Music> m_music;
+    std::unique_ptr<sf::Music>    m_music;
 
-    bool                       m_running { true };
+    sf::Clock m_clock;
+    bool      m_running { true };
 };
