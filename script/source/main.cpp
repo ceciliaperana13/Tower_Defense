@@ -1,15 +1,15 @@
 #include "MainMenu.hpp"
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(1080, 720), "Defend the Castle");
+    // SFML 3 
+    sf::RenderWindow window(sf::VideoMode({ 1080u, 720u }), "Defend the Castle");
+    window.setFramerateLimit(60);
 
-    while (window.isOpen()) {
-        MainMenu menu(window);
-        MenuAction action = menu.run();
+    MainMenu menu(window);
+    MenuAction action = menu.run();
 
-        if (action == MenuAction::NewGame)    { /* lancer GameController */ }
-        else if (action == MenuAction::Scoreboard) { /* afficher scores  */ }
-        else if (action == MenuAction::Settings)   { /* ouvrir Settings  */ }
-        else { window.close(); }
-    }
+    // Traite l'action retournée ici...
+    (void)action;
+
+    return 0;
 }
