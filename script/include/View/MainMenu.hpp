@@ -1,8 +1,10 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <vector>
 #include <optional>
+#include <memory>
 #include <string>
 
 
@@ -61,6 +63,9 @@ private:
 
     // Boutons
     std::vector<MenuButton>    m_buttons;
+
+    // Musique
+    std::unique_ptr<sf::Music> m_music;
 
     bool                       m_running { true };
 };

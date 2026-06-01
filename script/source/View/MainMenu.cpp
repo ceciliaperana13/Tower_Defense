@@ -47,7 +47,7 @@ void MainMenu::loadAssets() {
     float titleY = static_cast<float>(m_window.getSize().y) * 0.10f;
     m_title->setPosition({ titleX, titleY });
 
-    // Icône settings
+    // Icone settings
     if (!m_settingsTexture.loadFromFile("../assets/sprites/setting.png")) {
         std::cerr << "[MainMenu] setting.png introuvable.\n";
     } else {
@@ -58,7 +58,7 @@ void MainMenu::loadAssets() {
     }
 }
 
-// buildButtons 
+// ─── buildButtons 
 void MainMenu::buildButtons() {
     const float winW = static_cast<float>(m_window.getSize().x);
     const float winH = static_cast<float>(m_window.getSize().y);
@@ -83,7 +83,7 @@ void MainMenu::buildButtons() {
         btn.shape.setTexture(&btn.texture);
 }
 
-//  makeButton
+// ─── makeButton 
 MenuButton MainMenu::makeButton(const std::string& texturePath,
                                 float cx, float cy,
                                 float width, float height,
@@ -161,14 +161,15 @@ void MainMenu::handleEvents(MenuAction& result) {
     }
 }
 
-// ─── update 
+// ─── update
 void MainMenu::update(sf::Vector2f mousePos) {
     for (auto& btn : m_buttons) {
         btn.setHovered(btn.contains(mousePos));
     }
 }
 
-// ─── render 
+// ─── render ──────────────────────────────────────────────────────
+
 void MainMenu::render() {
     m_window.clear(sf::Color(20, 20, 40));
 
