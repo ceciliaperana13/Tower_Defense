@@ -6,10 +6,11 @@
 
 using json = nlohmann::json;
 
-// ─── Constructeur ─────────────────────────────────────────────────────────────
 WaveManager::WaveManager(const std::string& wavesJson,
-                         const std::string& enemiesJson)
+                         const std::string& enemiesJson,
+                         const std::vector<sf::Vector2f>& waypoints)
     : m_enemiesJson(enemiesJson)
+    , m_waypoints(waypoints)
 {
     std::ifstream file(wavesJson);
     if (!file.is_open())
@@ -37,7 +38,6 @@ WaveManager::WaveManager(const std::string& wavesJson,
     std::cout << "[WaveManager] " << m_waves.size() << " vagues chargées.\n";
 }
 
-// ─── startNextWave ────────────────────────────────────────────────────────────
 void WaveManager::startNextWave() {
     if (allWavesDone()) return;
 
@@ -51,24 +51,40 @@ void WaveManager::startNextWave() {
               << " | speedx" << m_waves[m_currentWave].speedMultiplier << "\n";
 }
 
-// ─── update ───────────────────────────────────────────────────────────────────
 void WaveManager::update(float dt) {
-    // Met à jour les ennemis actifs, retire les morts
+    // Update all active enemies, remove those that reached the castle or are dead
     for (auto& e : m_activeEnemies)
         e->update(dt);
 
     m_activeEnemies.erase(
         std::remove_if(m_activeEnemies.begin(), m_activeEnemies.end(),
-            [](const std::unique_ptr<Enemy>& e) { return e->isDead(); }),
+            [](const std::unique_ptr<Enemy>& e) {
+                return e->isDead() || e->hasReached();
+            }),
         m_activeEnemies.end()
     );
 
-    if (m_state == State::Idle || m_state == State::WaveComplete)
+    if (m_state == State::Idle)
         return;
+
+    // Once all enemies are gone, wait then auto-start next wave
+    if (m_state == State::WaveComplete && m_activeEnemies.empty()) {
+        if (!allWavesDone()) {
+            m_state     = State::WaitingNextWave;
+            m_waveTimer = INTER_WAVE_DELAY;
+        }
+        return;
+    }
+
+    if (m_state == State::WaitingNextWave) {
+        m_waveTimer -= dt;
+        if (m_waveTimer <= 0.f)
+            startNextWave();
+        return;
+    }
 
     const Wave& wave = m_waves[m_currentWave];
 
-    // ── Pause entre groupes ──────────────────────────────────────────────────
     if (m_state == State::PauseBetweenGroups) {
         m_pauseTimer -= dt;
         if (m_pauseTimer <= 0.f) {
@@ -79,7 +95,6 @@ void WaveManager::update(float dt) {
         return;
     }
 
-    // ── Spawn du groupe courant ───────────────────────────────────────────────
     if (m_state == State::Spawning) {
         const EnemyGroup& group = wave.groups[m_currentGroup];
 
@@ -104,22 +119,15 @@ void WaveManager::update(float dt) {
     }
 }
 
-// ─── spawnNext ────────────────────────────────────────────────────────────────
 void WaveManager::spawnNext() {
-    const Wave&        wave  = m_waves[m_currentWave];
-    const EnemyGroup&  group = wave.groups[m_currentGroup];
+    const Wave&       wave  = m_waves[m_currentWave];
+    const EnemyGroup& group = wave.groups[m_currentGroup];
 
     try {
-        // Charge les stats depuis enemy_values.json
         auto enemy = std::make_unique<Enemy>(
-            Enemy::fromJson(m_enemiesJson, group.type)
+            Enemy::fromJson(m_enemiesJson, group.type, m_waypoints)
         );
-
-        // Applique le multiplicateur de vitesse de la vague
         enemy->applySpeedMultiplier(wave.speedMultiplier);
-
-        // TODO: position de spawn selon le chemin de la map
-        enemy->setPosition(0.f, 300.f);
 
         m_activeEnemies.push_back(std::move(enemy));
         ++m_spawnedInGroup;
@@ -133,7 +141,7 @@ void WaveManager::spawnNext() {
     }
 }
 
-// ─── isWaveComplete ───────────────────────────────────────────────────────────
 bool WaveManager::isWaveComplete() const {
-    return m_state == State::WaveComplete && m_activeEnemies.empty();
+    return (m_state == State::WaveComplete || m_state == State::WaitingNextWave)
+           && m_activeEnemies.empty();
 }

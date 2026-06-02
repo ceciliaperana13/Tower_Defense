@@ -4,6 +4,7 @@
 #include "View/GameView.hpp"
 #include "Controller/SaveController.hpp"
 #include "Model/Map.hpp"
+#include "Model/Wavemanager.hpp"
 
 static bool s_fullscreen = false;
 
@@ -49,6 +50,7 @@ int main() {
 
     GameSettings   settings;
     SaveController saveCtrl;
+    sf::Clock      clock;
 
     while (window.isOpen()) {
         refreshView(window);
@@ -74,17 +76,38 @@ int main() {
         }
 
         if (action == MenuAction::NewGame) {
-            Map      map;
-            GameView gameView(window, map);
+            Map map;
+
+            // Build waypoints at game scale (MAP_SCALE = 2)
+            constexpr float MAP_SCALE = 2.f;
+            auto waypoints = map.getWaypoints(MAP_SCALE);
+
+            WaveManager waveManager(
+                "../assets/data/waves.json",
+                "../assets/data/enemy_values.json",
+                waypoints
+            );
+            waveManager.startNextWave();
+
+            GameView gameView(window, map, waveManager);
+            clock.restart();
 
             while (window.isOpen()) {
+                float dt = clock.restart().asSeconds();
+                if (dt > 0.1f) dt = 0.1f;
+
                 while (const auto event = window.pollEvent()) {
                     if (event->is<sf::Event::Closed>())
                         window.close();
 
-                    if (const auto* kp = event->getIf<sf::Event::KeyPressed>())
+                    if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
                         if (kp->code == sf::Keyboard::Key::F11)
                             toggleFullscreen(window);
+                        // Space: launch next wave manually
+                        if (kp->code == sf::Keyboard::Key::Space
+                            && waveManager.isWaveComplete())
+                            waveManager.startNextWave();
+                    }
 
                     sf::View view = window.getView();
                     if (const auto* mm = event->getIf<sf::Event::MouseMoved>()) {
@@ -101,6 +124,8 @@ int main() {
                             goto backToMenu;
                     }
                 }
+
+                gameView.update(dt);
 
                 refreshView(window);
                 window.clear(sf::Color::Black);

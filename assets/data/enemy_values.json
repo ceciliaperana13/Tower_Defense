@@ -1,33 +1,33 @@
 {
-    "enemytype" : {
-        "goblin" : {
-            "id" : 1,
-            "maxhp" : 1,
-            "maxspeed" : 1,
-            "reward" : 1,
-            "paths" : {
-                "sprite1" : "../sprites/enemies/goblin1.png",
-                "sprite2" : "../sprites/enemies/goblin2.png"
+    "enemytype": {
+        "goblin": {
+            "id": 1,
+            "maxhp": 1,
+            "maxspeed": 100,
+            "reward": 1,
+            "paths": {
+                "sprite1": "../assets/sprites/enemies/goblin1.png",
+                "sprite2": "../assets/sprites/enemies/goblin2.png"
             }
         },
-        "orc" : {
-            "id" : 2,
-            "maxhp" : 1,
-            "maxspeed" : 1,
-            "reward" : 1,
-            "paths" : {
-                "sprite1" : "../sprites/enemies/orc1.png",
-                "sprite2" : "../sprites/enemies/orc2.png"
+        "orc": {
+            "id": 2,
+            "maxhp": 1,
+            "maxspeed": 80,
+            "reward": 1,
+            "paths": {
+                "sprite1": "../assets/sprites/enemies/orc1.png",
+                "sprite2": "../assets/sprites/enemies/orc2.png"
             }
         },
-        "ogre" : {
-            "id" : 3,
-            "maxhp" : 1,
-            "maxspeed" : 1,
-            "reward" : 1,
-            "paths" : {
-                "sprite1" : "../sprites/enemies/ogre_boss1.png",
-                "sprite2" : "../sprites/enemies/ogre_boss2.png"
+        "ogre": {
+            "id": 3,
+            "maxhp": 1,
+            "maxspeed": 60,
+            "reward": 1,
+            "paths": {
+                "sprite1": "../assets/sprites/enemies/ogre_boss1.png",
+                "sprite2": "../assets/sprites/enemies/ogre_boss2.png"
             }
         }
     }

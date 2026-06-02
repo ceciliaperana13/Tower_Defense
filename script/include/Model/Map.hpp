@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <array>
 #include <string>
+#include <vector>
 
 // Tilemap: 33x22 tiles, tile size 16px
 // Two layers: background (TilesetFloor) and foreground (TilesetNature + buildings)
@@ -26,6 +27,9 @@ public:
     void update(float dt) {}
     void draw(sf::RenderTarget& target, sf::Vector2f offset, float scale) const;
 
+    // Waypoints for enemy path, pre-scaled to the given render scale
+    std::vector<sf::Vector2f> getWaypoints(float scale) const;
+
 private:
     using Layer = std::array<int, COLS * ROWS>;
 
@@ -33,7 +37,6 @@ private:
     void loadLayers();
     void drawLayer(sf::RenderTarget& target, const Layer& layer,
                    sf::Vector2f offset, float scale) const;
-
     void drawTile(sf::RenderTarget& target, int gid,
                   float px, float py, float scale) const;
 

@@ -21,7 +21,8 @@ struct Wave {
 class WaveManager {
 public:
     WaveManager(const std::string& wavesJson,
-                const std::string& enemiesJson);
+                const std::string& enemiesJson,
+                const std::vector<sf::Vector2f>& waypoints);
 
     void update(float dt);
     void startNextWave();
@@ -36,8 +37,9 @@ public:
 private:
     void spawnNext();
 
-    std::string               m_enemiesJson;
-    std::vector<Wave>         m_waves;
+    std::string                         m_enemiesJson;
+    std::vector<sf::Vector2f>           m_waypoints;
+    std::vector<Wave>                   m_waves;
     std::vector<std::unique_ptr<Enemy>> m_activeEnemies;
 
     int   m_currentWave    { -1 };
@@ -46,6 +48,9 @@ private:
     float m_spawnTimer     { 0.f };
     float m_pauseTimer     { 0.f };
 
-    enum class State { Idle, Spawning, PauseBetweenGroups, WaveComplete };
-    State m_state { State::Idle };
+    static constexpr float INTER_WAVE_DELAY = 10.f;
+
+    enum class State { Idle, Spawning, PauseBetweenGroups, WaveComplete, WaitingNextWave };
+    State m_state      { State::Idle };
+    float m_waveTimer  { 0.f };
 };
