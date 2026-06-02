@@ -1,10 +1,12 @@
 {
-    "element" : {
+    "lvl1" : {
         "basic" : {
             "damage" : 1,
             "range" : 1,
             "firerate" : 1
-        },
+        }
+    },
+    "lvl2" : {
         "fire" : {
             "damage" : 1,
             "range" : 1,
