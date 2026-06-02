@@ -5,7 +5,6 @@
 
 class Enemy {
 public:
-    // Constructeur direct
     Enemy(int id,
           int maxhp,
           float maxspeed,
@@ -13,18 +12,20 @@ public:
           const std::string& sprite1Path,
           const std::string& sprite2Path);
 
-    // Constructeur depuis un fichier JSON
     static Enemy fromJson(const std::string& jsonPath, const std::string& type);
 
     void update(float dt);
     void render(sf::RenderWindow& window);
 
-    void setPosition(float x, float y);
-    bool isDead() const { return hp <= 0; }
+    void  setPosition(float x, float y);
+    void  applySpeedMultiplier(float multiplier) { speed = maxspeed * multiplier; }
 
-    int  getId()     const { return id; }
-    int  getHp()     const { return hp; }
-    int  getReward() const { return reward; }
+    bool  isDead()    const { return hp <= 0; }
+    int   getId()     const { return id; }
+    int   getHp()     const { return hp; }
+    int   getMaxHp()  const { return maxhp; }
+    float getSpeed()  const { return speed; }
+    int   getReward() const { return reward; }
 
 private:
     int   id;
@@ -38,6 +39,6 @@ private:
     sf::Texture               texture2;
     std::optional<sf::Sprite> sprite;
 
-    float animTimer   { 0.f };
-    bool  useFirst    { true };
+    float animTimer  { 0.f };
+    bool  useFirst   { true };
 };
