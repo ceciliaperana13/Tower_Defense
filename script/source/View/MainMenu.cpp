@@ -24,9 +24,9 @@ void MainMenu::loadAssets() {
         std::cerr << "[MainMenu] background.jpg introuvable.\n";
     } else {
         m_bgSprite.emplace(m_bgTexture);
-        float sx = static_cast<float>(m_window.getSize().x) /
+        float sx = m_window.getView().getSize().x /
                    static_cast<float>(m_bgTexture.getSize().x);
-        float sy = static_cast<float>(m_window.getSize().y) /
+        float sy = m_window.getView().getSize().y /
                    static_cast<float>(m_bgTexture.getSize().y);
         m_bgSprite->setScale({ sx, sy });
     }
@@ -35,8 +35,8 @@ void MainMenu::loadAssets() {
     m_title->setFillColor(sf::Color::White);
     m_title->setStyle(sf::Text::Bold);
     sf::FloatRect tb = m_title->getLocalBounds();
-    float titleX = (static_cast<float>(m_window.getSize().x) - tb.size.x) / 2.f - tb.position.x;
-    float titleY = static_cast<float>(m_window.getSize().y) * 0.10f;
+    float titleX = (m_window.getView().getSize().x - tb.size.x) / 2.f - tb.position.x;
+    float titleY = m_window.getView().getSize().y * 0.10f;
     m_title->setPosition({ titleX, titleY });
 
     if (!m_settingsTexture.loadFromFile("../assets/sprites/setting.png")) {
@@ -51,8 +51,8 @@ void MainMenu::loadAssets() {
 
 // ─── buildButtons 
 void MainMenu::buildButtons() {
-    const float winW = static_cast<float>(m_window.getSize().x);
-    const float winH = static_cast<float>(m_window.getSize().y);
+    const float winW = m_window.getView().getSize().x;
+    const float winH = m_window.getView().getSize().y;
     const float btnW = 300.f;
     const float btnH = 80.f;
     const float cx   = winW / 2.f;
@@ -71,8 +71,8 @@ void MainMenu::buildButtons() {
 
 // ─── loadCharacters 
 void MainMenu::loadCharacters() {
-    const float winW = static_cast<float>(m_window.getSize().x);
-    const float winH = static_cast<float>(m_window.getSize().y);
+    const float winW = m_window.getView().getSize().x;
+    const float winH = m_window.getView().getSize().y;
 
     struct CharDef {
         std::string f1, f2;
@@ -139,7 +139,7 @@ void MainMenu::loadCharacters() {
 
 // ─── updateCharacters 
 void MainMenu::updateCharacters(float dt) {
-    const float winW = static_cast<float>(m_window.getSize().x);
+    const float winW = m_window.getView().getSize().x;
 
     for (auto& c : m_characters) {
         sf::Vector2f pos = c.shape.getPosition();
@@ -178,7 +178,7 @@ MenuAction MainMenu::run() {
         float dt = m_clock.restart().asSeconds();
         if (dt > 0.1f) dt = 0.1f;
 
-        sf::Vector2f mouse = m_window.mapPixelToCoords(sf::Mouse::getPosition(m_window));
+        sf::Vector2f mouse = m_window.mapPixelToCoords(sf::Mouse::getPosition(m_window), m_window.getView());
         handleEvents(result);
         update(mouse, dt);
         render();
@@ -200,7 +200,7 @@ void MainMenu::handleEvents(MenuAction& result) {
 
         if (const auto* mb = event->getIf<sf::Event::MouseButtonReleased>()) {
             if (mb->button == sf::Mouse::Button::Left) {
-                sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y });
+                sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y }, m_window.getView());
 
                 for (auto& btn : m_buttons) {
                     if (btn.contains(pos)) {
