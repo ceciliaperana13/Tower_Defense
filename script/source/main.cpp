@@ -3,6 +3,7 @@
 #include "View/Leaderboard.hpp"
 #include "View/GameView.hpp"
 #include "Controller/SaveController.hpp"
+#include "Controller/SoundManager.hpp"
 #include "Model/Map.hpp"
 #include "Model/WaveManager.hpp"
 #include "Model/Enemy.hpp"
@@ -78,8 +79,6 @@ int main() {
 
         if (action == MenuAction::NewGame) {
             Map map;
-
-            // Charge la texture cœur une seule fois pour tous les ennemis
             Enemy::loadHeartTexture("../assets/sprites/icons/heart.png");
 
             constexpr float MAP_SCALE = 2.f;

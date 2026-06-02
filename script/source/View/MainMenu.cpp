@@ -1,9 +1,8 @@
 #include "MainMenu.hpp"
+#include "SoundManager.hpp"
 #include <iostream>
 #include <stdexcept>
-#include "SoundManager.hpp"
 
-// ─── Constructeur 
 MainMenu::MainMenu(sf::RenderWindow& window)
     : m_window(window)
 {
@@ -11,11 +10,9 @@ MainMenu::MainMenu(sf::RenderWindow& window)
     buildButtons();
     loadCharacters();
 
-    // ─── Musique du menu ───
     SoundManager::getInstance().playMusic("menu");
 }
 
-// ─── loadAssets 
 void MainMenu::loadAssets() {
     if (!m_font.openFromFile("C:/Windows/Fonts/arialbd.ttf"))
         throw std::runtime_error("MainMenu: impossible de charger la police.");
@@ -49,7 +46,6 @@ void MainMenu::loadAssets() {
     }
 }
 
-// ─── buildButtons 
 void MainMenu::buildButtons() {
     const float winW = m_window.getView().getSize().x;
     const float winH = m_window.getView().getSize().y;
@@ -57,7 +53,6 @@ void MainMenu::buildButtons() {
     const float btnH = 80.f;
     const float cx   = winW / 2.f;
 
-    // Button encapsule texture + shape + action 
     m_buttons.reserve(4);
     m_buttons.emplace_back("../assets/sprites/buttons/new_game.png",
                            cx, winH * 0.38f, btnW, btnH, MenuAction::NewGame);
@@ -69,7 +64,6 @@ void MainMenu::buildButtons() {
                            cx, winH * 0.80f, btnW, btnH, MenuAction::Exit);
 }
 
-// ─── loadCharacters 
 void MainMenu::loadCharacters() {
     const float winW = m_window.getView().getSize().x;
     const float winH = m_window.getView().getSize().y;
@@ -82,30 +76,21 @@ void MainMenu::loadCharacters() {
     };
 
     const std::vector<CharDef> defs = {
-        // ── Gobelins gauche → droite ──
         { "../assets/sprites/enemies/goblin1.png",
           "../assets/sprites/enemies/goblin2.png",
-          -60.f, winH * 0.78f,  2.2f, 2.2f,  95.f, false, 0.28f },
-
+          -60.f, winH * 0.78f, 2.2f, 2.2f, 95.f, false, 0.28f },
         { "../assets/sprites/enemies/goblin1.png",
           "../assets/sprites/enemies/goblin2.png",
-          -200.f, winH * 0.83f, 1.8f, 1.8f,  80.f, false, 0.32f },
-
-        // ── Gobelins droite → gauche ──
+          -200.f, winH * 0.83f, 1.8f, 1.8f, 80.f, false, 0.32f },
         { "../assets/sprites/enemies/goblin1.png",
           "../assets/sprites/enemies/goblin2.png",
-          winW + 60.f,  winH * 0.76f, 2.2f, 2.2f, -90.f, true, 0.28f },
-
+          winW + 60.f, winH * 0.76f, 2.2f, 2.2f, -90.f, true, 0.28f },
         { "../assets/sprites/enemies/goblin1.png",
           "../assets/sprites/enemies/goblin2.png",
           winW + 220.f, winH * 0.81f, 1.8f, 1.8f, -75.f, true, 0.30f },
-
-        // ── Ogres gauche → droite ──
         { "../assets/sprites/enemies/ogre_boss1.png",
           "../assets/sprites/enemies/ogre_boss2.png",
-          -110.f, winH * 0.72f, 3.2f, 3.2f,  52.f, false, 0.40f },
-
-        // ── Ogres droite → gauche ──
+          -110.f, winH * 0.72f, 3.2f, 3.2f, 52.f, false, 0.40f },
         { "../assets/sprites/enemies/ogre_boss1.png",
           "../assets/sprites/enemies/ogre_boss2.png",
           winW + 110.f, winH * 0.70f, 3.2f, 3.2f, -48.f, true, 0.42f },
@@ -137,7 +122,6 @@ void MainMenu::loadCharacters() {
     }
 }
 
-// ─── updateCharacters 
 void MainMenu::updateCharacters(float dt) {
     const float winW = m_window.getView().getSize().x;
 
@@ -162,13 +146,11 @@ void MainMenu::updateCharacters(float dt) {
     }
 }
 
-// ─── renderCharacters 
 void MainMenu::renderCharacters() {
     for (auto& c : m_characters)
         m_window.draw(c.shape);
 }
 
-// ─── run 
 MenuAction MainMenu::run() {
     MenuAction result = MenuAction::None;
     m_running = true;
@@ -178,7 +160,8 @@ MenuAction MainMenu::run() {
         float dt = m_clock.restart().asSeconds();
         if (dt > 0.1f) dt = 0.1f;
 
-        sf::Vector2f mouse = m_window.mapPixelToCoords(sf::Mouse::getPosition(m_window), m_window.getView());
+        sf::Vector2f mouse = m_window.mapPixelToCoords(
+            sf::Mouse::getPosition(m_window), m_window.getView());
         handleEvents(result);
         update(mouse, dt);
         render();
@@ -187,7 +170,6 @@ MenuAction MainMenu::run() {
     return result;
 }
 
-// ─── handleEvents 
 void MainMenu::handleEvents(MenuAction& result) {
     while (const std::optional<sf::Event> event = m_window.pollEvent()) {
 
@@ -200,7 +182,8 @@ void MainMenu::handleEvents(MenuAction& result) {
 
         if (const auto* mb = event->getIf<sf::Event::MouseButtonReleased>()) {
             if (mb->button == sf::Mouse::Button::Left) {
-                sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y }, m_window.getView());
+                sf::Vector2f pos = m_window.mapPixelToCoords(
+                    { mb->position.x, mb->position.y }, m_window.getView());
 
                 for (auto& btn : m_buttons) {
                     if (btn.contains(pos)) {
@@ -211,8 +194,7 @@ void MainMenu::handleEvents(MenuAction& result) {
                 }
 
                 if (m_settingsSprite.has_value() &&
-                    m_settingsSprite->getGlobalBounds().contains(pos))
-                {
+                    m_settingsSprite->getGlobalBounds().contains(pos)) {
                     result    = MenuAction::Settings;
                     m_running = false;
                     return;
@@ -229,15 +211,12 @@ void MainMenu::handleEvents(MenuAction& result) {
     }
 }
 
-// ─── update 
 void MainMenu::update(sf::Vector2f mousePos, float dt) {
     for (auto& btn : m_buttons)
         btn.setHovered(btn.contains(mousePos));
-
     updateCharacters(dt);
 }
 
-// ─── render 
 void MainMenu::render() {
     m_window.clear(sf::Color(20, 20, 40));
 
