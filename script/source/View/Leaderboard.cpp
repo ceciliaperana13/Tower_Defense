@@ -19,8 +19,8 @@ void Leaderboard::loadAssets() {
 
 // ─── buildUI 
 void Leaderboard::buildUI() {
-    const float winW = static_cast<float>(m_window.getSize().x);
-    const float winH = static_cast<float>(m_window.getSize().y);
+    const float winW = m_window.getView().getSize().x;
+    const float winH = m_window.getView().getSize().y;
 
     m_panelW = 620.f;
     m_panelH = 560.f;
@@ -79,7 +79,7 @@ void Leaderboard::handleEvents() {
 
         if (const auto* mb = event->getIf<sf::Event::MouseButtonReleased>()) {
             if (mb->button == sf::Mouse::Button::Left) {
-                sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y });
+                sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y }, m_window.getView());
                 if (m_closeBtn.getGlobalBounds().contains(pos)) {
                     m_running = false;
                     return;
@@ -102,8 +102,8 @@ void Leaderboard::run() {
 void Leaderboard::render() {
     // Overlay sombre
     sf::RectangleShape overlay({
-        static_cast<float>(m_window.getSize().x),
-        static_cast<float>(m_window.getSize().y)
+        m_window.getView().getSize().x,
+        m_window.getView().getSize().y
     });
     overlay.setFillColor(sf::Color(0, 0, 0, 170));
     m_window.draw(overlay);

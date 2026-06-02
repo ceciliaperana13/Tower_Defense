@@ -16,8 +16,8 @@ SettingsMenu::SettingsMenu(sf::RenderWindow& window, GameSettings& settings)
 
 // ─── buildUI 
 void SettingsMenu::buildUI() {
-    const float winW = static_cast<float>(m_window.getSize().x);
-    const float winH = static_cast<float>(m_window.getSize().y);
+    const float winW = m_window.getView().getSize().x;
+    const float winH = m_window.getView().getSize().y;
 
     m_panelW = 460.f; m_panelH = 360.f;
     m_panelX = (winW - m_panelW) / 2.f;
@@ -68,7 +68,7 @@ void SettingsMenu::buildUI() {
 void SettingsMenu::run() {
     m_running = true;
     while (m_running && m_window.isOpen()) {
-        sf::Vector2f mouse = m_window.mapPixelToCoords(sf::Mouse::getPosition(m_window));
+        sf::Vector2f mouse = m_window.mapPixelToCoords(sf::Mouse::getPosition(m_window), m_window.getView());
         handleEvents();
         update(mouse);
         render();
@@ -87,7 +87,7 @@ void SettingsMenu::handleEvents() {
 
         if (const auto* mb = event->getIf<sf::Event::MouseButtonPressed>()) {
             if (mb->button == sf::Mouse::Button::Left) {
-                sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y });
+                sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y }, m_window.getView());
 
                 if (m_closeBtn.getGlobalBounds().contains(pos)) { m_running = false; return; }
                 if (m_musicTrack.contains(pos))    { m_draggingMusic = true; onMusicSlider(pos.x); }
@@ -191,8 +191,8 @@ void SettingsMenu::drawSliderRow(const std::string& label, float value, sf::Floa
 // ─── render 
 void SettingsMenu::render() {
     sf::RectangleShape overlay({
-        static_cast<float>(m_window.getSize().x),
-        static_cast<float>(m_window.getSize().y)
+        m_window.getView().getSize().x,
+        m_window.getView().getSize().y
     });
     overlay.setFillColor(sf::Color(0, 0, 0, 150));
     m_window.draw(overlay);
