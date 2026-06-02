@@ -75,7 +75,8 @@ int main() {
 
         if (action == MenuAction::NewGame) {
             Map      map;
-            GameView gameView(window, map);
+            CountdownTimer timer;
+            GameView gameView(window, map, timer);
 
             while (window.isOpen()) {
                 while (const auto event = window.pollEvent()) {

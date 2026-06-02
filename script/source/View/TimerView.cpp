@@ -8,23 +8,23 @@ TimerView::TimerView(CountdownTimer& timer)
     : m_timer(timer)
 {}
 
-// ─── load ─
+// ─── load 
 bool TimerView::load(const std::string& texturePath,
                      const std::string& fontPath)
 {
-    // Sprite (icône timer)
     if (!m_texture.loadFromFile(texturePath)) {
         std::cerr << "[TimerView] Texture introuvable : " << texturePath << "\n";
         return false;
     }
     m_sprite.emplace(m_texture);
 
-    // Texte
     if (!m_font.openFromFile(fontPath)) {
         std::cerr << "[TimerView] Police introuvable : " << fontPath << "\n";
         return false;
     }
-    m_text.emplace(m_font, "00:00", 28u);
+
+    // Taille réduite pour le haut de l'écran
+    m_text.emplace(m_font, "00:00", 20u);
     m_text->setFillColor(sf::Color::White);
     m_text->setStyle(sf::Text::Bold);
 
@@ -36,12 +36,11 @@ void TimerView::setPosition(const sf::Vector2f& position) {
     if (m_sprite.has_value())
         m_sprite->setPosition(position);
 
-    // Texte décalé à droite de l'icône
     if (m_text.has_value()) {
         float iconW = m_sprite.has_value()
             ? m_sprite->getGlobalBounds().size.x
             : 0.f;
-        m_text->setPosition({ position.x + iconW + 8.f, position.y });
+        m_text->setPosition({ position.x + iconW + 6.f, position.y + 2.f });
     }
 }
 
