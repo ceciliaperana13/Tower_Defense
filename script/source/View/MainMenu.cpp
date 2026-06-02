@@ -2,16 +2,6 @@
 #include <iostream>
 #include <stdexcept>
 
-// ─── MenuButton helpers 
-bool MenuButton::contains(sf::Vector2f point) const {
-    return shape.getGlobalBounds().contains(point);
-}
-
-void MenuButton::setHovered(bool hovered) {
-    shape.setFillColor(hovered ? sf::Color(180, 180, 180, 255)
-                               : sf::Color(255, 255, 255, 255));
-}
-
 // ─── Constructeur 
 MainMenu::MainMenu(sf::RenderWindow& window)
     : m_window(window)
@@ -63,38 +53,16 @@ void MainMenu::buildButtons() {
     const float btnH = 80.f;
     const float cx   = winW / 2.f;
 
+    // Button encapsule texture + shape + action 
     m_buttons.reserve(4);
-    m_buttons.push_back(makeButton("../assets/sprites/buttons/new_game.png",
-                                   cx, winH * 0.38f, btnW, btnH, MenuAction::NewGame));
-    m_buttons.push_back(makeButton("../assets/sprites/buttons/leaderboard.png",
-                                   cx, winH * 0.52f, btnW, btnH, MenuAction::Scoreboard));
-    m_buttons.push_back(makeButton("../assets/sprites/buttons/options.png",
-                                   cx, winH * 0.66f, btnW, btnH, MenuAction::Settings));
-    m_buttons.push_back(makeButton("../assets/sprites/buttons/quit_game.png",
-                                   cx, winH * 0.80f, btnW, btnH, MenuAction::Exit));
-
-    for (auto& btn : m_buttons)
-        btn.shape.setTexture(&btn.texture);
-}
-
-// ─── makeButton 
-MenuButton MainMenu::makeButton(const std::string& texturePath,
-                                float cx, float cy,
-                                float width, float height,
-                                MenuAction action)
-{
-    MenuButton btn;
-    btn.action = action;
-
-    if (!btn.texture.loadFromFile(texturePath))
-        std::cerr << "[MainMenu] Texture introuvable : " << texturePath << "\n";
-
-    btn.shape.setSize({ width, height });
-    btn.shape.setOrigin({ width / 2.f, height / 2.f });
-    btn.shape.setPosition({ cx, cy });
-    btn.shape.setFillColor(sf::Color::White);
-
-    return btn;
+    m_buttons.emplace_back("../assets/sprites/buttons/new_game.png",
+                           cx, winH * 0.38f, btnW, btnH, MenuAction::NewGame);
+    m_buttons.emplace_back("../assets/sprites/buttons/leaderboard.png",
+                           cx, winH * 0.52f, btnW, btnH, MenuAction::Scoreboard);
+    m_buttons.emplace_back("../assets/sprites/buttons/options.png",
+                           cx, winH * 0.66f, btnW, btnH, MenuAction::Settings);
+    m_buttons.emplace_back("../assets/sprites/buttons/quit_game.png",
+                           cx, winH * 0.80f, btnW, btnH, MenuAction::Exit);
 }
 
 // ─── loadCharacters 
@@ -109,8 +77,6 @@ void MainMenu::loadCharacters() {
         float animSpeed;
     };
 
-    // Plusieurs gobelins et ogres des deux côtés, à des hauteurs légèrement différentes
-    // pour donner de la profondeur. Les flippés marchent vers la gauche.
     const std::vector<CharDef> defs = {
         // ── Gobelins gauche → droite ──
         { "../assets/sprites/enemies/goblin1.png",
@@ -156,11 +122,10 @@ void MainMenu::loadCharacters() {
         float h = static_cast<float>(c.frames[0].getSize().y) * d.scaleY;
 
         c.shape.setSize({ w, h });
-        c.shape.setOrigin({ w / 2.f, h });          // pivot bas-centre
+        c.shape.setOrigin({ w / 2.f, h });
         c.shape.setPosition({ d.x, d.y });
         c.shape.setTexture(&c.frames[0]);
 
-        // Flip horizontal : scale négatif en X, on compense l'origine
         if (d.flipped)
             c.shape.setScale({ -1.f, 1.f });
 
@@ -173,11 +138,9 @@ void MainMenu::updateCharacters(float dt) {
     const float winW = static_cast<float>(m_window.getSize().x);
 
     for (auto& c : m_characters) {
-        // Déplacement
         sf::Vector2f pos = c.shape.getPosition();
         pos.x += c.speed * dt;
 
-        // Boucle infinie : réapparition côté opposé
         float halfW = c.shape.getSize().x / 2.f;
         if (c.speed > 0.f && pos.x - halfW > winW)
             pos.x = -halfW;
@@ -186,7 +149,6 @@ void MainMenu::updateCharacters(float dt) {
 
         c.shape.setPosition(pos);
 
-        // Alternance des frames
         c.animTimer += dt;
         if (c.animTimer >= c.animSpeed) {
             c.animTimer    = 0.f;
@@ -210,7 +172,6 @@ MenuAction MainMenu::run() {
 
     while (m_running && m_window.isOpen()) {
         float dt = m_clock.restart().asSeconds();
-        // Clamp dt pour éviter les sauts si la fenêtre est déplacée / mise en pause
         if (dt > 0.1f) dt = 0.1f;
 
         sf::Vector2f mouse = m_window.mapPixelToCoords(sf::Mouse::getPosition(m_window));
@@ -239,7 +200,7 @@ void MainMenu::handleEvents(MenuAction& result) {
 
                 for (auto& btn : m_buttons) {
                     if (btn.contains(pos)) {
-                        result    = btn.action;
+                        result    = btn.getAction();
                         m_running = false;
                         return;
                     }
@@ -265,7 +226,6 @@ void MainMenu::handleEvents(MenuAction& result) {
 }
 
 // ─── update 
-
 void MainMenu::update(sf::Vector2f mousePos, float dt) {
     for (auto& btn : m_buttons)
         btn.setHovered(btn.contains(mousePos));
@@ -277,14 +237,11 @@ void MainMenu::update(sf::Vector2f mousePos, float dt) {
 void MainMenu::render() {
     m_window.clear(sf::Color(20, 20, 40));
 
-    // 1. Background
     if (m_bgSprite.has_value())
         m_window.draw(*m_bgSprite);
 
-    // 2. Personnages animés (derrière les boutons)
     renderCharacters();
 
-    // 3. Titre + ombre
     if (m_title.has_value()) {
         sf::Text shadow = *m_title;
         shadow.setFillColor(sf::Color(0, 0, 0, 150));
@@ -293,11 +250,9 @@ void MainMenu::render() {
         m_window.draw(*m_title);
     }
 
-    // 4. Boutons
     for (auto& btn : m_buttons)
-        m_window.draw(btn.shape);
+        btn.draw(m_window);
 
-    // 5. Icône settings
     if (m_settingsSprite.has_value())
         m_window.draw(*m_settingsSprite);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Button.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <vector>
@@ -7,22 +8,7 @@
 #include <memory>
 #include <string>
 
-enum class MenuAction {
-    NewGame,
-    Scoreboard,
-    Settings,
-    Exit,
-    None
-};
-
-struct MenuButton {
-    sf::RectangleShape shape;
-    sf::Texture        texture;
-    MenuAction         action { MenuAction::None };
-
-    bool contains(sf::Vector2f point) const;
-    void setHovered(bool hovered);
-};
+// MenuAction est désormais défini dans Button.hpp
 
 struct WalkingCharacter {
     sf::Texture        frames[2];
@@ -52,11 +38,6 @@ private:
     void render();
     void renderCharacters();
 
-    MenuButton makeButton(const std::string& texturePath,
-                          float cx, float cy,
-                          float width, float height,
-                          MenuAction action);
-
     sf::RenderWindow& m_window;
 
     sf::Texture               m_bgTexture;
@@ -68,7 +49,7 @@ private:
     sf::Font                  m_font;
     std::optional<sf::Text>   m_title;
 
-    std::vector<MenuButton>       m_buttons;
+    std::vector<Button>           m_buttons;       // ← std::vector<Button> au lieu de MenuButton
     std::vector<WalkingCharacter> m_characters;
 
     std::unique_ptr<sf::Music>    m_music;
