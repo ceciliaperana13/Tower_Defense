@@ -6,9 +6,13 @@ static void loadTex(sf::Texture& tex, const std::string& path) {
         std::cerr << "[GameView] Missing texture: " << path << "\n";
 }
 
-GameView::GameView(sf::RenderWindow& window, Map& map, WaveManager& waveManager)
-    : m_window(window), m_map(map), m_waveManager(waveManager),
-      m_countdownTimer(0.f), m_timerView(m_countdownTimer)
+// ─── Constructeur 
+GameView::GameView(sf::RenderWindow& window, Map& map,
+                   WaveManager& waveManager, CountdownTimer& timer)
+    : m_window(window), m_map(map),
+      m_waveManager(waveManager),
+      m_countdownTimer(timer),
+      m_timerView(timer)
 {
     buildUI();
 
@@ -16,17 +20,15 @@ GameView::GameView(sf::RenderWindow& window, Map& map, WaveManager& waveManager)
                           "C:/Windows/Fonts/arialbd.ttf"))
         std::cerr << "[GameView] TimerView: assets manquants.\n";
 
-    // Icône petite (18px logiques)
     float iconSize = toWinH(18.f);
     m_timerView.setScale({ iconSize / 64.f, iconSize / 64.f });
 
-    // Centré horizontalement en haut de la map, 8px de marge
     float tX = static_cast<float>(WIN_W) / 2.f - toWinW(20.f);
     float tY = 8.f;
     m_timerView.setPosition({ tX, tY });
 }
 
-// ─── makePanelShape ───────────────────────────────────────────────────────────
+// ─── makePanelShape 
 sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
                                              float uiX, float uiY,
                                              float uiW, float uiH) const {
@@ -37,7 +39,7 @@ sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
     return shape;
 }
 
-// ─── buildUI ──────────────────────────────────────────────────────────────────
+// ─── buildUI 
 void GameView::buildUI() {
     loadTex(m_topPanelTex,   "../assets/sprites/buttons/top_panel.png");
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
@@ -75,6 +77,7 @@ void GameView::buildUI() {
                          toWinW(128.f), toWinH(32.f), MenuAction::Exit);
 }
 
+// ─── makeLetterboxView 
 sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     float contentRatio = static_cast<float>(WIN_W) / static_cast<float>(WIN_H);
     float screenRatio  = static_cast<float>(screenW) / static_cast<float>(screenH);
@@ -100,27 +103,31 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     return view;
 }
 
+// ─── update 
 void GameView::update(float dt) {
     m_waveManager.update(dt);
     m_timerView.update();
 }
 
+// ─── render 
 void GameView::render() {
     drawMap();
     drawEnemies();
     drawUIBar();
 }
 
-// ─── drawMap 
+// ─── drawMap
 void GameView::drawMap() {
     m_map.draw(m_window, { 0.f, 0.f }, MAP_SCALE);
 }
 
+// ─── drawEnemies
 void GameView::drawEnemies() {
     for (const auto& enemy : m_waveManager.getActiveEnemies())
         enemy->render(m_window);
 }
 
+// ─── drawUIBar 
 void GameView::drawUIBar() {
     m_window.draw(m_topPanel);
     m_window.draw(m_goldPanel);
@@ -132,7 +139,6 @@ void GameView::drawUIBar() {
     if (m_sellButton) m_sellButton->draw(m_window);
     if (m_backButton) m_backButton->draw(m_window);
 
-    // Timer centré en haut de la map
     m_window.draw(m_timerView);
 }
 
@@ -160,6 +166,7 @@ MenuAction GameView::handleClickAt(sf::Vector2f logicalPos) {
     return MenuAction::None;
 }
 
+// ─── handleEvent 
 MenuAction GameView::handleEvent(const sf::Event& event) {
     return MenuAction::None;
 }

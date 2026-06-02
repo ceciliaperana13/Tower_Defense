@@ -4,9 +4,7 @@
 #include <vector>
 #include "Map.hpp"
 #include "Button.hpp"
-#include "Wavemanager.hpp"
-
-// Map occupies the top portion, UI bar the bottom.
+#include "WaveManager.hpp"
 #include "TimerView.hpp"
 #include "CountdownTimer.hpp"
 
@@ -15,8 +13,9 @@ public:
     static constexpr unsigned WIN_W = 1056u;
     static constexpr unsigned WIN_H = 957u;
 
-    GameView(sf::RenderWindow& window, Map& map, WaveManager& waveManager);
-    GameView(sf::RenderWindow& window, Map& map, CountdownTimer& timer);
+    // ── Un seul constructeur avec les deux
+    GameView(sf::RenderWindow& window, Map& map,
+             WaveManager& waveManager, CountdownTimer& timer);
 
     void update(float dt);
     void render();
@@ -50,6 +49,7 @@ private:
     sf::RenderWindow& m_window;
     Map&              m_map;
     WaveManager&      m_waveManager;
+    CountdownTimer&   m_countdownTimer;
 
     sf::Texture        m_topPanelTex;
     sf::Texture        m_goldPanelTex;
@@ -58,12 +58,9 @@ private:
     sf::RectangleShape m_goldPanel;
     sf::RectangleShape m_heartPanel;
 
-    // Buttons
     std::vector<Button>   m_towerButtons;
     std::optional<Button> m_sellButton;
     std::optional<Button> m_backButton;
 
-    // Timer — affiché dans le top panel, centré horizontalement
-    CountdownTimer& m_countdownTimer;
-    TimerView       m_timerView;
+    TimerView m_timerView;
 };
