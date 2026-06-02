@@ -1,31 +1,56 @@
 {
     "lvl1" : {
         "basic" : {
+            "id" : 1,
             "damage" : 1,
             "range" : 1,
-            "firerate" : 1
-        }
-    },
-    "lvl2" : {
-        "fire" : {
-            "damage" : 1,
-            "range" : 1,
-            "firerate" : 1
-        },
-        "ice" : {
-            "damage" : 1,
-            "range" : 1,
-            "firerate" : 1
-        },
-        "earth" : {
-            "damage" : 1,
-            "range" : 1,
-            "firerate" : 1
-        },
-        "arcane" : {
-            "damage" : 1,
-            "range" : 1,
-            "firerate" : 1
+            "firerate" : 1,
+            "paths" : {
+                "building" : "../sprites/towers/buildings/basic_tower.png",
+                "projectile" : "../sprites/towers/projectiles/basic_projectile.png"
+            },
+            "lvl2" : {
+                "fire" : {
+                    "id" : 2,
+                    "damage" : 1,
+                    "range" : 1,
+                    "firerate" : 1,
+                    "paths" : {
+                    "building" : "../sprites/towers/buildings/fire_tower.png",
+                    "projectile" : "../sprites/towers/projectiles/fire_projectile.png"
+                    }
+                },
+                "ice" : {
+                    "id" : 3,
+                    "damage" : 1,
+                    "range" : 1,
+                    "firerate" : 1,
+                    "paths" : {
+                    "building" : "../sprites/towers/buildings/ice_tower.png",
+                    "projectile" : "../sprites/towers/projectiles/ice_projectile.png"
+                    }
+                },
+                "rock" : {
+                    "id" : 4,
+                    "damage" : 1,
+                    "range" : 1,
+                    "firerate" : 1,
+                    "paths" : {
+                    "building" : "../sprites/towers/buildings/rock_tower.png",
+                    "projectile" : "../sprites/towers/projectiles/rock_projectile.png"
+                    }
+                },
+                "arcane" : {
+                    "id" : 5,
+                    "damage" : 1,
+                    "range" : 1,
+                    "firerate" : 1,
+                    "paths" : {
+                    "building" : "../sprites/towers/buildings/arcane_tower.png",
+                    "projectile" : "../sprites/towers/projectiles/arcane_projectile.png"
+                    }
+                }
+            }
         }
     }
 }
