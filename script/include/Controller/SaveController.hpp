@@ -7,10 +7,10 @@
 class SaveController {
 public:
     explicit SaveController(
-        const std::string& scoresPath    = "../assets/data/scores.json",
-        const std::string& towerValPath  = "../assets/data/towers.json",
-        const std::string& enemyValPath  = "../assets/data/enemies.json"
-    );
+    const std::string& scoresPath   = "../assets/data/scores.json",
+    const std::string& towerValPath = "../assets/data/tower_values.json",
+    const std::string& enemyValPath = "../assets/data/enemy_values.json"
+);
 
     // Scores
     void                    saveScore(const ScoreData& s);
