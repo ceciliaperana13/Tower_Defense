@@ -7,20 +7,17 @@
 
 static bool s_fullscreen = false;
 
-static sf::View buildView(unsigned sw, unsigned sh) {
-    if (sw == GameView::WIN_W && sh == GameView::WIN_H)
-        return sf::View(sf::FloatRect({ 0.f, 0.f },
-                        { static_cast<float>(GameView::WIN_W),
-                          static_cast<float>(GameView::WIN_H) }));
-    return GameView::makeLetterboxView(sw, sh);
+static sf::View windowedView() {
+    return sf::View(sf::FloatRect({ 0.f, 0.f },
+                    { static_cast<float>(GameView::WIN_W),
+                      static_cast<float>(GameView::WIN_H) }));
 }
 
-// Rebuilds the window and immediately sets the correct view
 static void openWindowed(sf::RenderWindow& window) {
     window.create(sf::VideoMode({ GameView::WIN_W, GameView::WIN_H }),
                   "Defend the Castle");
     window.setFramerateLimit(60);
-    window.setView(buildView(GameView::WIN_W, GameView::WIN_H));
+    window.setView(windowedView());
     s_fullscreen = false;
 }
 
@@ -28,7 +25,7 @@ static void openFullscreen(sf::RenderWindow& window) {
     auto desk = sf::VideoMode::getDesktopMode();
     window.create(desk, "Defend the Castle", sf::State::Fullscreen);
     window.setFramerateLimit(60);
-    window.setView(buildView(desk.size.x, desk.size.y));
+    window.setView(GameView::makeLetterboxView(desk.size.x, desk.size.y));
     s_fullscreen = true;
 }
 
@@ -37,10 +34,13 @@ static void toggleFullscreen(sf::RenderWindow& window) {
     else              openFullscreen(window);
 }
 
-// Must be called each frame to re-assert the view (window.create resets it)
 static void refreshView(sf::RenderWindow& window) {
-    auto sz = window.getSize();
-    window.setView(buildView(sz.x, sz.y));
+    if (s_fullscreen) {
+        auto sz = window.getSize();
+        window.setView(GameView::makeLetterboxView(sz.x, sz.y));
+    } else {
+        window.setView(windowedView());
+    }
 }
 
 int main() {
@@ -51,7 +51,6 @@ int main() {
     SaveController saveCtrl;
 
     while (window.isOpen()) {
-        // View must be set before MainMenu reads window.getView().getSize()
         refreshView(window);
 
         MainMenu   menu(window);
