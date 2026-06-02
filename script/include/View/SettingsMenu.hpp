@@ -27,6 +27,11 @@ private:
     void update(sf::Vector2f mouse);
     void render();
 
+    // UI helpers
+    void drawSliderRow(const std::string& label, float value, sf::FloatRect track);
+    void drawLabel    (const std::string& txt,   sf::Vector2f pos);
+
+    // Actions — délèguent au SoundManager
     void onMusicSlider(float mx);
     void onSfxSlider  (float mx);
     void onFullscreenToggle();
@@ -36,22 +41,22 @@ private:
     sf::RenderWindow& m_window;
     GameSettings&     m_settings;
 
-    sf::Font                  m_font;
-    std::optional<sf::Text>   m_titleText;
+    sf::Font                m_font;
+    std::optional<sf::Text> m_titleText;
+    std::optional<sf::Text> m_closeLabel;
 
-    sf::RectangleShape        m_panel;
-    sf::RectangleShape        m_closeBtn;
-    std::optional<sf::Text>   m_closeLabel;
+    sf::RectangleShape m_panel;
+    sf::RectangleShape m_closeBtn;
 
-    sf::FloatRect  m_musicTrack;
-    sf::FloatRect  m_sfxTrack;
-    sf::FloatRect  m_fullscreenBox;
-    sf::FloatRect  m_langLeftBtn;
-    sf::FloatRect  m_langRightBtn;
+    sf::FloatRect m_musicTrack;
+    sf::FloatRect m_sfxTrack;
+    sf::FloatRect m_fullscreenBox;
+    sf::FloatRect m_langLeftBtn;
+    sf::FloatRect m_langRightBtn;
 
     bool m_draggingMusic { false };
     bool m_draggingSfx   { false };
     bool m_running       { true  };
 
-    float m_panelX, m_panelY, m_panelW, m_panelH;
+    float m_panelX {}, m_panelY {}, m_panelW {}, m_panelH {};
 };

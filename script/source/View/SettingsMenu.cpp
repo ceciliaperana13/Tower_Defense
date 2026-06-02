@@ -1,6 +1,7 @@
 #include "SettingsMenu.hpp"
+#include "SoundManager.hpp"
 #include <iostream>
-//languages
+
 const std::vector<std::string> GameSettings::LANGUAGES = {
     "Francais", "English", "Espanol"
 };
@@ -12,13 +13,13 @@ SettingsMenu::SettingsMenu(sf::RenderWindow& window, GameSettings& settings)
         throw std::runtime_error("SettingsMenu: police introuvable.");
     buildUI();
 }
-// ─── buildUI
+
+// ─── buildUI 
 void SettingsMenu::buildUI() {
     const float winW = static_cast<float>(m_window.getSize().x);
     const float winH = static_cast<float>(m_window.getSize().y);
 
-    m_panelW = 460.f;
-    m_panelH = 360.f;
+    m_panelW = 460.f; m_panelH = 360.f;
     m_panelX = (winW - m_panelW) / 2.f;
     m_panelY = (winH - m_panelH) / 2.f;
 
@@ -54,18 +55,16 @@ void SettingsMenu::buildUI() {
     float trackW = 200.f;
     float trackX = m_panelX + m_panelW - trackW - 40.f;
 
-    m_musicTrack = { {trackX, m_panelY + 90.f},  {trackW, 14.f} };
-    m_sfxTrack   = { {trackX, m_panelY + 160.f}, {trackW, 14.f} };
-
-    // Checkbox plein ecran alignee a droite
+    m_musicTrack    = { {trackX, m_panelY + 90.f},  {trackW, 14.f} };
+    m_sfxTrack      = { {trackX, m_panelY + 160.f}, {trackW, 14.f} };
     m_fullscreenBox = { {m_panelX + m_panelW - 54.f, m_panelY + 228.f}, {24.f, 24.f} };
 
-    // Langue
     float rowY = m_panelY + 295.f;
-    m_langLeftBtn  = { {trackX,               rowY}, {28.f, 28.f} };
-    m_langRightBtn = { {trackX + trackW - 28.f, rowY}, {28.f, 28.f} };
+    m_langLeftBtn  = { {trackX,                  rowY}, {28.f, 28.f} };
+    m_langRightBtn = { {trackX + trackW - 28.f,  rowY}, {28.f, 28.f} };
 }
-// ─── run
+
+// ─── run 
 void SettingsMenu::run() {
     m_running = true;
     while (m_running && m_window.isOpen()) {
@@ -75,35 +74,27 @@ void SettingsMenu::run() {
         render();
     }
 }
+
 // ─── handleEvents
 void SettingsMenu::handleEvents() {
     while (const std::optional<sf::Event> event = m_window.pollEvent()) {
 
-        if (event->is<sf::Event::Closed>()) {
-            m_window.close();
-            m_running = false;
-            return;
-        }
+        if (event->is<sf::Event::Closed>()) { m_window.close(); m_running = false; return; }
 
         if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
-            if (kp->code == sf::Keyboard::Key::Escape) {
-                m_running = false;
-                return;
-            }
+            if (kp->code == sf::Keyboard::Key::Escape) { m_running = false; return; }
         }
 
         if (const auto* mb = event->getIf<sf::Event::MouseButtonPressed>()) {
             if (mb->button == sf::Mouse::Button::Left) {
                 sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y });
 
-                if (m_closeBtn.getGlobalBounds().contains(pos)) {
-                    m_running = false; return;
-                }
-                if (m_musicTrack.contains(pos)) { m_draggingMusic = true; onMusicSlider(pos.x); }
-                if (m_sfxTrack.contains(pos))   { m_draggingSfx   = true; onSfxSlider(pos.x);   }
-                if (m_fullscreenBox.contains(pos)) onFullscreenToggle();
-                if (m_langLeftBtn.contains(pos))   onLanguagePrev();
-                if (m_langRightBtn.contains(pos))  onLanguageNext();
+                if (m_closeBtn.getGlobalBounds().contains(pos)) { m_running = false; return; }
+                if (m_musicTrack.contains(pos))    { m_draggingMusic = true; onMusicSlider(pos.x); }
+                if (m_sfxTrack.contains(pos))      { m_draggingSfx   = true; onSfxSlider(pos.x);   }
+                if (m_fullscreenBox.contains(pos))   onFullscreenToggle();
+                if (m_langLeftBtn.contains(pos))     onLanguagePrev();
+                if (m_langRightBtn.contains(pos))    onLanguageNext();
             }
         }
 
@@ -116,33 +107,35 @@ void SettingsMenu::handleEvents() {
     }
 }
 
+// ─── update 
 void SettingsMenu::update(sf::Vector2f mouse) {
     if (m_draggingMusic) onMusicSlider(mouse.x);
     if (m_draggingSfx)   onSfxSlider(mouse.x);
 }
 
+// ─── Actions — toute la logique passe par SoundManager ──────────
 void SettingsMenu::onMusicSlider(float mx) {
     float rel = (mx - m_musicTrack.position.x) / m_musicTrack.size.x;
-    m_settings.musicVolume = std::max(0.f, std::min(100.f, rel * 100.f));
+    float v   = std::max(0.f, std::min(100.f, rel * 100.f));
+    m_settings.musicVolume = v;
+    SoundManager::getInstance().setMusicVolume(v);   // ← controller
 }
 
 void SettingsMenu::onSfxSlider(float mx) {
     float rel = (mx - m_sfxTrack.position.x) / m_sfxTrack.size.x;
-    m_settings.sfxVolume = std::max(0.f, std::min(100.f, rel * 100.f));
+    float v   = std::max(0.f, std::min(100.f, rel * 100.f));
+    m_settings.sfxVolume = v;
+    SoundManager::getInstance().setSFXVolume(v);     // ← controller
 }
 
 void SettingsMenu::onFullscreenToggle() {
     m_settings.fullscreen = !m_settings.fullscreen;
-
     sf::VideoMode mode = m_settings.fullscreen
         ? sf::VideoMode::getDesktopMode()
         : sf::VideoMode({ 1080u, 720u });
-
     m_window.create(mode, "Defend the Castle",
         m_settings.fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
     m_window.setFramerateLimit(60);
-
-    // Recalcule les positions du panneau apres recreation
     buildUI();
 }
 
@@ -156,55 +149,47 @@ void SettingsMenu::onLanguagePrev() {
     m_settings.languageIdx = (m_settings.languageIdx + n - 1) % n;
 }
 
-// Helper local
-static void drawLabel(sf::RenderWindow& w, sf::Font& f,
-                      const std::string& txt, sf::Vector2f pos) {
-    sf::Text t(f, txt, 18u);
+// ─── Render helpers 
+
+void SettingsMenu::drawLabel(const std::string& txt, sf::Vector2f pos) {
+    sf::Text t(m_font, txt, 18u);
     t.setFillColor(sf::Color(210, 210, 210));
     t.setPosition(pos);
-    w.draw(t);
+    m_window.draw(t);
 }
 
-static void drawSliderRow(sf::RenderWindow& w, sf::Font& f,
-                          const std::string& label, float value,
-                          sf::FloatRect track)
-{
-    // Label
-    drawLabel(w, f, label, { track.position.x - 220.f, track.position.y - 2.f });
+void SettingsMenu::drawSliderRow(const std::string& label, float value, sf::FloatRect track) {
+    drawLabel(label, { track.position.x - 220.f, track.position.y - 2.f });
 
-    // Track fond
     sf::RectangleShape bg({ track.size.x, track.size.y });
     bg.setPosition(track.position);
     bg.setFillColor(sf::Color(55, 55, 55));
     bg.setOutlineColor(sf::Color(100, 100, 100));
     bg.setOutlineThickness(1.f);
-    w.draw(bg);
+    m_window.draw(bg);
 
-    // Fill
     float fillW = track.size.x * value / 100.f;
     sf::RectangleShape fill({ fillW, track.size.y });
     fill.setPosition(track.position);
     fill.setFillColor(sf::Color(220, 175, 60));
-    w.draw(fill);
+    m_window.draw(fill);
 
-    // Knob
     sf::CircleShape knob(8.f);
     knob.setOrigin({ 8.f, 8.f });
     knob.setPosition({ track.position.x + fillW, track.position.y + track.size.y / 2.f });
     knob.setFillColor(sf::Color(240, 240, 240));
     knob.setOutlineColor(sf::Color(180, 140, 60));
     knob.setOutlineThickness(1.5f);
-    w.draw(knob);
+    m_window.draw(knob);
 
-    // Valeur
-    sf::Text val(f, std::to_string((int)value), 15u);
+    sf::Text val(m_font, std::to_string((int)value), 15u);
     val.setFillColor(sf::Color(180, 180, 180));
     val.setPosition({ track.position.x + track.size.x + 10.f, track.position.y });
-    w.draw(val);
+    m_window.draw(val);
 }
 
+// ─── render 
 void SettingsMenu::render() {
-    // Overlay
     sf::RectangleShape overlay({
         static_cast<float>(m_window.getSize().x),
         static_cast<float>(m_window.getSize().y)
@@ -212,42 +197,33 @@ void SettingsMenu::render() {
     overlay.setFillColor(sf::Color(0, 0, 0, 150));
     m_window.draw(overlay);
 
-    // Panneau
     m_window.draw(m_panel);
-
-    // Titre
     if (m_titleText) m_window.draw(*m_titleText);
 
-    // Separateur
-    sf::RectangleShape sep({ m_panelW - 40.f, 1.f });
-    sep.setPosition({ m_panelX + 20.f, m_panelY + 60.f });
-    sep.setFillColor(sf::Color(180, 140, 60, 100));
-    m_window.draw(sep);
+    // Séparateurs
+    auto sep = [&](float y, uint8_t alpha = 100) {
+        sf::RectangleShape s({ m_panelW - 40.f, 1.f });
+        s.setPosition({ m_panelX + 20.f, y });
+        s.setFillColor(sf::Color(180, 140, 60, alpha));
+        m_window.draw(s);
+    };
+    sep(m_panelY + 60.f);
+    sep(m_panelY + 210.f, 60);
+    sep(m_panelY + 270.f, 60);
 
-    // Bouton fermer
     m_window.draw(m_closeBtn);
     if (m_closeLabel) m_window.draw(*m_closeLabel);
 
-    float labelX = m_panelX + 30.f;
+    // Sliders — valeurs lues depuis GameSettings
+    drawSliderRow("Musique",        m_settings.musicVolume, m_musicTrack);
+    drawSliderRow("Effets sonores", m_settings.sfxVolume,   m_sfxTrack);
 
-    // Sliders
-    drawSliderRow(m_window, m_font, "Musique",        m_settings.musicVolume, m_musicTrack);
-    drawSliderRow(m_window, m_font, "Effets sonores", m_settings.sfxVolume,   m_sfxTrack);
-
-    // Separateur
-    sf::RectangleShape sep2({ m_panelW - 40.f, 1.f });
-    sep2.setPosition({ m_panelX + 20.f, m_panelY + 210.f });
-    sep2.setFillColor(sf::Color(180, 140, 60, 60));
-    m_window.draw(sep2);
-
-    // Plein ecran
-    drawLabel(m_window, m_font, "Plein ecran",
-              { labelX, m_fullscreenBox.position.y + 2.f });
+    // Plein écran
+    drawLabel("Plein ecran", { m_panelX + 30.f, m_fullscreenBox.position.y + 2.f });
     {
         sf::RectangleShape box({ 24.f, 24.f });
         box.setPosition(m_fullscreenBox.position);
-        box.setFillColor(m_settings.fullscreen
-            ? sf::Color(220, 175, 60) : sf::Color(40, 40, 50));
+        box.setFillColor(m_settings.fullscreen ? sf::Color(220, 175, 60) : sf::Color(40, 40, 50));
         box.setOutlineColor(sf::Color(180, 140, 60));
         box.setOutlineThickness(2.f);
         m_window.draw(box);
@@ -263,31 +239,27 @@ void SettingsMenu::render() {
         }
     }
 
-    // Separateur
-    sf::RectangleShape sep3({ m_panelW - 40.f, 1.f });
-    sep3.setPosition({ m_panelX + 20.f, m_panelY + 270.f });
-    sep3.setFillColor(sf::Color(180, 140, 60, 60));
-    m_window.draw(sep3);
-
     // Langue
-    drawLabel(m_window, m_font, "Langue",
-              { labelX, m_langLeftBtn.position.y + 4.f });
+    drawLabel("Langue", { m_panelX + 30.f, m_langLeftBtn.position.y + 4.f });
     {
         float trackW = m_langRightBtn.position.x + 28.f - m_langLeftBtn.position.x;
 
-        // Bouton gauche
-        sf::RectangleShape lBtn({ 28.f, 28.f });
-        lBtn.setPosition(m_langLeftBtn.position);
-        lBtn.setFillColor(sf::Color(45, 45, 55));
-        lBtn.setOutlineColor(sf::Color(180, 140, 60));
-        lBtn.setOutlineThickness(1.f);
-        m_window.draw(lBtn);
-        sf::Text lt(m_font, "<", 18u);
-        lt.setFillColor(sf::Color::White);
-        lt.setPosition({ m_langLeftBtn.position.x + 6.f, m_langLeftBtn.position.y + 2.f });
-        m_window.draw(lt);
+        auto arrowBtn = [&](sf::FloatRect r, const std::string& lbl) {
+            sf::RectangleShape b({ r.size.x, r.size.y });
+            b.setPosition(r.position);
+            b.setFillColor(sf::Color(45, 45, 55));
+            b.setOutlineColor(sf::Color(180, 140, 60));
+            b.setOutlineThickness(1.f);
+            m_window.draw(b);
+            sf::Text t(m_font, lbl, 18u);
+            t.setFillColor(sf::Color::White);
+            t.setPosition({ r.position.x + 6.f, r.position.y + 2.f });
+            m_window.draw(t);
+        };
 
-        // Valeur
+        arrowBtn(m_langLeftBtn,  "<");
+        arrowBtn(m_langRightBtn, ">");
+
         const std::string& lang = GameSettings::LANGUAGES[m_settings.languageIdx];
         sf::Text lv(m_font, lang, 17u);
         lv.setFillColor(sf::Color(220, 220, 220));
@@ -297,18 +269,6 @@ void SettingsMenu::render() {
             m_langLeftBtn.position.y + 4.f
         });
         m_window.draw(lv);
-
-        // Bouton droit
-        sf::RectangleShape rBtn({ 28.f, 28.f });
-        rBtn.setPosition(m_langRightBtn.position);
-        rBtn.setFillColor(sf::Color(45, 45, 55));
-        rBtn.setOutlineColor(sf::Color(180, 140, 60));
-        rBtn.setOutlineThickness(1.f);
-        m_window.draw(rBtn);
-        sf::Text rt(m_font, ">", 18u);
-        rt.setFillColor(sf::Color::White);
-        rt.setPosition({ m_langRightBtn.position.x + 6.f, m_langRightBtn.position.y + 2.f });
-        m_window.draw(rt);
     }
 
     m_window.display();
