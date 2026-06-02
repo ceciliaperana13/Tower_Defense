@@ -1,0 +1,19 @@
+{
+    "enemytype" : {
+        "goblin" : {
+            "maxhp" : 1,
+            "maxspeed" : 1,
+            "reward" : 1
+        },
+        "orc" : {
+            "maxhp" : 1,
+            "maxspeed" : 1,
+            "reward" : 1
+        },
+        "troll" : {
+            "maxhp" : 1,
+            "maxspeed" : 1,
+            "reward" : 1
+        }
+    }
+}
