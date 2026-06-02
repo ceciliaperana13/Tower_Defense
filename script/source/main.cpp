@@ -4,7 +4,8 @@
 #include "View/GameView.hpp"
 #include "Controller/SaveController.hpp"
 #include "Model/Map.hpp"
-#include "Model/Wavemanager.hpp"
+#include "Model/WaveManager.hpp"
+#include "Model/Enemy.hpp"
 
 static bool s_fullscreen = false;
 
@@ -78,7 +79,9 @@ int main() {
         if (action == MenuAction::NewGame) {
             Map map;
 
-            // Build waypoints at game scale (MAP_SCALE = 2)
+            // Charge la texture cœur une seule fois pour tous les ennemis
+            Enemy::loadHeartTexture("../assets/sprites/icons/heart.png");
+
             constexpr float MAP_SCALE = 2.f;
             auto waypoints = map.getWaypoints(MAP_SCALE);
 
@@ -89,7 +92,7 @@ int main() {
             );
             waveManager.startNextWave();
 
-            CountdownTimer timer(120.f); // 2 minutes
+            CountdownTimer timer(120.f);
             GameView gameView(window, map, waveManager, timer);
             clock.restart();
 
@@ -104,7 +107,6 @@ int main() {
                     if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
                         if (kp->code == sf::Keyboard::Key::F11)
                             toggleFullscreen(window);
-                        // Space: launch next wave manually
                         if (kp->code == sf::Keyboard::Key::Space
                             && waveManager.isWaveComplete())
                             waveManager.startNextWave();
