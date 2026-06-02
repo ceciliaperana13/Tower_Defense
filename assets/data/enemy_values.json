@@ -1,19 +1,34 @@
 {
     "enemytype" : {
         "goblin" : {
+            "id" : 1,
             "maxhp" : 1,
             "maxspeed" : 1,
-            "reward" : 1
+            "reward" : 1,
+            "paths" : {
+                "sprite1" : "../sprites/enemies/goblin1.png",
+                "sprite2" : "../sprites/enemies/goblin2.png"
+            }
         },
         "orc" : {
+            "id" : 2,
             "maxhp" : 1,
             "maxspeed" : 1,
-            "reward" : 1
+            "reward" : 1,
+            "paths" : {
+                "sprite1" : "../sprites/enemies/orc1.png",
+                "sprite2" : "../sprites/enemies/orc2.png"
+            }
         },
-        "troll" : {
+        "ogre" : {
+            "id" : 3,
             "maxhp" : 1,
             "maxspeed" : 1,
-            "reward" : 1
+            "reward" : 1,
+            "paths" : {
+                "sprite1" : "../sprites/enemies/ogre_boss1.png",
+                "sprite2" : "../sprites/enemies/ogre_boss2.png"
+            }
         }
     }
 }

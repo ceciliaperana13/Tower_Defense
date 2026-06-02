@@ -4,11 +4,10 @@
 
 class GameView {
 public:
-    GameView(sf::RenderWindow& window, Map& map)
-        : m_window(window), m_map(map) {}
+    GameView(sf::RenderWindow& window, Map& map);
 
-    void update(float dt) {}
-    void render() {}
+    void update(float dt);
+    void render();
 
 private:
     sf::RenderWindow& m_window;
