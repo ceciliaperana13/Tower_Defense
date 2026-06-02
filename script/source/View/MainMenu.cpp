@@ -1,6 +1,7 @@
 #include "MainMenu.hpp"
 #include <iostream>
 #include <stdexcept>
+#include "SoundManager.hpp"
 
 // ─── Constructeur 
 MainMenu::MainMenu(sf::RenderWindow& window)
@@ -9,6 +10,9 @@ MainMenu::MainMenu(sf::RenderWindow& window)
     loadAssets();
     buildButtons();
     loadCharacters();
+
+    // ─── Musique du menu ───
+    SoundManager::getInstance().playMusic("menu");
 }
 
 // ─── loadAssets 
