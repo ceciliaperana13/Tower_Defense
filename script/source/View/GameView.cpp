@@ -7,11 +7,26 @@ static void loadTex(sf::Texture& tex, const std::string& path) {
 }
 
 GameView::GameView(sf::RenderWindow& window, Map& map, WaveManager& waveManager)
-    : m_window(window), m_map(map), m_waveManager(waveManager)
+    : m_window(window), m_map(map), m_waveManager(waveManager),
+      m_countdownTimer(0.f), m_timerView(m_countdownTimer)
 {
     buildUI();
+
+    if (!m_timerView.load("../assets/sprites/icons/timer.png",
+                          "C:/Windows/Fonts/arialbd.ttf"))
+        std::cerr << "[GameView] TimerView: assets manquants.\n";
+
+    // Icône petite (18px logiques)
+    float iconSize = toWinH(18.f);
+    m_timerView.setScale({ iconSize / 64.f, iconSize / 64.f });
+
+    // Centré horizontalement en haut de la map, 8px de marge
+    float tX = static_cast<float>(WIN_W) / 2.f - toWinW(20.f);
+    float tY = 8.f;
+    m_timerView.setPosition({ tX, tY });
 }
 
+// ─── makePanelShape ───────────────────────────────────────────────────────────
 sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
                                              float uiX, float uiY,
                                              float uiW, float uiH) const {
@@ -22,6 +37,7 @@ sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
     return shape;
 }
 
+// ─── buildUI ──────────────────────────────────────────────────────────────────
 void GameView::buildUI() {
     loadTex(m_topPanelTex,   "../assets/sprites/buttons/top_panel.png");
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
@@ -86,6 +102,7 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
 
 void GameView::update(float dt) {
     m_waveManager.update(dt);
+    m_timerView.update();
 }
 
 void GameView::render() {
@@ -94,6 +111,7 @@ void GameView::render() {
     drawUIBar();
 }
 
+// ─── drawMap 
 void GameView::drawMap() {
     m_map.draw(m_window, { 0.f, 0.f }, MAP_SCALE);
 }
@@ -113,8 +131,12 @@ void GameView::drawUIBar() {
 
     if (m_sellButton) m_sellButton->draw(m_window);
     if (m_backButton) m_backButton->draw(m_window);
+
+    // Timer centré en haut de la map
+    m_window.draw(m_timerView);
 }
 
+// ─── updateHover 
 void GameView::updateHover(sf::Vector2f mousePos) {
     for (auto& btn : m_towerButtons)
         btn.setHovered(btn.contains(mousePos));
@@ -125,6 +147,7 @@ void GameView::updateHover(sf::Vector2f mousePos) {
 
 void GameView::updateHoverAt(sf::Vector2f logicalPos) { updateHover(logicalPos); }
 
+// ─── handleClickAt 
 MenuAction GameView::handleClickAt(sf::Vector2f logicalPos) {
     for (const auto& btn : m_towerButtons)
         if (btn.contains(logicalPos)) return btn.getAction();

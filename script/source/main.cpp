@@ -89,7 +89,8 @@ int main() {
             );
             waveManager.startNextWave();
 
-            GameView gameView(window, map, waveManager);
+            CountdownTimer timer(120.f); // 2 minutes
+            GameView gameView(window, map, waveManager, timer);
             clock.restart();
 
             while (window.isOpen()) {

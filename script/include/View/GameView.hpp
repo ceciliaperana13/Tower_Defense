@@ -1,5 +1,4 @@
 #pragma once
-
 #include <SFML/Graphics.hpp>
 #include <optional>
 #include <vector>
@@ -8,12 +7,16 @@
 #include "Wavemanager.hpp"
 
 // Map occupies the top portion, UI bar the bottom.
+#include "TimerView.hpp"
+#include "CountdownTimer.hpp"
+
 class GameView {
 public:
     static constexpr unsigned WIN_W = 1056u;
     static constexpr unsigned WIN_H = 957u;
 
     GameView(sf::RenderWindow& window, Map& map, WaveManager& waveManager);
+    GameView(sf::RenderWindow& window, Map& map, CountdownTimer& timer);
 
     void update(float dt);
     void render();
@@ -55,7 +58,12 @@ private:
     sf::RectangleShape m_goldPanel;
     sf::RectangleShape m_heartPanel;
 
+    // Buttons
     std::vector<Button>   m_towerButtons;
     std::optional<Button> m_sellButton;
     std::optional<Button> m_backButton;
+
+    // Timer — affiché dans le top panel, centré horizontalement
+    CountdownTimer& m_countdownTimer;
+    TimerView       m_timerView;
 };
