@@ -1,0 +1,29 @@
+{
+    "element" : {
+        "basic" : {
+            "damage" : 1,
+            "range" : 1,
+            "firerate" : 1
+        },
+        "fire" : {
+            "damage" : 1,
+            "range" : 1,
+            "firerate" : 1
+        },
+        "ice" : {
+            "damage" : 1,
+            "range" : 1,
+            "firerate" : 1
+        },
+        "earth" : {
+            "damage" : 1,
+            "range" : 1,
+            "firerate" : 1
+        },
+        "arcane" : {
+            "damage" : 1,
+            "range" : 1,
+            "firerate" : 1
+        }
+    }
+}
