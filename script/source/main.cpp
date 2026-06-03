@@ -7,11 +7,11 @@
 
 #include "Controller/SaveController.hpp"
 #include "Controller/SoundManager.hpp"
+#include "Controller/TowerController.hpp"
 
 #include "Model/Map.hpp"
 #include "Model/WaveManager.hpp"
 #include "Model/Enemy.hpp"
-
 
 static bool s_fullscreen = false;
 
@@ -19,13 +19,10 @@ static bool s_fullscreen = false;
 // Vue fenêtrée
 // ─────────────────────────────────────────────
 static sf::View windowedView() {
-    return sf::View(
-        sf::FloatRect(
-            sf::Vector2f(0.f, 0.f),
-            sf::Vector2f(static_cast<float>(WIN_W),
-                         static_cast<float>(WIN_H))
-        )
-    );
+    return sf::View(sf::FloatRect(
+        sf::Vector2f(0.f, 0.f),
+        sf::Vector2f(WIN_W, WIN_H)
+    ));
 }
 
 // ─────────────────────────────────────────────
@@ -55,13 +52,10 @@ static void openFullscreen(sf::RenderWindow& window) {
     );
     window.setFramerateLimit(60);
 
-    window.setView(sf::View(
-        sf::FloatRect(
-            sf::Vector2f(0.f, 0.f),
-            sf::Vector2f(static_cast<float>(WIN_W),
-                         static_cast<float>(WIN_H))
-        )
-    ));
+    window.setView(sf::View(sf::FloatRect(
+        sf::Vector2f(0.f, 0.f),
+        sf::Vector2f(WIN_W, WIN_H)
+    )));
 
     s_fullscreen = true;
 }
@@ -79,14 +73,10 @@ static void toggleFullscreen(sf::RenderWindow& window) {
 // ─────────────────────────────────────────────
 static void refreshView(sf::RenderWindow& window) {
     if (s_fullscreen) {
-        auto sz = window.getSize();
-        window.setView(sf::View(
-            sf::FloatRect(
-                sf::Vector2f(0.f, 0.f),
-                sf::Vector2f(static_cast<float>(WIN_W),
-                             static_cast<float>(WIN_H))
-            )
-        ));
+        window.setView(sf::View(sf::FloatRect(
+            sf::Vector2f(0.f, 0.f),
+            sf::Vector2f(WIN_W, WIN_H)
+        )));
     } else {
         window.setView(windowedView());
     }
@@ -127,10 +117,10 @@ int main() {
         }
 
         if (action == MenuAction::NewGame) {
+
             Map map;
             Enemy::loadHeartTexture("../assets/sprites/icons/heart.png");
 
-            constexpr float MAP_SCALE = 2.f;
             auto waypoints = map.getWaypoints(MAP_SCALE);
 
             WaveManager waveManager(
@@ -141,7 +131,12 @@ int main() {
             waveManager.startNextWave();
 
             CountdownTimer timer(120.f);
-            GameView gameView(window, map, waveManager, timer);
+
+            TowerController towerController;
+            towerController.loadFromJson("../assets/data/towers.json");
+
+            GameView gameView(window, map, waveManager, timer, towerController);
+
             clock.restart();
 
             while (window.isOpen()) {
@@ -149,9 +144,12 @@ int main() {
                 if (dt > 0.1f) dt = 0.1f;
 
                 while (const auto event = window.pollEvent()) {
+
+                    // Fermeture fenêtre
                     if (event->is<sf::Event::Closed>())
                         window.close();
 
+                    // Touche clavier
                     if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
                         if (kp->code == sf::Keyboard::Key::F11)
                             toggleFullscreen(window);
@@ -163,10 +161,14 @@ int main() {
 
                     sf::View view = window.getView();
 
+                    // Souris déplacée
                     if (const auto* mm = event->getIf<sf::Event::MouseMoved>()) {
                         gameView.updateHoverAt(
-                            window.mapPixelToCoords(mm->position, view));
+                            window.mapPixelToCoords(mm->position, view)
+                        );
                     }
+
+                    // Clic souris
                     else if (const auto* mb = event->getIf<sf::Event::MouseButtonPressed>()) {
                         if (mb->button == sf::Mouse::Button::Left) {
                             auto pos = window.mapPixelToCoords(mb->position, view);
@@ -174,6 +176,8 @@ int main() {
                                 goto backToMenu;
                         }
                     }
+
+                    // Autres events
                     else {
                         if (gameView.handleEvent(*event) == MenuAction::Exit)
                             goto backToMenu;

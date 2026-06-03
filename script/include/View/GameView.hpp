@@ -10,21 +10,32 @@
 #include "Button.hpp"
 #include "TowerController.hpp"
 
-// ─────────────────────────────────────────────
-// CONSTANTES UTILISÉES PAR GameView
-// ─────────────────────────────────────────────
+// Dimensions logiques
 constexpr unsigned WIN_W = 960;
 constexpr unsigned WIN_H = 540;
+
+// Taille réelle de la map Tiled : 22 tiles * 16px = 352px
+constexpr float MAP_H = 352.f;
+
+// Échelle de la map
 constexpr float MAP_SCALE = 2.f;
-// ─────────────────────────────────────────────
-// GameView
-// ─────────────────────────────────────────────
+
+// Noms des tours (ordre = boutons)
+static constexpr const char* TOWER_NAMES[] = {
+    "basic",
+    "fire",
+    "ice",
+    "rock",
+    "arcane"
+};
+
 class GameView {
 public:
     GameView(sf::RenderWindow& window,
              Map& map,
              WaveManager& waveManager,
-             CountdownTimer& timer);
+             CountdownTimer& timer,
+             TowerController& towerController);
 
     void update(float dt);
     void render();
@@ -35,6 +46,8 @@ public:
     MenuAction handleEvent(const sf::Event& event);
     MenuAction handleClickAt(sf::Vector2f logicalPos);
 
+    static sf::View makeLetterboxView(unsigned screenW, unsigned screenH);
+
 private:
     sf::RenderWindow& m_window;
     Map&              m_map;
@@ -43,7 +56,6 @@ private:
 
     TimerView         m_timerView;
 
-    // UI panels
     sf::Texture m_topPanelTex;
     sf::Texture m_goldPanelTex;
     sf::Texture m_heartPanelTex;
@@ -52,13 +64,14 @@ private:
     sf::RectangleShape m_goldPanel;
     sf::RectangleShape m_heartPanel;
 
-    // Tower buttons
     std::vector<Button> m_towerButtons;
     std::optional<Button> m_sellButton;
     std::optional<Button> m_backButton;
 
-    // Tower controller (lié à GameView)
-    TowerController m_towerController;
+    TowerController& m_towerController;
+
+    sf::FloatRect m_uiRect;
+    sf::Vector2f m_mousePos;
 
 private:
     void buildUI();
@@ -68,7 +81,8 @@ private:
 
     void drawMap();
     void drawEnemies();
+    void drawTowers();
     void drawUIBar();
 
-    static sf::View makeLetterboxView(unsigned screenW, unsigned screenH);
+    bool isOverUI(sf::Vector2f logicalPos) const;
 };
