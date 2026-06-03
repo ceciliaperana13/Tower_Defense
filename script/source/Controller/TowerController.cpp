@@ -153,16 +153,16 @@ bool TowerController::placeTower(sf::Vector2f worldPos) {
     const sf::Texture* tex  = getBuildingTexture(name);
     if (!tex) return false;
 
-    PlacedTower pt;
-    pt.dataId   = towerDefs_[name].id;
-    pt.position = worldPos;
-    pt.sprite.setTexture(*tex);
+    const auto& def = towerDefs_[name];
+
+    PlacedTower pt(def.id, worldPos, *tex);
 
     sf::FloatRect bounds = pt.sprite.getLocalBounds();
-    pt.sprite.setOrigin({ bounds.size.x / 2.f, bounds.size.y / 2.f });
+    pt.sprite.setOrigin(sf::Vector2f(bounds.size.x / 2.f, bounds.size.y / 2.f));
     pt.sprite.setPosition(worldPos);
 
     placedTowers_.push_back(std::move(pt));
+
     std::cout << "[TowerController] Placed '" << name
               << "' at (" << worldPos.x << ", " << worldPos.y << ")\n";
     return true;

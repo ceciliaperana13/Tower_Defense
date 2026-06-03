@@ -38,6 +38,11 @@ struct PlacedTower {
     int          dataId = 0;
     sf::Vector2f position;
     sf::Sprite   sprite;
+
+    PlacedTower(int id, sf::Vector2f pos, const sf::Texture& tex)
+        : dataId(id),
+          position(pos),
+          sprite(tex) {}
 };
 
 // ─────────────────────────────────────────────
