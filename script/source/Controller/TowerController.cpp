@@ -5,11 +5,6 @@
 using json = nlohmann::json;
 
 // ─────────────────────────────────────────────
-// Constructeur
-// ─────────────────────────────────────────────
-TowerController::TowerController() = default;
-
-// ─────────────────────────────────────────────
 // loadFromJson
 // ─────────────────────────────────────────────
 bool TowerController::loadFromJson(const std::string& jsonPath) {
@@ -27,20 +22,20 @@ bool TowerController::loadFromJson(const std::string& jsonPath) {
         return false;
     }
 
-    // Parcours récursif de tous les niveaux du JSON
-    // Structure attendue : { "lvl1": { "basic": {...} }, "lvl2": { "fire": {...}, ... } }
+    // Structure attendue :
+    //   { "lvl1": { "basic": { "attackdatas": {...}, "paths": {...} } },
+    //     "lvl2": { "fire":  { ... }, "ice": { ... } } }
     for (auto& [levelKey, levelNode] : root.items()) {
         if (!levelNode.is_object()) continue;
         for (auto& [towerName, towerNode] : levelNode.items()) {
-            // Ignorer les sous-niveaux imbriqués (ex: "lvl2" imbriqué dans "lvl1")
             if (towerNode.contains("attackdatas")) {
+                // Nœud direct
                 parseTowerEntry(towerName, towerNode);
-            } else {
-                // Niveau imbriqué (ex: lvl1 → lvl2 → fire …)
+            } else if (towerNode.is_object()) {
+                // Niveau imbriqué supplémentaire
                 for (auto& [subName, subNode] : towerNode.items()) {
-                    if (subNode.contains("attackdatas")) {
+                    if (subNode.contains("attackdatas"))
                         parseTowerEntry(subName, subNode);
-                    }
                 }
             }
         }
@@ -51,59 +46,62 @@ bool TowerController::loadFromJson(const std::string& jsonPath) {
 }
 
 // ─────────────────────────────────────────────
-// parseTowerEntry (helper privé)
+// parseTowerEntry
 // ─────────────────────────────────────────────
 void TowerController::parseTowerEntry(const std::string& name, const json& node) {
     TowerData data;
     data.name = name;
     data.id   = node.value("id", 0);
 
-    // --- AttackData ---
-    const auto& ad       = node["attackdatas"];
-    data.attackData.damage         = ad.value("damage",         0.f);
-    data.attackData.range          = ad.value("range",          0.f);
-    data.attackData.fireRate       = ad.value("firerate",       0.f);
-    data.attackData.damagePerSecond= ad.value("damagepersecond",0.f);
-    data.attackData.slowness       = ad.value("slowness",       0.f);
-    data.attackData.effectDuration = ad.value("effectduration", 0.f);
-    data.attackData.aoeRadius      = ad.value("aoeradius",      0.f);
-    data.attackData.nbTarget       = ad.value("nbtarget",       1);
+    // AttackData
+    const auto& ad          = node["attackdatas"];
+    data.attackData.damage          = ad.value("damage",          0.f);
+    data.attackData.range           = ad.value("range",           0.f);
+    data.attackData.fireRate        = ad.value("firerate",        0.f);
+    data.attackData.damagePerSecond = ad.value("damagepersecond", 0.f);
+    data.attackData.slowness        = ad.value("slowness",        0.f);
+    data.attackData.effectDuration  = ad.value("effectduration",  0.f);
+    data.attackData.aoeRadius       = ad.value("aoeradius",       0.f);
+    data.attackData.nbTarget        = ad.value("nbtarget",        1);
 
-    // --- Sprite paths ---
-    data.buildingSpritePath    = node["paths"].value("building",   "");
-    data.projectileSpritePath  = node["paths"].value("projectile", "");
+    // Chemins sprites
+    if (node.contains("paths")) {
+        data.buildingSpritePath   = node["paths"].value("building",   "");
+        data.projectileSpritePath = node["paths"].value("projectile", "");
+    }
 
-    // --- Chargement des textures ---
+    // Chargement texture bâtiment
     {
         sf::Texture tex;
-        if (tex.loadFromFile(data.buildingSpritePath)) {
+        if (!data.buildingSpritePath.empty() && tex.loadFromFile(data.buildingSpritePath)) {
             buildingTextures_[name] = std::move(tex);
         } else {
-            std::cerr << "[TowerController] Missing building sprite for '" << name
-                      << "': " << data.buildingSpritePath << "\n";
-            // Texture de remplacement : carré coloré 32x32
+            std::cerr << "[TowerController] Missing building sprite for '"
+                      << name << "': " << data.buildingSpritePath << "\n";
             sf::Image img({32, 32}, sf::Color(180, 180, 180));
             buildingTextures_[name].loadFromImage(img);
         }
     }
+
+    // Chargement texture projectile
     {
         sf::Texture tex;
-        if (tex.loadFromFile(data.projectileSpritePath)) {
+        if (!data.projectileSpritePath.empty() && tex.loadFromFile(data.projectileSpritePath)) {
             projectileTextures_[name] = std::move(tex);
         } else {
-            std::cerr << "[TowerController] Missing projectile sprite for '" << name
-                      << "': " << data.projectileSpritePath << "\n";
-            sf::Image img({8, 8}, sf::Color(255, 255, 0));
+            std::cerr << "[TowerController] Missing projectile sprite for '"
+                      << name << "': " << data.projectileSpritePath << "\n";
+            sf::Image img({8, 8}, sf::Color(255, 220, 0));
             projectileTextures_[name].loadFromImage(img);
         }
     }
 
     towerDefs_[name] = std::move(data);
-    std::cout << "[TowerController] Registered tower: " << name << "\n";
+    std::cout << "[TowerController] Registered: " << name << "\n";
 }
 
 // ─────────────────────────────────────────────
-// Accesseurs textures / données
+// Accesseurs
 // ─────────────────────────────────────────────
 const sf::Texture* TowerController::getBuildingTexture(const std::string& name) const {
     auto it = buildingTextures_.find(name);
@@ -160,9 +158,8 @@ bool TowerController::placeTower(sf::Vector2f worldPos) {
     pt.position = worldPos;
     pt.sprite.setTexture(*tex);
 
-    // Centre le sprite sur la position cliquée
     sf::FloatRect bounds = pt.sprite.getLocalBounds();
-    pt.sprite.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+    pt.sprite.setOrigin({ bounds.size.x / 2.f, bounds.size.y / 2.f });
     pt.sprite.setPosition(worldPos);
 
     placedTowers_.push_back(std::move(pt));
@@ -172,27 +169,25 @@ bool TowerController::placeTower(sf::Vector2f worldPos) {
 }
 
 // ─────────────────────────────────────────────
-// drawGhost : aperçu semi-transparent sous le curseur
+// drawGhost
 // ─────────────────────────────────────────────
 void TowerController::drawGhost(sf::RenderWindow& window, sf::Vector2f mousePos) const {
     if (!selected_) return;
-
     const sf::Texture* tex = getBuildingTexture(*selected_);
     if (!tex) return;
 
     sf::Sprite ghost(*tex);
     sf::FloatRect bounds = ghost.getLocalBounds();
-    ghost.setOrigin({bounds.size.x / 2.f, bounds.size.y / 2.f});
+    ghost.setOrigin({ bounds.size.x / 2.f, bounds.size.y / 2.f });
     ghost.setPosition(mousePos);
-    ghost.setColor(sf::Color(255, 255, 255, 160)); // transparent
+    ghost.setColor(sf::Color(255, 255, 255, 160));
     window.draw(ghost);
 }
 
 // ─────────────────────────────────────────────
-// drawPlaced : toutes les tours posées
+// drawPlaced
 // ─────────────────────────────────────────────
 void TowerController::drawPlaced(sf::RenderWindow& window) const {
-    for (const auto& pt : placedTowers_) {
+    for (const auto& pt : placedTowers_)
         window.draw(pt.sprite);
-    }
 }
