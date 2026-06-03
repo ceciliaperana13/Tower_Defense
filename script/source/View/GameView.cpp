@@ -6,6 +6,7 @@ static void loadTex(sf::Texture& tex, const std::string& path) {
         std::cerr << "[GameView] Missing texture: " << path << "\n";
 }
 
+// ─── Constructeur ─────────────────────────────────────────────────────────────
 GameView::GameView(sf::RenderWindow& window,
                    Map& map,
                    WaveManager& waveManager,
@@ -20,61 +21,98 @@ GameView::GameView(sf::RenderWindow& window,
 {
     buildUI();
 
-    // TimerView
     if (!m_timerView.load("../assets/sprites/icons/timer.png",
                           "C:/Windows/Fonts/arialbd.ttf"))
         std::cerr << "[GameView] TimerView: missing assets.\n";
 
     m_timerView.setScale(sf::Vector2f(1.5f, 1.5f));
-    m_timerView.setPosition(sf::Vector2f(WIN_W / 2.f - 32.f, 8.f));
+    // Centré horizontalement, dans la zone carte
+    m_timerView.setPosition(sf::Vector2f(float(WIN_W) / 2.f - 48.f, 8.f));
 }
 
+// ─── makePanelShape ───────────────────────────────────────────────────────────
 sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
-                                            float uiX, float uiY,
-                                            float uiW, float uiH) const {
-    sf::RectangleShape shape({ toWinW(uiW), toWinH(uiH) });
-    shape.setPosition({ toWinX(uiX), toWinY(uiY) });
+                                            float px, float py,
+                                            float pw, float ph) const {
+    sf::RectangleShape shape({ pw, ph });
+    shape.setPosition({ px, py });
     shape.setTexture(&tex);
+    shape.setFillColor(sf::Color::White);
     return shape;
 }
 
+// ─── buildUI ──────────────────────────────────────────────────────────────────
 void GameView::buildUI() {
     loadTex(m_topPanelTex,   "../assets/sprites/buttons/top_panel.png");
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
     loadTex(m_heartPanelTex, "../assets/sprites/buttons/heart_pannel.png");
 
-    m_topPanel   = makePanelShape(m_topPanelTex,    0.f,  0.f, 192.f, 32.f);
-    m_goldPanel  = makePanelShape(m_goldPanelTex,  192.f, 16.f,  64.f, 32.f);
-    m_heartPanel = makePanelShape(m_heartPanelTex, 192.f, 48.f,  64.f, 32.f);
+    // ── Panels ───────────────────────────────────────────────────────────────
+    // Panel principal BUILD : 0→192 logique = toute la zone gauche
+    m_topPanel = makePanelShape(
+        m_topPanelTex,
+        0.f,           MAP_H,
+        toWinW(192.f), UI_H
+    );
+    // Gold : demi-hauteur supérieure, après le panel principal
+    m_goldPanel = makePanelShape(
+        m_goldPanelTex,
+        toWinX(192.f), MAP_H,
+        toWinW(64.f),  UI_H / 2.f
+    );
+    // Heart : demi-hauteur inférieure
+    m_heartPanel = makePanelShape(
+        m_heartPanelTex,
+        toWinX(192.f), MAP_H + UI_H / 2.f,
+        toWinW(64.f),  UI_H / 2.f
+    );
 
-    struct BtnDef { const char* path; float x, y, w, h; };
+    // ── Boutons tours ────────────────────────────────────────────────────────
+    // Espace logique 320x96 — on remplit toute la hauteur UI
+    struct BtnDef { const char* path; float x, y, w, h; const char* type; };
     constexpr BtnDef defs[] = {
-        { "../assets/sprites/buttons/buy_normal_tower_button.png",  0.f, 32.f, 64.f, 64.f },
-        { "../assets/sprites/buttons/fire_button.png",             64.f, 32.f, 32.f, 32.f },
-        { "../assets/sprites/buttons/ice_button.png",              96.f, 32.f, 32.f, 32.f },
-        { "../assets/sprites/buttons/earth_button.png",            64.f, 64.f, 32.f, 32.f },
-        { "../assets/sprites/buttons/arcane_button.png",           96.f, 64.f, 32.f, 32.f },
+        // Bouton BUILD (tour basique) : occupe colonne 0-64 pleine hauteur
+        { "../assets/sprites/buttons/buy_normal_tower_button.png",  0.f,  0.f, 64.f, 96.f, "basic"  },
+        // 4 boutons upgrade : colonne 64-128, rangés 2x2
+        { "../assets/sprites/buttons/fire_button.png",             64.f,  0.f, 32.f, 48.f, "fire"   },
+        { "../assets/sprites/buttons/ice_button.png",              96.f,  0.f, 32.f, 48.f, "ice"    },
+        { "../assets/sprites/buttons/earth_button.png",            64.f, 48.f, 32.f, 48.f, "rock"   },
+        { "../assets/sprites/buttons/arcane_button.png",           96.f, 48.f, 32.f, 48.f, "arcane" },
     };
 
     m_towerButtons.reserve(5);
+    m_towerTypes.reserve(5);
     for (const auto& d : defs) {
         float cx = toWinX(d.x) + toWinW(d.w) / 2.f;
-        float cy = toWinY(d.y) + toWinH(d.h) / 2.f;
-        m_towerButtons.emplace_back(d.path, cx, cy, toWinW(d.w), toWinH(d.h),
+        float cy = toUIY(d.y)  + toUIH(d.h)  / 2.f;
+        m_towerButtons.emplace_back(d.path, cx, cy,
+                                    toWinW(d.w), toUIH(d.h),
                                     MenuAction::None);
+        m_towerTypes.push_back(d.type);
     }
 
-    m_sellButton.emplace("../assets/sprites/buttons/sell_tower_button.png",
-                         toWinX(128.f) + toWinW(64.f) / 2.f,
-                         toWinY(32.f)  + toWinH(64.f) / 2.f,
-                         toWinW(64.f), toWinH(64.f), MenuAction::None);
+    // ── SELL : colonne 128-192, pleine hauteur ────────────────────────────────
+    m_sellButton.emplace(
+        "../assets/sprites/buttons/sell_tower_button.png",
+        toWinX(128.f) + toWinW(64.f) / 2.f,
+        toUIY(0.f)    + toUIH(96.f)  / 2.f,
+        toWinW(64.f),  toUIH(96.f),
+        MenuAction::None
+    );
 
-    m_backButton.emplace("../assets/sprites/buttons/back_to_main_menu_button.png",
-                         toWinX(272.f) + toWinW(128.f) / 2.f,
-                         toWinY(0.f)   + toWinH(32.f)  / 2.f,
-                         toWinW(128.f), toWinH(32.f), MenuAction::Exit);
+    // ── BACK : ancré à droite, colonne 272-320 x pleine hauteur ──────────────
+    // On utilise WIN_W pour le coller au bord droit
+    float backW = toWinW(128.f);
+    m_backButton.emplace(
+        "../assets/sprites/buttons/back_to_main_menu_button.png",
+        float(WIN_W) - backW / 2.f - (float(WIN_W) - toWinX(320.f)) / 2.f,
+        toUIY(0.f) + toUIH(96.f) / 2.f,
+        backW, toUIH(96.f),
+        MenuAction::Exit
+    );
 }
 
+// ─── makeLetterboxView ────────────────────────────────────────────────────────
 sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     float contentRatio = float(WIN_W) / float(WIN_H);
     float screenRatio  = float(screenW) / float(screenH);
@@ -93,41 +131,42 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
         viewportY = (1.f - viewportH) / 2.f;
     }
 
-    // 🔥 AGRANDIR LA MAP
     sf::View view(sf::FloatRect(
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(WIN_W, WIN_H * 1.35f)
+        sf::Vector2f(float(WIN_W), float(WIN_H))
     ));
-
     view.setViewport(sf::FloatRect(
         sf::Vector2f(viewportX, viewportY),
         sf::Vector2f(viewportW, viewportH)
     ));
-
     return view;
 }
 
-void GameView::update(float dt) {
-    m_waveManager.update(dt);
-    m_timer.update(dt);
+// ─── update ───────────────────────────────────────────────────────────────────
+void GameView::update(float /*dt*/) {
     m_timerView.update();
 }
 
+// ─── render ───────────────────────────────────────────────────────────────────
 void GameView::render() {
     drawMap();
     drawEnemies();
     drawUIBar();
+    m_window.draw(m_timerView);
 }
 
+// ─── drawMap ──────────────────────────────────────────────────────────────────
 void GameView::drawMap() {
     m_map.draw(m_window, { 0.f, 0.f }, MAP_SCALE);
 }
 
+// ─── drawEnemies ──────────────────────────────────────────────────────────────
 void GameView::drawEnemies() {
     for (const auto& enemy : m_waveManager.getActiveEnemies())
         enemy->render(m_window);
 }
 
+// ─── drawUIBar ────────────────────────────────────────────────────────────────
 void GameView::drawUIBar() {
     m_window.draw(m_topPanel);
     m_window.draw(m_goldPanel);
@@ -138,50 +177,41 @@ void GameView::drawUIBar() {
 
     if (m_sellButton) m_sellButton->draw(m_window);
     if (m_backButton) m_backButton->draw(m_window);
-
-    m_window.draw(m_timerView);
 }
 
+// ─── getTowerTypeAt ───────────────────────────────────────────────────────────
+std::string GameView::getTowerTypeAt(sf::Vector2f logicalPos) const {
+    for (std::size_t i = 0; i < m_towerButtons.size(); ++i)
+        if (m_towerButtons[i].contains(logicalPos))
+            return m_towerTypes[i];
+    return "";
+}
+
+// ─── updateHover ──────────────────────────────────────────────────────────────
 void GameView::updateHover(sf::Vector2f mousePos) {
     for (auto& btn : m_towerButtons)
         btn.setHovered(btn.contains(mousePos));
-
     if (m_sellButton) m_sellButton->setHovered(m_sellButton->contains(mousePos));
     if (m_backButton) m_backButton->setHovered(m_backButton->contains(mousePos));
 }
 
-void GameView::updateHoverAt(sf::Vector2f logicalPos) {
-    updateHover(logicalPos);
+void GameView::updateHoverAt(sf::Vector2f logicalPos) { updateHover(logicalPos); }
 
-    // 🔥 Déplacement du ghost
-    if (!m_towerButtons.empty())
-        m_towerController.setGhostPosition(logicalPos);
-}
-
+// ─── handleClickAt ────────────────────────────────────────────────────────────
 MenuAction GameView::handleClickAt(sf::Vector2f logicalPos) {
-    // Boutons de tours → sélection
-    for (size_t i = 0; i < m_towerButtons.size(); ++i) {
-        if (m_towerButtons[i].contains(logicalPos)) {
-            m_towerController.selectTower("basic");
-            return MenuAction::None;
-        }
-    }
+    // Les boutons tours sont traités via getTowerTypeAt dans main.cpp
+    for (const auto& btn : m_towerButtons)
+        if (btn.contains(logicalPos)) return MenuAction::None;
 
-    // Placement tour
-    if (m_towerController.hasSelection())
-        m_towerController.placeTower(logicalPos);
-
-    // Sell
     if (m_sellButton && m_sellButton->contains(logicalPos))
         return m_sellButton->getAction();
-
-    // Back
     if (m_backButton && m_backButton->contains(logicalPos))
         return m_backButton->getAction();
 
     return MenuAction::None;
 }
 
-MenuAction GameView::handleEvent(const sf::Event& event) {
+// ─── handleEvent ──────────────────────────────────────────────────────────────
+MenuAction GameView::handleEvent(const sf::Event& /*event*/) {
     return MenuAction::None;
 }

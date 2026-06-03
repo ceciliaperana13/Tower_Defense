@@ -19,7 +19,7 @@ static bool s_fullscreen = false;
 static sf::View windowedView() {
     return sf::View(sf::FloatRect(
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(WIN_W, WIN_H)
+        sf::Vector2f(float(WIN_W), float(WIN_H))
     ));
 }
 
@@ -36,19 +36,16 @@ static void openWindowed(sf::RenderWindow& window) {
 
 static void openFullscreen(sf::RenderWindow& window) {
     auto desk = sf::VideoMode::getDesktopMode();
-
     window.create(
         sf::VideoMode(sf::Vector2u(desk.size.x, desk.size.y)),
         "Defend the Castle",
         sf::State::Fullscreen
     );
     window.setFramerateLimit(60);
-
     window.setView(sf::View(sf::FloatRect(
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(WIN_W, WIN_H)
+        sf::Vector2f(float(WIN_W), float(WIN_H))
     )));
-
     s_fullscreen = true;
 }
 
@@ -58,14 +55,10 @@ static void toggleFullscreen(sf::RenderWindow& window) {
 }
 
 static void refreshView(sf::RenderWindow& window) {
-    if (s_fullscreen) {
-        window.setView(sf::View(sf::FloatRect(
-            sf::Vector2f(0.f, 0.f),
-            sf::Vector2f(WIN_W, WIN_H)
-        )));
-    } else {
-        window.setView(windowedView());
-    }
+    window.setView(sf::View(sf::FloatRect(
+        sf::Vector2f(0.f, 0.f),
+        sf::Vector2f(float(WIN_W), float(WIN_H))
+    )));
 }
 
 int main() {
@@ -126,53 +119,81 @@ int main() {
                 float dt = clock.restart().asSeconds();
                 if (dt > 0.1f) dt = 0.1f;
 
+                // Vue letterbox recalculée à chaque frame
+                sf::View view = GameView::makeLetterboxView(
+                    window.getSize().x, window.getSize().y);
+                window.setView(view);
+
+                // ── Événements ───────────────────────────────────────────
                 while (const auto event = window.pollEvent()) {
-                    if (event->is<sf::Event::Closed>())
+
+                    if (event->is<sf::Event::Closed>()) {
                         window.close();
+                        break;
+                    }
 
                     if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
                         if (kp->code == sf::Keyboard::Key::F11)
                             toggleFullscreen(window);
 
+                        // Annule la sélection de tour en cours
+                        if (kp->code == sf::Keyboard::Key::Escape)
+                            towerController.selectTower("");
+
+                        // Vague suivante
                         if (kp->code == sf::Keyboard::Key::Space &&
                             waveManager.isWaveComplete())
                             waveManager.startNextWave();
                     }
 
-                    sf::View view = GameView::makeLetterboxView(
-                        window.getSize().x, window.getSize().y);
-                    window.setView(view);
-
                     if (const auto* mm = event->getIf<sf::Event::MouseMoved>()) {
                         auto worldPos = window.mapPixelToCoords(mm->position, view);
+                        towerController.setGhostPosition(worldPos);
                         gameView.updateHoverAt(worldPos);
                     }
-                    else if (const auto* mb = event->getIf<sf::Event::MouseButtonPressed>()) {
+
+                    if (const auto* mb = event->getIf<sf::Event::MouseButtonPressed>()) {
+                        auto worldPos = window.mapPixelToCoords(mb->position, view);
+
                         if (mb->button == sf::Mouse::Button::Left) {
-                            auto worldPos = window.mapPixelToCoords(mb->position, view);
-                            if (gameView.handleClickAt(worldPos) == MenuAction::Exit)
-                                goto backToMenu;
+
+                            // 1) Clic sur un bouton de tour dans l'UI ?
+                            std::string type = gameView.getTowerTypeAt(worldPos);
+                            if (!type.empty()) {
+                                towerController.selectTower(type);
+                            }
+                            else {
+                                // 2) Clic sur Back / Sell ?
+                                MenuAction act = gameView.handleClickAt(worldPos);
+                                if (act == MenuAction::Exit)
+                                    goto backToMenu;
+
+                                // 3) Clic sur la carte → poser la tour
+                                if (act == MenuAction::None &&
+                                    towerController.hasSelection() &&
+                                    worldPos.y < MAP_H)
+                                {
+                                    towerController.placeTower(worldPos);
+                                }
+                            }
                         }
-                    }
-                    else {
-                        if (gameView.handleEvent(*event) == MenuAction::Exit)
-                            goto backToMenu;
+
+                        // Clic droit = annuler sélection
+                        if (mb->button == sf::Mouse::Button::Right)
+                            towerController.selectTower("");
                     }
                 }
 
-                float dtLogic = dt;
-                waveManager.update(dtLogic);
-                towerController.update(dtLogic, waveManager.getActiveEnemies());
-                timer.update(dtLogic);
-                gameView.update(dtLogic);
+                // ── Logique ───────────────────────────────────────────────
+                waveManager.update(dt);
+                towerController.update(dt, waveManager.getActiveEnemies());
+                timer.update(dt);
+                gameView.update(dt);
 
-                sf::View view = GameView::makeLetterboxView(
-                    window.getSize().x, window.getSize().y);
-                window.setView(view);
-
+                // ── Rendu ─────────────────────────────────────────────────
                 window.clear(sf::Color::Black);
-                gameView.render();
-                towerController.render(window);
+                gameView.render();              // map + ennemis + UI
+                towerController.render(window); // tours + projectiles + fantôme
                 window.display();
             }
 
