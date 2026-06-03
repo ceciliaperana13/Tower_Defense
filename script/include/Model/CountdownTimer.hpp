@@ -3,15 +3,19 @@
 
 class CountdownTimer {
 public:
-    CountdownTimer(float durationSec = 100.f);
+    CountdownTimer(float durationSec);
 
     void setDuration(float sec);
     void start();
+
     float remaining() const;
-    bool isFinished();
+    bool  isFinished();
+
+    // 🔥 Ajout SFML3 : pour main.cpp
+    void update(float dt);
 
 private:
-    float duration;
+    float     duration;
+    bool      finished;
     sf::Clock clock;
-    bool finished;
 };

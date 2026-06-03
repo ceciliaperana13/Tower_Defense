@@ -12,12 +12,10 @@
 #include "Model/Map.hpp"
 #include "Model/WaveManager.hpp"
 #include "Model/Enemy.hpp"
+#include "Model/CountdownTimer.hpp"
 
 static bool s_fullscreen = false;
 
-// ─────────────────────────────────────────────
-// Vue fenêtrée
-// ─────────────────────────────────────────────
 static sf::View windowedView() {
     return sf::View(sf::FloatRect(
         sf::Vector2f(0.f, 0.f),
@@ -25,9 +23,6 @@ static sf::View windowedView() {
     ));
 }
 
-// ─────────────────────────────────────────────
-// Ouvrir en mode fenêtré
-// ─────────────────────────────────────────────
 static void openWindowed(sf::RenderWindow& window) {
     window.create(
         sf::VideoMode(sf::Vector2u(WIN_W, WIN_H)),
@@ -39,9 +34,6 @@ static void openWindowed(sf::RenderWindow& window) {
     s_fullscreen = false;
 }
 
-// ─────────────────────────────────────────────
-// Ouvrir en plein écran
-// ─────────────────────────────────────────────
 static void openFullscreen(sf::RenderWindow& window) {
     auto desk = sf::VideoMode::getDesktopMode();
 
@@ -60,17 +52,11 @@ static void openFullscreen(sf::RenderWindow& window) {
     s_fullscreen = true;
 }
 
-// ─────────────────────────────────────────────
-// Toggle fullscreen
-// ─────────────────────────────────────────────
 static void toggleFullscreen(sf::RenderWindow& window) {
     if (s_fullscreen) openWindowed(window);
     else              openFullscreen(window);
 }
 
-// ─────────────────────────────────────────────
-// Rafraîchir la vue
-// ─────────────────────────────────────────────
 static void refreshView(sf::RenderWindow& window) {
     if (s_fullscreen) {
         window.setView(sf::View(sf::FloatRect(
@@ -82,9 +68,6 @@ static void refreshView(sf::RenderWindow& window) {
     }
 }
 
-// ─────────────────────────────────────────────
-// MAIN
-// ─────────────────────────────────────────────
 int main() {
     sf::RenderWindow window;
     openWindowed(window);
@@ -133,7 +116,7 @@ int main() {
             CountdownTimer timer(120.f);
 
             TowerController towerController;
-            towerController.loadFromJson("../assets/data/towers.json");
+            towerController.loadFromJson("../assets/data/tower_values.json");
 
             GameView gameView(window, map, waveManager, timer, towerController);
 
@@ -144,12 +127,9 @@ int main() {
                 if (dt > 0.1f) dt = 0.1f;
 
                 while (const auto event = window.pollEvent()) {
-
-                    // Fermeture fenêtre
                     if (event->is<sf::Event::Closed>())
                         window.close();
 
-                    // Touche clavier
                     if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
                         if (kp->code == sf::Keyboard::Key::F11)
                             toggleFullscreen(window);
@@ -159,36 +139,40 @@ int main() {
                             waveManager.startNextWave();
                     }
 
-                    sf::View view = window.getView();
+                    sf::View view = GameView::makeLetterboxView(
+                        window.getSize().x, window.getSize().y);
+                    window.setView(view);
 
-                    // Souris déplacée
                     if (const auto* mm = event->getIf<sf::Event::MouseMoved>()) {
-                        gameView.updateHoverAt(
-                            window.mapPixelToCoords(mm->position, view)
-                        );
+                        auto worldPos = window.mapPixelToCoords(mm->position, view);
+                        gameView.updateHoverAt(worldPos);
                     }
-
-                    // Clic souris
                     else if (const auto* mb = event->getIf<sf::Event::MouseButtonPressed>()) {
                         if (mb->button == sf::Mouse::Button::Left) {
-                            auto pos = window.mapPixelToCoords(mb->position, view);
-                            if (gameView.handleClickAt(pos) == MenuAction::Exit)
+                            auto worldPos = window.mapPixelToCoords(mb->position, view);
+                            if (gameView.handleClickAt(worldPos) == MenuAction::Exit)
                                 goto backToMenu;
                         }
                     }
-
-                    // Autres events
                     else {
                         if (gameView.handleEvent(*event) == MenuAction::Exit)
                             goto backToMenu;
                     }
                 }
 
-                gameView.update(dt);
+                float dtLogic = dt;
+                waveManager.update(dtLogic);
+                towerController.update(dtLogic, waveManager.getActiveEnemies());
+                timer.update(dtLogic);
+                gameView.update(dtLogic);
 
-                refreshView(window);
+                sf::View view = GameView::makeLetterboxView(
+                    window.getSize().x, window.getSize().y);
+                window.setView(view);
+
                 window.clear(sf::Color::Black);
                 gameView.render();
+                towerController.render(window);
                 window.display();
             }
 

@@ -1,194 +1,204 @@
 #include "TowerController.hpp"
+#include "json.hpp"
 #include <fstream>
 #include <iostream>
+#include <cmath>
 
 using json = nlohmann::json;
 
-// ─────────────────────────────────────────────
-// loadFromJson
-// ─────────────────────────────────────────────
-bool TowerController::loadFromJson(const std::string& jsonPath) {
-    std::ifstream file(jsonPath);
-    if (!file.is_open()) {
-        std::cerr << "[TowerController] Cannot open: " << jsonPath << "\n";
+static float length(sf::Vector2f v) {
+    return std::sqrt(v.x * v.x + v.y * v.y);
+}
+
+TowerController::TowerController()
+    : m_ghostSprite(m_basicTex) // SFML3 : sprite doit être construit avec texture
+{
+}
+
+bool TowerController::loadFromJson(const std::string& path) {
+    std::ifstream ifs(path);
+    if (!ifs.is_open()) {
+        std::cerr << "[TowerController] Cannot open " << path << "\n";
         return false;
     }
 
-    json root;
+    json j;
+    ifs >> j;
+
     try {
-        file >> root;
-    } catch (const json::parse_error& e) {
+        auto& basic = j["lvl1"]["basic"];
+        m_basicDef.id = basic["id"].get<int>();
+
+        auto& ad = basic["attackdatas"];
+        m_basicDef.attack.damage           = ad["damage"].get<int>();
+        m_basicDef.attack.range            = ad["range"].get<float>();
+        m_basicDef.attack.fireRate         = ad["firerate"].get<float>();
+        m_basicDef.attack.damagePerSecond  = ad["damagepersecond"].get<float>();
+        m_basicDef.attack.slowness         = ad["slowness"].get<float>();
+        m_basicDef.attack.effectDuration   = ad["effectduration"].get<float>();
+        m_basicDef.attack.aoeRadius        = ad["aoeradius"].get<float>();
+        m_basicDef.attack.nbTarget         = ad["nbtarget"].get<int>();
+
+        auto& paths = basic["paths"];
+        m_basicDef.buildingPath   = paths["building"].get<std::string>();
+        m_basicDef.projectilePath = paths["projectile"].get<std::string>();
+    }
+    catch (std::exception& e) {
         std::cerr << "[TowerController] JSON parse error: " << e.what() << "\n";
         return false;
     }
 
-    for (auto& [levelKey, levelNode] : root.items()) {
-        if (!levelNode.is_object()) continue;
-
-        for (auto& [towerName, towerNode] : levelNode.items()) {
-            if (towerNode.contains("attackdatas")) {
-                parseTowerEntry(towerName, towerNode);
-            }
-            else if (towerNode.is_object()) {
-                for (auto& [subName, subNode] : towerNode.items()) {
-                    if (subNode.contains("attackdatas"))
-                        parseTowerEntry(subName, subNode);
-                }
-            }
-        }
+    // Charger sprite tour
+    if (!m_basicTex.loadFromFile("../assets/" + m_basicDef.buildingPath.substr(3))) {
+        std::cerr << "[TowerController] Missing building texture: "
+                  << m_basicDef.buildingPath << "\n";
     }
 
-    std::cout << "[TowerController] Loaded " << towerDefs_.size() << " tower(s).\n";
+    // Charger sprite projectile
+    if (!m_basicProjectileTex.loadFromFile("../assets/" + m_basicDef.projectilePath.substr(3))) {
+        std::cerr << "[TowerController] Missing projectile texture: "
+                  << m_basicDef.projectilePath << "\n";
+    }
+
+    // Ghost
+    m_ghostSprite = sf::Sprite(m_basicTex);
+    m_ghostSprite.setColor(sf::Color(255, 255, 255, 150));
+    m_ghostSprite.setOrigin(sf::Vector2f(
+        m_basicTex.getSize().x / 2.f,
+        m_basicTex.getSize().y / 2.f
+    ));
+    m_ghostSprite.setScale(sf::Vector2f(2.f, 2.f));
+
     return true;
 }
 
-// ─────────────────────────────────────────────
-// parseTowerEntry
-// ─────────────────────────────────────────────
-void TowerController::parseTowerEntry(const std::string& name, const json& node) {
-    TowerData data;
-    data.name = name;
-    data.id   = node.value("id", 0);
+void TowerController::selectBasic() {
+    m_hasSelection = true;
+    m_ghostVisible = true;
+    m_ghostSprite.setTexture(m_basicTex);
+}
 
-    const auto& ad = node["attackdatas"];
-    data.attackData.damage          = ad.value("damage",          0.f);
-    data.attackData.range           = ad.value("range",           0.f);
-    data.attackData.fireRate        = ad.value("firerate",        0.f);
-    data.attackData.damagePerSecond = ad.value("damagepersecond", 0.f);
-    data.attackData.slowness        = ad.value("slowness",        0.f);
-    data.attackData.effectDuration  = ad.value("effectduration",  0.f);
-    data.attackData.aoeRadius       = ad.value("aoeradius",       0.f);
-    data.attackData.nbTarget        = ad.value("nbtarget",        1);
+void TowerController::clearSelection() {
+    m_hasSelection = false;
+    m_ghostVisible = false;
+}
 
-    if (node.contains("paths")) {
-        data.buildingSpritePath   = node["paths"].value("building",   "");
-        data.projectileSpritePath = node["paths"].value("projectile", "");
+void TowerController::setGhostPosition(sf::Vector2f worldPos) {
+    if (!m_hasSelection) return;
+    m_ghostVisible = true;
+    m_ghostSprite.setPosition(worldPos);
+}
+
+void TowerController::placeCurrentTower(sf::Vector2f worldPos) {
+    if (!m_hasSelection) return;
+
+    Tower t(m_basicTex);
+    t.position     = worldPos;
+    t.attack       = m_basicDef.attack;
+    t.fireCooldown = 0.f;
+
+    t.sprite.setOrigin(sf::Vector2f(
+        m_basicTex.getSize().x / 2.f,
+        m_basicTex.getSize().y / 2.f
+    ));
+    t.sprite.setScale(sf::Vector2f(2.f, 2.f));
+    t.sprite.setPosition(worldPos);
+
+    m_towers.push_back(t);
+}
+
+Enemy* TowerController::findTarget(const Tower& tower,
+                                   const std::vector<std::unique_ptr<Enemy>>& enemies) {
+    Enemy* best = nullptr;
+    float bestDist = 0.f;
+
+    for (auto& e : enemies) {
+        if (e->isDead() || e->hasReached()) continue;
+
+        sf::Vector2f enemyPos = e->getPosition();
+        float d = length(enemyPos - tower.position);
+
+        if (d <= tower.attack.range * 64.f) {
+            if (!best || d < bestDist) {
+                best = e.get();
+                bestDist = d;
+            }
+        }
     }
+    return best;
+}
 
-    // ─────────────────────────────────────────────
-    // Chargement texture bâtiment
-    // ─────────────────────────────────────────────
-    {
-        sf::Texture tex;
-        if (!data.buildingSpritePath.empty() && tex.loadFromFile(data.buildingSpritePath)) {
-            buildingTextures_[name] = std::move(tex);
-        } else {
-            std::cerr << "[TowerController] Missing building sprite for '"
-                      << name << "': " << data.buildingSpritePath << "\n";
+void TowerController::fireFromTower(Tower& tower,
+                                    const std::vector<std::unique_ptr<Enemy>>& enemies,
+                                    float dt) {
+    tower.fireCooldown -= dt;
+    if (tower.fireCooldown > 0.f) return;
 
-            sf::Image img({32, 32}, sf::Color(180, 180, 180));
-            (void)buildingTextures_[name].loadFromImage(img); // ✔️ warning SFML3 supprimé
+    Enemy* target = findTarget(tower, enemies);
+    if (!target) return;
+
+    tower.fireCooldown = 1.f / tower.attack.fireRate;
+
+    Projectile p(m_basicProjectileTex);
+    p.sprite.setOrigin(sf::Vector2f(
+        m_basicProjectileTex.getSize().x / 2.f,
+        m_basicProjectileTex.getSize().y / 2.f
+    ));
+    p.sprite.setScale(sf::Vector2f(2.f, 2.f));
+    p.sprite.setPosition(tower.position);
+    p.damage = tower.attack.damage;
+
+    sf::Vector2f dir = target->getPosition() - tower.position;
+    float len = length(dir);
+    if (len == 0.f) return;
+    dir /= len;
+
+    p.velocity = dir * 250.f;
+    p.lifeTime = 2.f;
+
+    m_projectiles.push_back(p);
+}
+
+void TowerController::updateProjectiles(float dt,
+                                        const std::vector<std::unique_ptr<Enemy>>& enemies) {
+    for (auto& p : m_projectiles) {
+        p.lifeTime -= dt;
+        p.sprite.move(p.velocity * dt);
+
+        for (auto& e : enemies) {
+            if (e->isDead() || e->hasReached()) continue;
+
+            auto inter = p.sprite.getGlobalBounds().findIntersection(e->getBounds());
+            if (inter.has_value()) {
+                e->takeDamage(p.damage);
+                p.lifeTime = 0.f;
+                break;
+            }
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Chargement texture projectile
-    // ─────────────────────────────────────────────
-    {
-        sf::Texture tex;
-        if (!data.projectileSpritePath.empty() && tex.loadFromFile(data.projectileSpritePath)) {
-            projectileTextures_[name] = std::move(tex);
-        } else {
-            std::cerr << "[TowerController] Missing projectile sprite for '"
-                      << name << "': " << data.projectileSpritePath << "\n";
-
-            sf::Image img({8, 8}, sf::Color(255, 220, 0));
-            (void)projectileTextures_[name].loadFromImage(img); // ✔️ warning SFML3 supprimé
-        }
-    }
-
-    towerDefs_[name] = std::move(data);
-    std::cout << "[TowerController] Registered: " << name << "\n";
+    m_projectiles.erase(
+        std::remove_if(m_projectiles.begin(), m_projectiles.end(),
+                       [](const Projectile& p) { return p.lifeTime <= 0.f; }),
+        m_projectiles.end()
+    );
 }
 
-// ─────────────────────────────────────────────
-// Accesseurs
-// ─────────────────────────────────────────────
-const sf::Texture* TowerController::getBuildingTexture(const std::string& name) const {
-    auto it = buildingTextures_.find(name);
-    return (it != buildingTextures_.end()) ? &it->second : nullptr;
+void TowerController::update(float dt,
+                             const std::vector<std::unique_ptr<Enemy>>& enemies) {
+    for (auto& t : m_towers)
+        fireFromTower(t, enemies, dt);
+
+    updateProjectiles(dt, enemies);
 }
 
-const sf::Texture* TowerController::getProjectileTexture(const std::string& name) const {
-    auto it = projectileTextures_.find(name);
-    return (it != projectileTextures_.end()) ? &it->second : nullptr;
-}
+void TowerController::render(sf::RenderWindow& window) {
+    for (auto& t : m_towers)
+        window.draw(t.sprite);
 
-const TowerData* TowerController::getTowerData(const std::string& name) const {
-    auto it = towerDefs_.find(name);
-    return (it != towerDefs_.end()) ? &it->second : nullptr;
-}
+    for (auto& p : m_projectiles)
+        window.draw(p.sprite);
 
-// ─────────────────────────────────────────────
-// Sélection
-// ─────────────────────────────────────────────
-void TowerController::selectTower(const std::string& name) {
-    if (towerDefs_.count(name)) {
-        selected_ = name;
-        std::cout << "[TowerController] Selected: " << name << "\n";
-    } else {
-        std::cerr << "[TowerController] Unknown tower: " << name << "\n";
-    }
-}
-
-void TowerController::deselect() {
-    selected_.reset();
-}
-
-bool TowerController::hasSelection() const {
-    return selected_.has_value();
-}
-
-const std::string& TowerController::selectedName() const {
-    static const std::string empty;
-    return selected_ ? *selected_ : empty;
-}
-
-// ─────────────────────────────────────────────
-// placeTower
-// ─────────────────────────────────────────────
-bool TowerController::placeTower(sf::Vector2f worldPos) {
-    if (!selected_) return false;
-
-    const std::string& name = *selected_;
-    const sf::Texture* tex  = getBuildingTexture(name);
-    if (!tex) return false;
-
-    const auto& def = towerDefs_[name];
-
-    PlacedTower pt(def.id, worldPos, *tex);
-
-    sf::FloatRect bounds = pt.sprite.getLocalBounds();
-    pt.sprite.setOrigin(sf::Vector2f(bounds.size.x / 2.f, bounds.size.y / 2.f));
-    pt.sprite.setPosition(worldPos);
-
-    placedTowers_.push_back(std::move(pt));
-
-    std::cout << "[TowerController] Placed '" << name
-              << "' at (" << worldPos.x << ", " << worldPos.y << ")\n";
-    return true;
-}
-
-// ─────────────────────────────────────────────
-// drawGhost
-// ─────────────────────────────────────────────
-void TowerController::drawGhost(sf::RenderWindow& window, sf::Vector2f mousePos) const {
-    if (!selected_) return;
-    const sf::Texture* tex = getBuildingTexture(*selected_);
-    if (!tex) return;
-
-    sf::Sprite ghost(*tex);
-    sf::FloatRect bounds = ghost.getLocalBounds();
-    ghost.setOrigin({ bounds.size.x / 2.f, bounds.size.y / 2.f });
-    ghost.setPosition(mousePos);
-    ghost.setColor(sf::Color(255, 255, 255, 160));
-    window.draw(ghost);
-}
-
-// ─────────────────────────────────────────────
-// drawPlaced
-// ─────────────────────────────────────────────
-void TowerController::drawPlaced(sf::RenderWindow& window) const {
-    for (const auto& pt : placedTowers_)
-        window.draw(pt.sprite);
+    if (m_ghostVisible && m_hasSelection)
+        window.draw(m_ghostSprite);
 }

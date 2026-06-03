@@ -14,7 +14,7 @@
             },
             "paths" : {
                 "building" : "../sprites/towers/buildings/basic_tower.png",
-                "projectile" : "../sprites/towers/projectiles/basic_projectile.png"
+                "projectile" : "../sprites/towers/projectiles/normal_projectile.png"
             }
         },
         "lvl2" : {

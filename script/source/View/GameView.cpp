@@ -1,114 +1,80 @@
 #include "GameView.hpp"
 #include <iostream>
 
-// Conversion logique → écran (identité)
-static float toWinX(float x) { return x; }
-static float toWinY(float y) { return y; }
-static float toWinW(float w) { return w; }
-static float toWinH(float h) { return h; }
-
 static void loadTex(sf::Texture& tex, const std::string& path) {
     if (!tex.loadFromFile(path))
         std::cerr << "[GameView] Missing texture: " << path << "\n";
 }
 
-// ─────────────────────────────────────────────
-// Constructeur
-// ─────────────────────────────────────────────
-GameView::GameView(sf::RenderWindow& window, Map& map,
-                   WaveManager& waveManager, CountdownTimer& timer,
+GameView::GameView(sf::RenderWindow& window,
+                   Map& map,
+                   WaveManager& waveManager,
+                   CountdownTimer& timer,
                    TowerController& towerController)
     : m_window(window)
     , m_map(map)
     , m_waveManager(waveManager)
-    , m_countdownTimer(timer)
+    , m_timer(timer)
     , m_towerController(towerController)
     , m_timerView(timer)
-    , m_mousePos(0.f, 0.f)
 {
     buildUI();
 
-    // Timer en haut
+    // TimerView
     if (!m_timerView.load("../assets/sprites/icons/timer.png",
                           "C:/Windows/Fonts/arialbd.ttf"))
-        std::cerr << "[GameView] TimerView: assets manquants.\n";
+        std::cerr << "[GameView] TimerView: missing assets.\n";
 
-    float iconSize = toWinH(18.f);
-    m_timerView.setScale({ iconSize / 64.f, iconSize / 64.f });
-
-    m_timerView.setPosition(sf::Vector2f(
-        WIN_W / 2.f - toWinW(20.f),
-        8.f
-    ));
+    m_timerView.setScale(sf::Vector2f(1.5f, 1.5f));
+    m_timerView.setPosition(sf::Vector2f(WIN_W / 2.f - 32.f, 8.f));
 }
 
-// ─────────────────────────────────────────────
-// makePanelShape
-// ─────────────────────────────────────────────
 sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
                                             float uiX, float uiY,
                                             float uiW, float uiH) const {
-    sf::RectangleShape shape(
-        sf::Vector2f(toWinW(uiW), toWinH(uiH))
-    );
-    shape.setPosition(sf::Vector2f(toWinX(uiX), toWinY(uiY)));
+    sf::RectangleShape shape({ toWinW(uiW), toWinH(uiH) });
+    shape.setPosition({ toWinX(uiX), toWinY(uiY) });
     shape.setTexture(&tex);
     return shape;
 }
 
-// ─────────────────────────────────────────────
-// buildUI — UI EN BAS
-// ─────────────────────────────────────────────
 void GameView::buildUI() {
     loadTex(m_topPanelTex,   "../assets/sprites/buttons/top_panel.png");
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
     loadTex(m_heartPanelTex, "../assets/sprites/buttons/heart_pannel.png");
 
-    float baseY = MAP_H;
-
-    m_topPanel   = makePanelShape(m_topPanelTex,    0.f,  baseY,     192.f, 32.f);
-    m_goldPanel  = makePanelShape(m_goldPanelTex,  192.f, baseY+16.f, 64.f, 32.f);
-    m_heartPanel = makePanelShape(m_heartPanelTex, 192.f, baseY+48.f, 64.f, 32.f);
-
-    // Zone UI
-    m_uiRect = sf::FloatRect(
-        sf::Vector2f(0.f, MAP_H),
-        sf::Vector2f(WIN_W, WIN_H - MAP_H)
-    );
+    m_topPanel   = makePanelShape(m_topPanelTex,    0.f,  0.f, 192.f, 32.f);
+    m_goldPanel  = makePanelShape(m_goldPanelTex,  192.f, 16.f,  64.f, 32.f);
+    m_heartPanel = makePanelShape(m_heartPanelTex, 192.f, 48.f,  64.f, 32.f);
 
     struct BtnDef { const char* path; float x, y, w, h; };
-
-    BtnDef defs[] = {
-        { "../assets/sprites/buttons/buy_normal_tower_button.png",  0.f,  baseY+32.f, 64.f, 64.f },
-        { "../assets/sprites/buttons/fire_button.png",             64.f, baseY+32.f, 32.f, 32.f },
-        { "../assets/sprites/buttons/ice_button.png",              96.f, baseY+32.f, 32.f, 32.f },
-        { "../assets/sprites/buttons/earth_button.png",            64.f, baseY+64.f, 32.f, 32.f },
-        { "../assets/sprites/buttons/arcane_button.png",           96.f, baseY+64.f, 32.f, 32.f },
+    constexpr BtnDef defs[] = {
+        { "../assets/sprites/buttons/buy_normal_tower_button.png",  0.f, 32.f, 64.f, 64.f },
+        { "../assets/sprites/buttons/fire_button.png",             64.f, 32.f, 32.f, 32.f },
+        { "../assets/sprites/buttons/ice_button.png",              96.f, 32.f, 32.f, 32.f },
+        { "../assets/sprites/buttons/earth_button.png",            64.f, 64.f, 32.f, 32.f },
+        { "../assets/sprites/buttons/arcane_button.png",           96.f, 64.f, 32.f, 32.f },
     };
 
     m_towerButtons.reserve(5);
-    for (int i = 0; i < 5; ++i) {
-        auto& d = defs[i];
-        float cx = d.x + d.w / 2.f;
-        float cy = d.y + d.h / 2.f;
-
-        m_towerButtons.emplace_back(
-            d.path, cx, cy, d.w, d.h, MenuAction::None
-        );
+    for (const auto& d : defs) {
+        float cx = toWinX(d.x) + toWinW(d.w) / 2.f;
+        float cy = toWinY(d.y) + toWinH(d.h) / 2.f;
+        m_towerButtons.emplace_back(d.path, cx, cy, toWinW(d.w), toWinH(d.h),
+                                    MenuAction::None);
     }
 
     m_sellButton.emplace("../assets/sprites/buttons/sell_tower_button.png",
-                         128.f + 32.f, baseY + 32.f + 32.f,
-                         64.f, 64.f, MenuAction::None);
+                         toWinX(128.f) + toWinW(64.f) / 2.f,
+                         toWinY(32.f)  + toWinH(64.f) / 2.f,
+                         toWinW(64.f), toWinH(64.f), MenuAction::None);
 
     m_backButton.emplace("../assets/sprites/buttons/back_to_main_menu_button.png",
-                         272.f + 64.f, baseY + 16.f,
-                         128.f, 32.f, MenuAction::Exit);
+                         toWinX(272.f) + toWinW(128.f) / 2.f,
+                         toWinY(0.f)   + toWinH(32.f)  / 2.f,
+                         toWinW(128.f), toWinH(32.f), MenuAction::Exit);
 }
 
-// ─────────────────────────────────────────────
-// Letterboxing SFML3
-// ─────────────────────────────────────────────
 sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     float contentRatio = float(WIN_W) / float(WIN_H);
     float screenRatio  = float(screenW) / float(screenH);
@@ -127,9 +93,10 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
         viewportY = (1.f - viewportH) / 2.f;
     }
 
+    // 🔥 AGRANDIR LA MAP
     sf::View view(sf::FloatRect(
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(WIN_W, WIN_H)
+        sf::Vector2f(WIN_W, WIN_H * 1.35f)
     ));
 
     view.setViewport(sf::FloatRect(
@@ -140,52 +107,27 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     return view;
 }
 
-// ─────────────────────────────────────────────
-// update
-// ─────────────────────────────────────────────
 void GameView::update(float dt) {
     m_waveManager.update(dt);
+    m_timer.update(dt);
     m_timerView.update();
 }
 
-// ─────────────────────────────────────────────
-// render
-// ─────────────────────────────────────────────
 void GameView::render() {
     drawMap();
     drawEnemies();
-    drawTowers();
     drawUIBar();
 }
 
-// ─────────────────────────────────────────────
-// drawMap
-// ─────────────────────────────────────────────
 void GameView::drawMap() {
     m_map.draw(m_window, { 0.f, 0.f }, MAP_SCALE);
 }
 
-// ─────────────────────────────────────────────
-// drawEnemies
-// ─────────────────────────────────────────────
 void GameView::drawEnemies() {
     for (const auto& enemy : m_waveManager.getActiveEnemies())
         enemy->render(m_window);
 }
 
-// ─────────────────────────────────────────────
-// drawTowers
-// ─────────────────────────────────────────────
-void GameView::drawTowers() {
-    m_towerController.drawPlaced(m_window);
-
-    if (!isOverUI(m_mousePos))
-        m_towerController.drawGhost(m_window, m_mousePos);
-}
-
-// ─────────────────────────────────────────────
-// drawUIBar
-// ─────────────────────────────────────────────
 void GameView::drawUIBar() {
     m_window.draw(m_topPanel);
     m_window.draw(m_goldPanel);
@@ -200,16 +142,6 @@ void GameView::drawUIBar() {
     m_window.draw(m_timerView);
 }
 
-// ─────────────────────────────────────────────
-// isOverUI
-// ─────────────────────────────────────────────
-bool GameView::isOverUI(sf::Vector2f logicalPos) const {
-    return m_uiRect.contains(logicalPos);
-}
-
-// ─────────────────────────────────────────────
-// updateHover
-// ─────────────────────────────────────────────
 void GameView::updateHover(sf::Vector2f mousePos) {
     for (auto& btn : m_towerButtons)
         btn.setHovered(btn.contains(mousePos));
@@ -219,50 +151,37 @@ void GameView::updateHover(sf::Vector2f mousePos) {
 }
 
 void GameView::updateHoverAt(sf::Vector2f logicalPos) {
-    m_mousePos = logicalPos;
     updateHover(logicalPos);
+
+    // 🔥 Déplacement du ghost
+    if (!m_towerButtons.empty())
+        m_towerController.setGhostPosition(logicalPos);
 }
 
-// ─────────────────────────────────────────────
-// handleClickAt
-// ─────────────────────────────────────────────
 MenuAction GameView::handleClickAt(sf::Vector2f logicalPos) {
-    for (int i = 0; i < 5; ++i) {
+    // Boutons de tours → sélection
+    for (size_t i = 0; i < m_towerButtons.size(); ++i) {
         if (m_towerButtons[i].contains(logicalPos)) {
-            m_towerController.selectTower(TOWER_NAMES[i]);
+            m_towerController.selectBasic(); // 🔥 pour l’instant : tour basic
             return MenuAction::None;
         }
     }
 
+    // Placement tour
+    if (m_towerController.hasSelection())
+        m_towerController.placeCurrentTower(logicalPos);
+
+    // Sell
     if (m_sellButton && m_sellButton->contains(logicalPos))
         return m_sellButton->getAction();
 
+    // Back
     if (m_backButton && m_backButton->contains(logicalPos))
         return m_backButton->getAction();
-
-    if (!isOverUI(logicalPos) && m_towerController.hasSelection()) {
-        m_towerController.placeTower(logicalPos);
-        return MenuAction::None;
-    }
 
     return MenuAction::None;
 }
 
-// ─────────────────────────────────────────────
-// handleEvent
-// ─────────────────────────────────────────────
 MenuAction GameView::handleEvent(const sf::Event& event) {
-    if (const auto* mb = event.getIf<sf::Event::MouseButtonPressed>()) {
-        if (mb->button == sf::Mouse::Button::Left) {
-            sf::Vector2f pos = m_window.mapPixelToCoords(mb->position);
-            return handleClickAt(pos);
-        }
-    }
-
-    if (const auto* key = event.getIf<sf::Event::KeyPressed>()) {
-        if (key->code == sf::Keyboard::Key::Escape)
-            m_towerController.deselect();
-    }
-
     return MenuAction::None;
 }

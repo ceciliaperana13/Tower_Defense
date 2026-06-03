@@ -1,88 +1,127 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <unordered_map>
-#include <string>
-#include <optional>
 #include <vector>
-#include <json.hpp>
+#include <string>
+#include <memory>
+
+#include "Enemy.hpp"
 
 // ─────────────────────────────────────────────
-// AttackData
+// Données d’attaque d’une tour
 // ─────────────────────────────────────────────
 struct AttackData {
-    float damage         = 0.f;
-    float range          = 0.f;
-    float fireRate       = 0.f;
-    float damagePerSecond= 0.f;
-    float slowness       = 0.f;
+    int   damage = 1;
+    float range = 1.f;
+    float fireRate = 1.f;
+    float damagePerSecond = 0.f;
+    float slowness = 0.f;
     float effectDuration = 0.f;
-    float aoeRadius      = 0.f;
-    int   nbTarget       = 1;
+    float aoeRadius = 0.f;
+    int   nbTarget = 1;
 };
 
 // ─────────────────────────────────────────────
-// TowerData : données brutes lues depuis le JSON
+// Définition d’une tour (depuis JSON)
 // ─────────────────────────────────────────────
-struct TowerData {
-    int         id   = 0;
-    std::string name;
-    AttackData  attackData;
-    std::string buildingSpritePath;
-    std::string projectileSpritePath;
+struct TowerDef {
+    int         id = 0;
+    AttackData  attack;
+    std::string buildingPath;
+    std::string projectilePath;   // pour basic = normal_projectile.png
 };
 
 // ─────────────────────────────────────────────
-// PlacedTower : une tour posée sur la carte
+// Projectile tiré par une tour
 // ─────────────────────────────────────────────
-struct PlacedTower {
-    int          dataId = 0;
-    sf::Vector2f position;
+struct Projectile {
+    sf::Sprite  sprite;
+    sf::Vector2f velocity;
+    float       lifeTime = 0.f;
+    int         damage   = 1;
+
+    Projectile(const sf::Texture& tex)
+        : sprite(tex) {}
+};
+
+// ─────────────────────────────────────────────
+// Instance d’une tour placée sur la map
+// ─────────────────────────────────────────────
+struct Tower {
     sf::Sprite   sprite;
+    sf::Vector2f position;
+    AttackData   attack;
+    float        fireCooldown = 0.f;
 
-    PlacedTower(int id, sf::Vector2f pos, const sf::Texture& tex)
-        : dataId(id),
-          position(pos),
-          sprite(tex) {}
+    Tower(const sf::Texture& tex)
+        : sprite(tex) {}
 };
 
 // ─────────────────────────────────────────────
-// TowerController
+// TowerController — gère :
+// ✔ sélection de tour
+// ✔ ghost
+// ✔ placement
+// ✔ tir
+// ✔ projectiles
 // ─────────────────────────────────────────────
 class TowerController {
 public:
-    TowerController() = default;
+    TowerController();
 
-    // Charge towers.json et tous les sprites associés
-    bool loadFromJson(const std::string& jsonPath);
+    // Charge towers.json
+    bool loadFromJson(const std::string& path);
 
-    // Accesseurs textures / données
-    const sf::Texture* getBuildingTexture   (const std::string& name) const;
-    const sf::Texture* getProjectileTexture (const std::string& name) const;
-    const TowerData*   getTowerData         (const std::string& name) const;
+    // Sélectionne la tour basic
+    void selectBasic();
 
-    // Sélection
-    void               selectTower (const std::string& name);
-    void               deselect    ();
-    bool               hasSelection() const;
-    const std::string& selectedName() const;
+    // Désélectionne
+    void clearSelection();
 
-    // Placement
-    bool placeTower(sf::Vector2f worldPos);
+    // Déplace le ghost
+    void setGhostPosition(sf::Vector2f worldPos);
 
-    // Rendu
-    void drawGhost  (sf::RenderWindow& window, sf::Vector2f mousePos) const;
-    void drawPlaced (sf::RenderWindow& window)                         const;
+    // Place la tour sélectionnée
+    void placeCurrentTower(sf::Vector2f worldPos);
 
-    // Accès lecture seule à la liste des tours placées
-    const std::vector<PlacedTower>& getPlacedTowers() const { return placedTowers_; }
+    // Update logique (tir + projectiles)
+    void update(float dt,
+                const std::vector<std::unique_ptr<Enemy>>& enemies);
+
+    // Affichage
+    void render(sf::RenderWindow& window);
+
+    bool hasSelection() const { return m_hasSelection; }
 
 private:
-    std::unordered_map<std::string, TowerData>   towerDefs_;
-    std::unordered_map<std::string, sf::Texture> buildingTextures_;
-    std::unordered_map<std::string, sf::Texture> projectileTextures_;
+    // Définition de la tour basic (depuis JSON)
+    TowerDef m_basicDef;
 
-    std::optional<std::string> selected_;
-    std::vector<PlacedTower>   placedTowers_;
+    // Textures
+    sf::Texture m_basicTex;             // sprite tour basic
+    sf::Texture m_basicProjectileTex;   // sprite projectile basic (normal_projectile.png)
 
-    void parseTowerEntry(const std::string& name, const nlohmann::json& node);
+    // Tours placées
+    std::vector<Tower> m_towers;
+
+    // Projectiles tirés
+    std::vector<Projectile> m_projectiles;
+
+    // Ghost
+    bool        m_hasSelection = false;
+    bool        m_ghostVisible = false;
+    sf::Sprite  m_ghostSprite;
+
+private:
+    // Trouve une cible dans la portée
+    Enemy* findTarget(const Tower& tower,
+                      const std::vector<std::unique_ptr<Enemy>>& enemies);
+
+    // Tire un projectile
+    void fireFromTower(Tower& tower,
+                       const std::vector<std::unique_ptr<Enemy>>& enemies,
+                       float dt);
+
+    // Update projectiles
+    void updateProjectiles(float dt,
+                           const std::vector<std::unique_ptr<Enemy>>& enemies);
 };

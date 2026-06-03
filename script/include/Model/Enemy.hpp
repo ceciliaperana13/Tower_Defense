@@ -32,6 +32,19 @@ public:
     int  getId()      const { return m_id; }
     int  getReward()  const { return m_reward; }
 
+    // 🔥 AJOUTS OBLIGATOIRES POUR SFML 3 + TowerController
+    sf::Vector2f getPosition() const {
+        if (m_sprite.has_value())
+            return m_sprite->getPosition();
+        return sf::Vector2f(0.f, 0.f);
+    }
+
+    sf::FloatRect getBounds() const {
+        if (m_sprite.has_value())
+            return m_sprite->getGlobalBounds();
+        return sf::FloatRect();
+    }
+
 private:
     void moveAlongPath(float dt);
     void drawHealthBar(sf::RenderWindow& window) const;

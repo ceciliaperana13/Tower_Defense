@@ -25,3 +25,13 @@ bool CountdownTimer::isFinished() {
     }
     return finished;
 }
+
+// 🔥 Fonction manquante qui cassait ton main.cpp
+void CountdownTimer::update(float dt) {
+    if (finished) return;
+
+    float r = remaining() - dt;
+    if (r <= 0.f) {
+        finished = true;
+    }
+}
