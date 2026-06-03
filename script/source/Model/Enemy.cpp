@@ -6,7 +6,7 @@
 
 using json = nlohmann::json;
 
-// ─── Membres statiques ───────────────────────────────────────────
+// ─── Membres statiques 
 sf::Texture Enemy::s_heartTex;
 bool        Enemy::s_heartLoaded = false;
 
@@ -19,7 +19,7 @@ bool Enemy::loadHeartTexture(const std::string& path) {
     return true;
 }
 
-// ─── Constructeur ────────────────────────────────────────────────
+// ─── Constructeur 
 Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
              const std::string& sprite1Path,
              const std::string& sprite2Path,
@@ -41,7 +41,7 @@ Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
         m_sprite->setPosition(m_waypoints[0]);
 }
 
-// ─── fromJson ────────────────────────────────────────────────────
+// ─── fromJson 
 Enemy Enemy::fromJson(const std::string& jsonPath,
                       const std::string& type,
                       const std::vector<sf::Vector2f>& waypoints) {
@@ -67,12 +67,12 @@ Enemy Enemy::fromJson(const std::string& jsonPath,
     );
 }
 
-// ─── takeDamage ──────────────────────────────────────────────────
+// ─── takeDamage 
 void Enemy::takeDamage(int dmg) {
     m_hp = std::max(0, m_hp - dmg);
 }
 
-// ─── moveAlongPath ───────────────────────────────────────────────
+// ─── moveAlongPath 
 void Enemy::moveAlongPath(float dt) {
     if (m_reached || m_waypointIdx >= (int)m_waypoints.size())
         return;
@@ -106,7 +106,7 @@ void Enemy::moveAlongPath(float dt) {
     }
 }
 
-// ─── update ──────────────────────────────────────────────────────
+// ─── update 
 void Enemy::update(float dt) {
     if (m_reached) return;
 
@@ -120,7 +120,7 @@ void Enemy::update(float dt) {
     moveAlongPath(dt);
 }
 
-// ─── drawHealthBar ───────────────────────────────────────────────
+// ─── drawHealthBar 
 void Enemy::drawHealthBar(sf::RenderWindow& window) const {
     if (!m_sprite.has_value()) return;
 
@@ -166,7 +166,7 @@ void Enemy::drawHealthBar(sf::RenderWindow& window) const {
     }
 }
 
-// ─── render ──────────────────────────────────────────────────────
+// ─── render 
 void Enemy::render(sf::RenderWindow& window) const {
     if (m_reached || !m_sprite.has_value()) return;
 

@@ -6,7 +6,7 @@
 
 using json = nlohmann::json;
 
-// ─── Constructeur ─────────────────────────────────────────────────────────────
+// ─── Constructeur 
 WaveManager::WaveManager(const std::string& wavesJson,
                          const std::string& enemiesJson,
                          const std::vector<sf::Vector2f>& waypoints)
@@ -39,7 +39,7 @@ WaveManager::WaveManager(const std::string& wavesJson,
     std::cout << "[WaveManager] " << m_waves.size() << " vagues chargées.\n";
 }
 
-// ─── startNextWave ────────────────────────────────────────────────────────────
+// ─── startNextWave 
 void WaveManager::startNextWave() {
     if (allWavesDone()) return;
 
@@ -53,7 +53,7 @@ void WaveManager::startNextWave() {
               << " | speedx" << m_waves[m_currentWave].speedMultiplier << "\n";
 }
 
-// ─── update ───────────────────────────────────────────────────────────────────
+// ─── update 
 void WaveManager::update(float dt) {
     // Met à jour tous les ennemis actifs
     for (auto& e : m_activeEnemies)
@@ -127,7 +127,7 @@ void WaveManager::update(float dt) {
     }
 }
 
-// ─── spawnNext ────────────────────────────────────────────────────────────────
+// ─── spawnNext 
 void WaveManager::spawnNext() {
     const Wave&       wave  = m_waves[m_currentWave];
     const EnemyGroup& group = wave.groups[m_currentGroup];
@@ -150,7 +150,7 @@ void WaveManager::spawnNext() {
     }
 }
 
-// ─── isWaveComplete ───────────────────────────────────────────────────────────
+// ─── isWaveComplete 
 bool WaveManager::isWaveComplete() const {
     return (m_state == State::WaveComplete || m_state == State::WaitingNextWave)
            && m_activeEnemies.empty();

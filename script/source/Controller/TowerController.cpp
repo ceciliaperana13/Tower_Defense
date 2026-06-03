@@ -10,13 +10,13 @@ static float length(sf::Vector2f v) {
     return std::sqrt(v.x * v.x + v.y * v.y);
 }
 
-// ─── Constructeur ─────────────────────────────────────────────────────────────
+// ─── Constructeur 
 TowerController::TowerController()
     : m_ghostVisible(false)
     , m_coins(100)
 {}
 
-// ─── loadFromJson ─────────────────────────────────────────────────────────────
+// ─── loadFromJson
 bool TowerController::loadFromJson(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -74,14 +74,14 @@ bool TowerController::loadFromJson(const std::string& path) {
     return true;
 }
 
-// ─── getCostOf ────────────────────────────────────────────────────────────────
+// ─── getCostOf 
 int TowerController::getCostOf(const std::string& type) const {
     auto it = m_defs.find(type);
     if (it == m_defs.end()) return 9999;
     return it->second.cost;
 }
 
-// ─── spawnGhost ───────────────────────────────────────────────────────────────
+// ─── spawnGhost
 void TowerController::spawnGhost(const std::string& type) {
     auto& def = m_defs.at(type);
     m_ghost.emplace(def.buildingTex);
@@ -94,7 +94,7 @@ void TowerController::spawnGhost(const std::string& type) {
     m_ghostVisible = true;
 }
 
-// ─── selectTower ─────────────────────────────────────────────────────────────
+// ─── selectTower
 bool TowerController::selectTower(const std::string& type) {
     // Annuler l'upgrade en cours si on sélectionne un nouveau type
     m_upgradeTargetIndex = -1;
@@ -116,7 +116,7 @@ bool TowerController::selectTower(const std::string& type) {
     return true;
 }
 
-// ─── clearSelection ──────────────────────────────────────────────────────────
+// ─── clearSelection 
 void TowerController::clearSelection() {
     m_selectedType.clear();
     m_ghost.reset();
@@ -124,13 +124,13 @@ void TowerController::clearSelection() {
     m_upgradeTargetIndex = -1;
 }
 
-// ─── setGhostPosition ────────────────────────────────────────────────────────
+// ─── setGhostPosition 
 void TowerController::setGhostPosition(sf::Vector2f pos) {
     if (m_ghostVisible && m_ghost.has_value())
         m_ghost->setPosition(pos);
 }
 
-// ─── placeTower ───────────────────────────────────────────────────────────────
+// ─── placeTower 
 void TowerController::placeTower(sf::Vector2f pos) {
     if (m_selectedType.empty()) return;
 
@@ -142,7 +142,7 @@ void TowerController::placeTower(sf::Vector2f pos) {
     clearSelection();
 }
 
-// ─── getTowerIndexAt ─────────────────────────────────────────────────────────
+// ─── getTowerIndexAt 
 int TowerController::getTowerIndexAt(sf::Vector2f pos) const {
     // Rayon de clic : 32px (taille sprite / 2 * scale)
     constexpr float CLICK_RADIUS = 32.f;

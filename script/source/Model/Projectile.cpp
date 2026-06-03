@@ -9,7 +9,7 @@ Projectile::Projectile(const sf::Texture& tex,
                        sf::Vector2f start,
                        sf::Vector2f target,
                        int damage)
-    : m_sprite(tex)          // 🔥 SFML3 : OBLIGATOIRE
+    : m_sprite(tex)          
     , m_damage(damage)
 {
     m_sprite.setOrigin(sf::Vector2f(
