@@ -13,8 +13,8 @@
                 "nbtarget" : 1
             },
             "paths" : {
-                "building" : "../sprites/towers/buildings/basic_tower.png",
-                "projectile" : "../sprites/towers/projectiles/basic_projectile.png"
+                "building" : "../assets/sprites/towers/buildings/basic_tower.png",
+                "projectile" : "../assets/sprites/towers/projectiles/basic_projectile.png"
             }
         },
         "lvl2" : {
@@ -31,8 +31,8 @@
                     "nbtarget" : 1
                 },
                 "paths" : {
-                "building" : "../sprites/towers/buildings/fire_tower.png",
-                "projectile" : "../sprites/towers/projectiles/fire_projectile.png"
+                    "building" : "../assets/sprites/towers/buildings/fire_tower.png",
+                    "projectile" : "../assets/sprites/towers/projectiles/fire_projectile.png"
                 }
             },
             "ice" : {
@@ -48,8 +48,8 @@
                     "nbtarget" : 1
                 },
                 "paths" : {
-                "building" : "../sprites/towers/buildings/ice_tower.png",
-                "projectile" : "../sprites/towers/projectiles/ice_projectile.png"
+                    "building" : "../assets/sprites/towers/buildings/ice_tower.png",
+                    "projectile" : "../assets/sprites/towers/projectiles/ice_projectile.png"
                 }
             },
             "rock" : {
@@ -65,8 +65,8 @@
                     "nbtarget" : 1
                 },
                 "paths" : {
-                "building" : "../sprites/towers/buildings/rock_tower.png",
-                "projectile" : "../sprites/towers/projectiles/rock_projectile.png"
+                    "building" : "../assets/sprites/towers/buildings/rock_tower.png",
+                    "projectile" : "../assets/sprites/towers/projectiles/rock_projectile.png"
                 }
             },
             "arcane" : {
@@ -82,8 +82,8 @@
                     "nbtarget" : 99
                 },
                 "paths" : {
-                "building" : "../sprites/towers/buildings/arcane_tower.png",
-                "projectile" : "../sprites/towers/projectiles/arcane_projectile.png"
+                    "building" : "../assets/sprites/towers/buildings/arcane_tower.png",
+                    "projectile" : "../assets/sprites/towers/projectiles/arcane_projectile.png"
                 }
             }
         }
