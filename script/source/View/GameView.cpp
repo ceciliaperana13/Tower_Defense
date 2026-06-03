@@ -162,14 +162,14 @@ MenuAction GameView::handleClickAt(sf::Vector2f logicalPos) {
     // Boutons de tours → sélection
     for (size_t i = 0; i < m_towerButtons.size(); ++i) {
         if (m_towerButtons[i].contains(logicalPos)) {
-            m_towerController.selectBasic(); // 🔥 pour l’instant : tour basic
+            m_towerController.selectTower("basic");
             return MenuAction::None;
         }
     }
 
     // Placement tour
     if (m_towerController.hasSelection())
-        m_towerController.placeCurrentTower(logicalPos);
+        m_towerController.placeTower(logicalPos);
 
     // Sell
     if (m_sellButton && m_sellButton->contains(logicalPos))
