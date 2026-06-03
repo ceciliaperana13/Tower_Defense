@@ -10,10 +10,13 @@ static float length(sf::Vector2f v) {
     return std::sqrt(v.x * v.x + v.y * v.y);
 }
 
-TowerController::TowerController() {
-    m_ghostVisible = false;
-}
+// ─── Constructeur ─────────────────────────────────────────────────────────────
+TowerController::TowerController()
+    : m_ghostVisible(false)
+    , m_coins(100)
+{}
 
+// ─── loadFromJson ─────────────────────────────────────────────────────────────
 bool TowerController::loadFromJson(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -25,12 +28,13 @@ bool TowerController::loadFromJson(const std::string& path) {
     file >> data;
 
     try {
-        auto& lvl1 = data["lvl1"];
-        auto& lvl2 = data["lvl2"];
-
-        auto loadTower = [&](const std::string& name, const json& j) {
+        auto loadTower = [&](const std::string& name,
+                              const json& j,
+                              const std::string& level) {
             TowerDef def;
-            def.id = j["id"].get<int>();
+            def.id    = j["id"].get<int>();
+            def.cost  = j["cost"].get<int>();
+            def.level = level;
 
             auto& ad = j["attackdatas"];
             def.attack.damage          = ad["damage"].get<int>();
@@ -45,20 +49,22 @@ bool TowerController::loadFromJson(const std::string& path) {
             def.buildingPath   = j["paths"]["building"].get<std::string>();
             def.projectilePath = j["paths"]["projectile"].get<std::string>();
 
-            if (!def.buildingTex.loadFromFile("../assets/" + def.buildingPath.substr(3)))
-                std::cerr << "[TowerController] Missing building sprite: " << def.buildingPath << "\n";
+            if (!def.buildingTex.loadFromFile(
+                    "../assets/" + def.buildingPath.substr(3)))
+                std::cerr << "[TC] Missing building: " << def.buildingPath << "\n";
 
-            if (!def.projectileTex.loadFromFile("../assets/" + def.projectilePath.substr(3)))
-                std::cerr << "[TowerController] Missing projectile sprite: " << def.projectilePath << "\n";
+            if (!def.projectileTex.loadFromFile(
+                    "../assets/" + def.projectilePath.substr(3)))
+                std::cerr << "[TC] Missing projectile: " << def.projectilePath << "\n";
 
-            m_defs[name] = def;
+            m_defs[name] = std::move(def);
         };
 
-        loadTower("basic",  lvl1["basic"]);
-        loadTower("fire",   lvl2["fire"]);
-        loadTower("ice",    lvl2["ice"]);
-        loadTower("rock",   lvl2["rock"]);
-        loadTower("arcane", lvl2["arcane"]);
+        loadTower("basic",  data["lvl1"]["basic"],  "lvl1");
+        loadTower("fire",   data["lvl2"]["fire"],   "lvl2");
+        loadTower("ice",    data["lvl2"]["ice"],    "lvl2");
+        loadTower("rock",   data["lvl2"]["rock"],   "lvl2");
+        loadTower("arcane", data["lvl2"]["arcane"], "lvl2");
     }
     catch (std::exception& e) {
         std::cerr << "[TowerController] JSON parse error: " << e.what() << "\n";
@@ -68,17 +74,16 @@ bool TowerController::loadFromJson(const std::string& path) {
     return true;
 }
 
-void TowerController::selectTower(const std::string& type) {
-    if (m_defs.find(type) == m_defs.end()) {
-        std::cerr << "[TowerController] Unknown tower type: " << type << "\n";
-        return;
-    }
+// ─── getCostOf ────────────────────────────────────────────────────────────────
+int TowerController::getCostOf(const std::string& type) const {
+    auto it = m_defs.find(type);
+    if (it == m_defs.end()) return 9999;
+    return it->second.cost;
+}
 
-    m_selectedType = type;
-    m_ghostVisible = true;
-
-    auto& def = m_defs[type];
-
+// ─── spawnGhost ───────────────────────────────────────────────────────────────
+void TowerController::spawnGhost(const std::string& type) {
+    auto& def = m_defs.at(type);
     m_ghost.emplace(def.buildingTex);
     m_ghost->setColor(sf::Color(255, 255, 255, 150));
     m_ghost->setOrigin(sf::Vector2f(
@@ -86,49 +91,131 @@ void TowerController::selectTower(const std::string& type) {
         def.buildingTex.getSize().y / 2.f
     ));
     m_ghost->setScale(sf::Vector2f(2.f, 2.f));
+    m_ghostVisible = true;
 }
 
+// ─── selectTower ─────────────────────────────────────────────────────────────
+bool TowerController::selectTower(const std::string& type) {
+    // Annuler l'upgrade en cours si on sélectionne un nouveau type
+    m_upgradeTargetIndex = -1;
+
+    if (m_defs.find(type) == m_defs.end()) {
+        std::cerr << "[TC] Unknown type: " << type << "\n";
+        return false;
+    }
+    int cost = m_defs[type].cost;
+    if (m_coins < cost) {
+        std::cerr << "[TC] Not enough coins (" << m_coins
+                  << ") to select " << type
+                  << " (cost " << cost << ")\n";
+        return false;
+    }
+
+    m_selectedType = type;
+    spawnGhost(type);
+    return true;
+}
+
+// ─── clearSelection ──────────────────────────────────────────────────────────
+void TowerController::clearSelection() {
+    m_selectedType.clear();
+    m_ghost.reset();
+    m_ghostVisible    = false;
+    m_upgradeTargetIndex = -1;
+}
+
+// ─── setGhostPosition ────────────────────────────────────────────────────────
 void TowerController::setGhostPosition(sf::Vector2f pos) {
-    if (!m_ghostVisible || !m_ghost.has_value()) return;
-    m_ghost->setPosition(pos);
+    if (m_ghostVisible && m_ghost.has_value())
+        m_ghost->setPosition(pos);
 }
 
+// ─── placeTower ───────────────────────────────────────────────────────────────
 void TowerController::placeTower(sf::Vector2f pos) {
     if (m_selectedType.empty()) return;
 
     auto& def = m_defs[m_selectedType];
+    m_coins -= def.cost;
 
-    m_towers.emplace_back(
-        def.buildingTex,
-        def.projectileTex,
-        def.attack,
+    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, pos);
+
+    clearSelection();
+}
+
+// ─── getTowerIndexAt ─────────────────────────────────────────────────────────
+int TowerController::getTowerIndexAt(sf::Vector2f pos) const {
+    // Rayon de clic : 32px (taille sprite / 2 * scale)
+    constexpr float CLICK_RADIUS = 32.f;
+    for (int i = 0; i < (int)m_towers.size(); ++i) {
+        sf::Vector2f d = m_towers[i].getPosition() - pos;
+        if (std::sqrt(d.x*d.x + d.y*d.y) <= CLICK_RADIUS)
+            return i;
+    }
+    return -1;
+}
+
+// ─── selectTowerForUpgrade ───────────────────────────────────────────────────
+void TowerController::selectTowerForUpgrade(int index) {
+    // Annule tout placement en cours
+    m_selectedType.clear();
+    m_ghost.reset();
+    m_ghostVisible = false;
+
+    if (index >= 0 && index < (int)m_towers.size())
+        m_upgradeTargetIndex = index;
+    else
+        m_upgradeTargetIndex = -1;
+}
+
+// ─── upgradeTower ─────────────────────────────────────────────────────────────
+bool TowerController::upgradeTower(const std::string& lv2Type) {
+    if (m_upgradeTargetIndex < 0 ||
+        m_upgradeTargetIndex >= (int)m_towers.size())
+        return false;
+
+    // Vérif que c'est bien une tour lv2
+    auto it = m_defs.find(lv2Type);
+    if (it == m_defs.end() || it->second.level != "lvl2") return false;
+
+    // Vérif coins
+    int cost = it->second.cost;
+    if (m_coins < cost) {
+        std::cerr << "[TC] Not enough coins for upgrade (" << lv2Type << ")\n";
+        return false;
+    }
+
+    m_coins -= cost;
+
+    // Remplace la tour sur place
+    sf::Vector2f pos = m_towers[m_upgradeTargetIndex].getPosition();
+    m_towers[m_upgradeTargetIndex] = Tower(
+        it->second.buildingTex,
+        it->second.projectileTex,
+        it->second.attack,
         pos
     );
 
-    m_ghostVisible = false;
-    m_ghost.reset();
-    m_selectedType.clear();
+    m_upgradeTargetIndex = -1;
+    return true;
 }
 
+// ─── update ───────────────────────────────────────────────────────────────────
 void TowerController::update(float dt,
                              const std::vector<std::unique_ptr<Enemy>>& enemies) {
-
-    for (auto& t : m_towers)
-        t.update(dt);
+    for (auto& t : m_towers) t.update(dt);
 
     for (auto& t : m_towers) {
         if (!t.canFire()) continue;
 
-        Enemy* best = nullptr;
-        float bestDist = 0.f;
+        Enemy* best     = nullptr;
+        float  bestDist = 0.f;
 
         for (auto& e : enemies) {
             if (e->isDead() || e->hasReached()) continue;
-
             float d = length(e->getPosition() - t.getPosition());
             if (d <= t.getAttack().range * 64.f) {
                 if (!best || d < bestDist) {
-                    best = e.get();
+                    best     = e.get();
                     bestDist = d;
                 }
             }
@@ -145,17 +232,13 @@ void TowerController::update(float dt,
         }
     }
 
-    for (auto& p : m_projectiles)
-        p.update(dt);
+    for (auto& p : m_projectiles) p.update(dt);
 
     for (auto& p : m_projectiles) {
         if (p.isDead()) continue;
-
         for (auto& e : enemies) {
             if (e->isDead() || e->hasReached()) continue;
-
-            if (p.checkCollision(*e))
-                break;
+            if (p.checkCollision(*e)) break;
         }
     }
 
@@ -166,13 +249,10 @@ void TowerController::update(float dt,
     );
 }
 
+// ─── render ───────────────────────────────────────────────────────────────────
 void TowerController::render(sf::RenderWindow& window) {
-    for (auto& t : m_towers)
-        t.render(window);
-
-    for (auto& p : m_projectiles)
-        p.render(window);
-
+    for (auto& t : m_towers)      t.render(window);
+    for (auto& p : m_projectiles) p.render(window);
     if (m_ghostVisible && m_ghost.has_value())
         window.draw(*m_ghost);
 }

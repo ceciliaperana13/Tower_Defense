@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <iostream>                         
 
 #include "View/MainMenu.hpp"
 #include "View/SettingsMenu.hpp"
@@ -54,13 +55,6 @@ static void toggleFullscreen(sf::RenderWindow& window) {
     else              openFullscreen(window);
 }
 
-static void refreshView(sf::RenderWindow& window) {
-    window.setView(sf::View(sf::FloatRect(
-        sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(float(WIN_W), float(WIN_H))
-    )));
-}
-
 int main() {
     sf::RenderWindow window;
     openWindowed(window);
@@ -70,23 +64,21 @@ int main() {
     sf::Clock      clock;
 
     while (window.isOpen()) {
-        refreshView(window);
+        window.setView(windowedView());
 
         MainMenu menu(window);
         MenuAction action = menu.run();
 
-        if (action == MenuAction::Exit || !window.isOpen())
-            break;
+        if (action == MenuAction::Exit || !window.isOpen()) break;
 
         if (action == MenuAction::Settings) {
-            refreshView(window);
+            window.setView(windowedView());
             SettingsMenu sm(window, settings);
             sm.run();
             continue;
         }
-
         if (action == MenuAction::Scoreboard) {
-            refreshView(window);
+            window.setView(windowedView());
             Leaderboard lb(window, saveCtrl);
             lb.run();
             continue;
@@ -106,12 +98,20 @@ int main() {
             );
             waveManager.startNextWave();
 
-            CountdownTimer timer(120.f);
-
-            TowerController towerController;
+            CountdownTimer    timer(120.f);
+            TowerController   towerController;
             towerController.loadFromJson("../assets/data/tower_values.json");
 
             GameView gameView(window, map, waveManager, timer, towerController);
+
+            // Cercle de surbrillance pour la tour sélectionnée à upgrader
+            sf::CircleShape upgradeRing(28.f);
+            upgradeRing.setOrigin({ 28.f, 28.f });
+            upgradeRing.setFillColor(sf::Color::Transparent);
+            upgradeRing.setOutlineColor(sf::Color::Yellow);
+            upgradeRing.setOutlineThickness(3.f);
+            bool showUpgradeRing = false;
+            sf::Vector2f upgradeRingPos;
 
             clock.restart();
 
@@ -119,7 +119,6 @@ int main() {
                 float dt = clock.restart().asSeconds();
                 if (dt > 0.1f) dt = 0.1f;
 
-                // Vue letterbox recalculée à chaque frame
                 sf::View view = GameView::makeLetterboxView(
                     window.getSize().x, window.getSize().y);
                 window.setView(view);
@@ -128,59 +127,97 @@ int main() {
                 while (const auto event = window.pollEvent()) {
 
                     if (event->is<sf::Event::Closed>()) {
-                        window.close();
-                        break;
+                        window.close(); break;
                     }
 
                     if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
                         if (kp->code == sf::Keyboard::Key::F11)
                             toggleFullscreen(window);
 
-                        // Annule la sélection de tour en cours
-                        if (kp->code == sf::Keyboard::Key::Escape)
-                            towerController.selectTower("");
+                        if (kp->code == sf::Keyboard::Key::Escape) {
+                            towerController.clearSelection();
+                            showUpgradeRing = false;
+                        }
 
-                        // Vague suivante
                         if (kp->code == sf::Keyboard::Key::Space &&
                             waveManager.isWaveComplete())
                             waveManager.startNextWave();
                     }
 
                     if (const auto* mm = event->getIf<sf::Event::MouseMoved>()) {
-                        auto worldPos = window.mapPixelToCoords(mm->position, view);
-                        towerController.setGhostPosition(worldPos);
-                        gameView.updateHoverAt(worldPos);
+                        auto wp = window.mapPixelToCoords(mm->position, view);
+                        towerController.setGhostPosition(wp);
+                        gameView.updateHoverAt(wp);
                     }
 
                     if (const auto* mb = event->getIf<sf::Event::MouseButtonPressed>()) {
-                        auto worldPos = window.mapPixelToCoords(mb->position, view);
+                        auto wp = window.mapPixelToCoords(mb->position, view);
 
                         if (mb->button == sf::Mouse::Button::Left) {
 
-                            // 1) Clic sur un bouton de tour dans l'UI ?
-                            std::string type = gameView.getTowerTypeAt(worldPos);
+                            // ── Clic dans l'UI ───────────────────────────
+                            std::string type = gameView.getTowerTypeAt(wp);
+
                             if (!type.empty()) {
-                                towerController.selectTower(type);
+                                // Mode upgrade : on applique le choix lv2
+                                if (towerController.hasUpgradeTarget()) {
+                                    if (type != "basic") {
+                                        // Tenter l'upgrade
+                                        if (!towerController.upgradeTower(type)) {
+                                            // pas assez de coins → feedback console
+                                            std::cerr << "[main] Not enough coins to upgrade to "
+                                                      << type << "\n";
+                                        }
+                                        showUpgradeRing = false;
+                                    }
+                                    // clic sur "basic" en mode upgrade → ignorer
+                                }
+                                else {
+                                    // Mode placement normal
+                                    // basic = gratuit, lv2 = 10 coins
+                                    if (!towerController.selectTower(type)) {
+                                        std::cerr << "[main] Not enough coins for "
+                                                  << type << "\n";
+                                    }
+                                }
                             }
                             else {
-                                // 2) Clic sur Back / Sell ?
-                                MenuAction act = gameView.handleClickAt(worldPos);
+                                // ── Clic sur Back / Sell ─────────────────
+                                MenuAction act = gameView.handleClickAt(wp);
                                 if (act == MenuAction::Exit)
                                     goto backToMenu;
 
-                                // 3) Clic sur la carte → poser la tour
-                                if (act == MenuAction::None &&
-                                    towerController.hasSelection() &&
-                                    worldPos.y < MAP_H)
-                                {
-                                    towerController.placeTower(worldPos);
+                                // ── Clic sur la carte ─────────────────────
+                                if (act == MenuAction::None && wp.y < MAP_H) {
+
+                                    if (towerController.hasSelection()) {
+                                        // Poser la tour
+                                        towerController.placeTower(wp);
+                                        showUpgradeRing = false;
+                                    }
+                                    else {
+                                        // Sélectionner une tour existante pour upgrade
+                                        int idx = towerController.getTowerIndexAt(wp);
+                                        if (idx >= 0) {
+                                            towerController.selectTowerForUpgrade(idx);
+                                            // Positionner le ring
+                                            // On passe par getTowerIndexAt qui connaît la pos
+                                            // On expose getPosition via index dans le controller
+                                            showUpgradeRing = true;
+                                            upgradeRingPos  = wp; // approx — raffinée ci-dessous
+                                        } else {
+                                            towerController.clearSelection();
+                                            showUpgradeRing = false;
+                                        }
+                                    }
                                 }
                             }
                         }
 
-                        // Clic droit = annuler sélection
-                        if (mb->button == sf::Mouse::Button::Right)
-                            towerController.selectTower("");
+                        if (mb->button == sf::Mouse::Button::Right) {
+                            towerController.clearSelection();
+                            showUpgradeRing = false;
+                        }
                     }
                 }
 
@@ -192,8 +229,15 @@ int main() {
 
                 // ── Rendu ─────────────────────────────────────────────────
                 window.clear(sf::Color::Black);
-                gameView.render();              // map + ennemis + UI
-                towerController.render(window); // tours + projectiles + fantôme
+                gameView.render();
+
+                // Ring de surbrillance upgrade
+                if (showUpgradeRing && towerController.hasUpgradeTarget()) {
+                    upgradeRing.setPosition(upgradeRingPos);
+                    window.draw(upgradeRing);
+                }
+
+                towerController.render(window);
                 window.display();
             }
 

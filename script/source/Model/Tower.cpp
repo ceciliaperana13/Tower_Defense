@@ -4,7 +4,7 @@ Tower::Tower(const sf::Texture& buildingTex,
              const sf::Texture& projectileTex,
              const AttackData& attack,
              sf::Vector2f pos)
-    : m_sprite(buildingTex)          // 🔥 SFML3 : OBLIGATOIRE
+    : m_sprite(buildingTex)          
     , m_projectileTex(projectileTex)
     , m_attack(attack)
     , m_position(pos)

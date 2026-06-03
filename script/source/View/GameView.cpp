@@ -1,5 +1,6 @@
 #include "GameView.hpp"
 #include <iostream>
+#include <string>
 
 static void loadTex(sf::Texture& tex, const std::string& path) {
     if (!tex.loadFromFile(path))
@@ -18,7 +19,13 @@ GameView::GameView(sf::RenderWindow& window,
     , m_timer(timer)
     , m_towerController(towerController)
     , m_timerView(timer)
+    , m_coinsText(m_font)
+    , m_livesText(m_font)
 {
+    // Police
+    if (!m_font.openFromFile("C:/Windows/Fonts/arialbd.ttf"))
+        std::cerr << "[GameView] Font not found.\n";
+
     buildUI();
 
     if (!m_timerView.load("../assets/sprites/icons/timer.png",
@@ -26,8 +33,14 @@ GameView::GameView(sf::RenderWindow& window,
         std::cerr << "[GameView] TimerView: missing assets.\n";
 
     m_timerView.setScale(sf::Vector2f(1.5f, 1.5f));
-    // Centré horizontalement, dans la zone carte
     m_timerView.setPosition(sf::Vector2f(float(WIN_W) / 2.f - 48.f, 8.f));
+
+    // Cercle surbrillance upgrade
+    m_upgradeHighlight.setRadius(28.f);
+    m_upgradeHighlight.setOrigin({ 28.f, 28.f });
+    m_upgradeHighlight.setFillColor(sf::Color::Transparent);
+    m_upgradeHighlight.setOutlineColor(sf::Color::Yellow);
+    m_upgradeHighlight.setOutlineThickness(3.f);
 }
 
 // ─── makePanelShape ───────────────────────────────────────────────────────────
@@ -47,33 +60,32 @@ void GameView::buildUI() {
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
     loadTex(m_heartPanelTex, "../assets/sprites/buttons/heart_pannel.png");
 
-    // ── Panels ───────────────────────────────────────────────────────────────
-    // Panel principal BUILD : 0→192 logique = toute la zone gauche
+    // ── Panels fond ──────────────────────────────────────────────────────────
     m_topPanel = makePanelShape(
-        m_topPanelTex,
-        0.f,           MAP_H,
-        toWinW(192.f), UI_H
-    );
-    // Gold : demi-hauteur supérieure, après le panel principal
+        m_topPanelTex, 0.f, MAP_H, toWinW(192.f), UI_H);
     m_goldPanel = makePanelShape(
-        m_goldPanelTex,
-        toWinX(192.f), MAP_H,
-        toWinW(64.f),  UI_H / 2.f
-    );
-    // Heart : demi-hauteur inférieure
+        m_goldPanelTex, toWinX(192.f), MAP_H, toWinW(64.f), UI_H / 2.f);
     m_heartPanel = makePanelShape(
-        m_heartPanelTex,
-        toWinX(192.f), MAP_H + UI_H / 2.f,
-        toWinW(64.f),  UI_H / 2.f
-    );
+        m_heartPanelTex, toWinX(192.f), MAP_H + UI_H / 2.f,
+        toWinW(64.f), UI_H / 2.f);
 
-    // ── Boutons tours ────────────────────────────────────────────────────────
-    // Espace logique 320x96 — on remplit toute la hauteur UI
+    // ── Textes coins / vies ───────────────────────────────────────────────────
+    m_coinsText.setCharacterSize(22u);
+    m_coinsText.setFillColor(sf::Color::Yellow);
+    m_coinsText.setStyle(sf::Text::Bold);
+    m_coinsText.setPosition({ toWinX(200.f), MAP_H + 8.f });
+
+    m_livesText.setCharacterSize(22u);
+    m_livesText.setFillColor(sf::Color(220, 60, 60));
+    m_livesText.setStyle(sf::Text::Bold);
+    m_livesText.setPosition({ toWinX(200.f), MAP_H + UI_H / 2.f + 8.f });
+
+    // ── Boutons tours ─────────────────────────────────────────────────────────
+    // Colonne 0-64  : bouton basic (tour lvl1)
+    // Colonnes 64-128 : 4 boutons lv2 en grille 2x2
     struct BtnDef { const char* path; float x, y, w, h; const char* type; };
     constexpr BtnDef defs[] = {
-        // Bouton BUILD (tour basique) : occupe colonne 0-64 pleine hauteur
         { "../assets/sprites/buttons/buy_normal_tower_button.png",  0.f,  0.f, 64.f, 96.f, "basic"  },
-        // 4 boutons upgrade : colonne 64-128, rangés 2x2
         { "../assets/sprites/buttons/fire_button.png",             64.f,  0.f, 32.f, 48.f, "fire"   },
         { "../assets/sprites/buttons/ice_button.png",              96.f,  0.f, 32.f, 48.f, "ice"    },
         { "../assets/sprites/buttons/earth_button.png",            64.f, 48.f, 32.f, 48.f, "rock"   },
@@ -91,7 +103,7 @@ void GameView::buildUI() {
         m_towerTypes.push_back(d.type);
     }
 
-    // ── SELL : colonne 128-192, pleine hauteur ────────────────────────────────
+    // ── SELL ──────────────────────────────────────────────────────────────────
     m_sellButton.emplace(
         "../assets/sprites/buttons/sell_tower_button.png",
         toWinX(128.f) + toWinW(64.f) / 2.f,
@@ -100,13 +112,12 @@ void GameView::buildUI() {
         MenuAction::None
     );
 
-    // ── BACK : ancré à droite, colonne 272-320 x pleine hauteur ──────────────
-    // On utilise WIN_W pour le coller au bord droit
+    // ── BACK ──────────────────────────────────────────────────────────────────
     float backW = toWinW(128.f);
+    float backX = float(WIN_W) - backW / 2.f;
     m_backButton.emplace(
         "../assets/sprites/buttons/back_to_main_menu_button.png",
-        float(WIN_W) - backW / 2.f - (float(WIN_W) - toWinX(320.f)) / 2.f,
-        toUIY(0.f) + toUIH(96.f) / 2.f,
+        backX, toUIY(0.f) + toUIH(96.f) / 2.f,
         backW, toUIH(96.f),
         MenuAction::Exit
     );
@@ -118,7 +129,6 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     float screenRatio  = float(screenW) / float(screenH);
 
     float viewportW, viewportH, viewportX, viewportY;
-
     if (screenRatio > contentRatio) {
         viewportH = 1.f;
         viewportW = contentRatio / screenRatio;
@@ -142,15 +152,23 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     return view;
 }
 
+// ─── updateTexts ──────────────────────────────────────────────────────────────
+void GameView::updateTexts() {
+    m_coinsText.setString(std::to_string(m_towerController.getCoins()));
+    m_livesText.setString(std::to_string(m_lives));
+}
+
 // ─── update ───────────────────────────────────────────────────────────────────
 void GameView::update(float /*dt*/) {
     m_timerView.update();
+    updateTexts();
 }
 
 // ─── render ───────────────────────────────────────────────────────────────────
 void GameView::render() {
     drawMap();
     drawEnemies();
+    drawUpgradeHighlight();
     drawUIBar();
     m_window.draw(m_timerView);
 }
@@ -166,11 +184,25 @@ void GameView::drawEnemies() {
         enemy->render(m_window);
 }
 
+// ─── drawUpgradeHighlight ─────────────────────────────────────────────────────
+void GameView::drawUpgradeHighlight() {
+    if (!m_towerController.hasUpgradeTarget()) return;
+    // Le TowerController expose getUpgradeTargetPos via index → on dessine
+    // un cercle jaune via getTowerIndexAt (pas besoin d'exposer la position
+    // directement : le render des tours le fait déjà, on ajoute juste le ring)
+    // Note : pour avoir la position, on expose une méthode dans main.cpp
+    // via le cercle positionné dans handleClickAt.
+}
+
 // ─── drawUIBar ────────────────────────────────────────────────────────────────
 void GameView::drawUIBar() {
     m_window.draw(m_topPanel);
     m_window.draw(m_goldPanel);
     m_window.draw(m_heartPanel);
+
+    // Textes coins / vies par-dessus les panels
+    m_window.draw(m_coinsText);
+    m_window.draw(m_livesText);
 
     for (const auto& btn : m_towerButtons)
         btn.draw(m_window);
@@ -199,9 +231,8 @@ void GameView::updateHoverAt(sf::Vector2f logicalPos) { updateHover(logicalPos);
 
 // ─── handleClickAt ────────────────────────────────────────────────────────────
 MenuAction GameView::handleClickAt(sf::Vector2f logicalPos) {
-    // Les boutons tours sont traités via getTowerTypeAt dans main.cpp
     for (const auto& btn : m_towerButtons)
-        if (btn.contains(logicalPos)) return MenuAction::None;
+        if (btn.contains(logicalPos)) return MenuAction::None; // géré dans main
 
     if (m_sellButton && m_sellButton->contains(logicalPos))
         return m_sellButton->getAction();

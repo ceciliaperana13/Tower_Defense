@@ -1,90 +1,95 @@
 {
-    "lvl1" : {
-        "basic" : {
-            "id" : 1,
-            "attackdatas" : {
-                "damage" : 1,
-                "range" : 1,
-                "firerate" : 1,
-                "damagepersecond" : 0,
-                "slowness" : 0,
-                "effectduration" : 0,
-                "aoeradius" : 0,
-                "nbtarget" : 1
+    "lvl1": {
+        "basic": {
+            "id": 1,
+            "cost": 0,
+            "attackdatas": {
+                "damage": 10,
+                "range": 3,
+                "firerate": 1.0,
+                "damagepersecond": 0,
+                "slowness": 0,
+                "effectduration": 0,
+                "aoeradius": 0,
+                "nbtarget": 1
             },
-            "paths" : {
-                "building" : "../sprites/towers/buildings/basic_tower.png",
-                "projectile" : "../sprites/towers/projectiles/normal_projectile.png"
+            "paths": {
+                "building": "../sprites/towers/buildings/basic_tower.png",
+                "projectile": "../sprites/towers/projectiles/normal_projectile.png"
+            }
+        }
+    },
+    "lvl2": {
+        "fire": {
+            "id": 2,
+            "cost": 10,
+            "attackdatas": {
+                "damage": 15,
+                "range": 3,
+                "firerate": 1.2,
+                "damagepersecond": 5,
+                "slowness": 0,
+                "effectduration": 3,
+                "aoeradius": 0,
+                "nbtarget": 1
+            },
+            "paths": {
+                "building": "../sprites/towers/buildings/fire_tower.png",
+                "projectile": "../sprites/towers/projectiles/fire_projectile.png"
             }
         },
-        "lvl2" : {
-            "fire" : {
-                "id" : 2,
-                "attackdatas" : {
-                    "damage" : 1,
-                    "range" : 1,
-                    "firerate" : 1,
-                    "damagepersecond" : 1,
-                    "slowness" : 0,
-                    "effectduration" : 10,
-                    "aoeradius" : 0,
-                    "nbtarget" : 1
-                },
-                "paths" : {
-                "building" : "../sprites/towers/buildings/fire_tower.png",
-                "projectile" : "../sprites/towers/projectiles/fire_projectile.png"
-                }
+        "ice": {
+            "id": 3,
+            "cost": 10,
+            "attackdatas": {
+                "damage": 8,
+                "range": 3,
+                "firerate": 0.8,
+                "damagepersecond": 0,
+                "slowness": 0.5,
+                "effectduration": 2,
+                "aoeradius": 0,
+                "nbtarget": 1
             },
-            "ice" : {
-                "id" : 3,
-                "attackdatas" : {
-                    "damage" : 1,
-                    "range" : 1,
-                    "firerate" : 1,
-                    "damagepersecond" : 0,
-                    "slowness" : 1,
-                    "effectduration" : 10,
-                    "aoeradius" : 0,
-                    "nbtarget" : 1
-                },
-                "paths" : {
-                "building" : "../sprites/towers/buildings/ice_tower.png",
-                "projectile" : "../sprites/towers/projectiles/ice_projectile.png"
-                }
+            "paths": {
+                "building": "../sprites/towers/buildings/ice_tower.png",
+                "projectile": "../sprites/towers/projectiles/ice_projectile.png"
+            }
+        },
+        "rock": {
+            "id": 4,
+            "cost": 10,
+            "attackdatas": {
+                "damage": 25,
+                "range": 2,
+                "firerate": 0.5,
+                "damagepersecond": 0,
+                "slowness": 0,
+                "effectduration": 0,
+                "aoeradius": 1,
+                "nbtarget": 3
             },
-            "rock" : {
-                "id" : 4,
-                "attackdatas" : {
-                    "damage" : 1,
-                    "range" : 1,
-                    "firerate" : 1,
-                    "damagepersecond" : 0,
-                    "slowness" : 0,
-                    "effectduration" : 0,
-                    "aoeradius" : 0,
-                    "nbtarget" : 1
-                },
-                "paths" : {
-                "building" : "../sprites/towers/buildings/rock_tower.png",
-                "projectile" : "../sprites/towers/projectiles/rock_projectile.png"
-                }
+            "paths": {
+                "building": "../sprites/towers/buildings/rock_tower.png",
+                "projectile": "../sprites/towers/projectiles/rock_projectile.png"
+            }
+        },
+        "arcane": {
+            "id": 5,
+            "cost": 10,
+            "attackdatas": {
+                "damage": 5,
+                "range": 4,
+                "firerate": 2.0,
+                "damagepersecond": 0,
+                "slowness": 0,
+                "effectduration": 0,
+                "aoeradius": 0,
+                "nbtarget": 99
             },
-            "arcane" : {
-                "id" : 5,
-                "attackdatas" : {
-                    "damage" : 1,
-                    "range" : 1,
-                    "firerate" : 1,
-                    "damagepersecond" : 0,
-                    "slowness" : 0,
-                    "effectduration" : 0,
-                    "aoeradius" : 0,
-                    "nbtarget" : 99
-                },
-                "paths" : {
-                "building" : "../sprites/towers/buildings/arcane_tower.png",
-                "projectile" : "../sprites/towers/projectiles/arcane_projectile.png"
-                }
+            "paths": {
+                "building": "../sprites/towers/buildings/arcane_tower.png",
+                "projectile": "../sprites/towers/projectiles/arcane_projectile.png"
             }
         }
     }
