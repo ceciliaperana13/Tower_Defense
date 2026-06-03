@@ -22,7 +22,6 @@ GameView::GameView(sf::RenderWindow& window,
     , m_coinsText(m_font)
     , m_livesText(m_font)
 {
-    // Police
     if (!m_font.openFromFile("C:/Windows/Fonts/arialbd.ttf"))
         std::cerr << "[GameView] Font not found.\n";
 
@@ -35,7 +34,6 @@ GameView::GameView(sf::RenderWindow& window,
     m_timerView.setScale(sf::Vector2f(1.5f, 1.5f));
     m_timerView.setPosition(sf::Vector2f(float(WIN_W) / 2.f - 48.f, 8.f));
 
-    // Cercle surbrillance upgrade
     m_upgradeHighlight.setRadius(28.f);
     m_upgradeHighlight.setOrigin({ 28.f, 28.f });
     m_upgradeHighlight.setFillColor(sf::Color::Transparent);
@@ -63,26 +61,40 @@ void GameView::buildUI() {
     // ── Panels fond ──────────────────────────────────────────────────────────
     m_topPanel = makePanelShape(
         m_topPanelTex, 0.f, MAP_H, toWinW(192.f), UI_H);
-    m_goldPanel = makePanelShape(
-        m_goldPanelTex, toWinX(192.f), MAP_H, toWinW(64.f), UI_H / 2.f);
-    m_heartPanel = makePanelShape(
-        m_heartPanelTex, toWinX(192.f), MAP_H + UI_H / 2.f,
-        toWinW(64.f), UI_H / 2.f);
+
+    float panelX = toWinX(192.f);
+    float panelW = toWinW(64.f);
+    float halfH  = UI_H / 2.f;
+
+    m_goldPanel  = makePanelShape(m_goldPanelTex,
+        panelX, MAP_H,          panelW, halfH);
+    m_heartPanel = makePanelShape(m_heartPanelTex,
+        panelX, MAP_H + halfH,  panelW, halfH);
 
     // ── Textes coins / vies ───────────────────────────────────────────────────
-    m_coinsText.setCharacterSize(22u);
-    m_coinsText.setFillColor(sf::Color::Yellow);
-    m_coinsText.setStyle(sf::Text::Bold);
-    m_coinsText.setPosition({ toWinX(200.f), MAP_H + 8.f });
+    // Les images gold_pannel et heart_pannel ont une icône à gauche (environ 40px)
+    // On place le texte à droite de l'icône, centré verticalement dans chaque demi-panel
+    unsigned int charSize = static_cast<unsigned int>(halfH * 0.45f); // ~28px pour UI_H=128
+    float iconOffset = panelW * 0.42f;   // ~40% de la largeur = zone icône
+    float textX      = panelX + iconOffset;
 
-    m_livesText.setCharacterSize(22u);
-    m_livesText.setFillColor(sf::Color(220, 60, 60));
+    m_coinsText.setCharacterSize(charSize);
+    m_coinsText.setFillColor(sf::Color(255, 215, 0));   // or
+    m_coinsText.setStyle(sf::Text::Bold);
+    m_coinsText.setPosition({
+        textX,
+        MAP_H + (halfH - float(charSize)) / 2.f
+    });
+
+    m_livesText.setCharacterSize(charSize);
+    m_livesText.setFillColor(sf::Color(230, 60, 60));   // rouge vif
     m_livesText.setStyle(sf::Text::Bold);
-    m_livesText.setPosition({ toWinX(200.f), MAP_H + UI_H / 2.f + 8.f });
+    m_livesText.setPosition({
+        textX,
+        MAP_H + halfH + (halfH - float(charSize)) / 2.f
+    });
 
     // ── Boutons tours ─────────────────────────────────────────────────────────
-    // Colonne 0-64  : bouton basic (tour lvl1)
-    // Colonnes 64-128 : 4 boutons lv2 en grille 2x2
     struct BtnDef { const char* path; float x, y, w, h; const char* type; };
     constexpr BtnDef defs[] = {
         { "../assets/sprites/buttons/buy_normal_tower_button.png",  0.f,  0.f, 64.f, 96.f, "basic"  },
@@ -154,7 +166,10 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
 
 // ─── updateTexts ──────────────────────────────────────────────────────────────
 void GameView::updateTexts() {
+    // Coins : récupéré depuis TowerController
     m_coinsText.setString(std::to_string(m_towerController.getCoins()));
+
+    // Vies : setLives() appelé depuis main à chaque fois qu'un ennemi atteint le château
     m_livesText.setString(std::to_string(m_lives));
 }
 
@@ -187,23 +202,21 @@ void GameView::drawEnemies() {
 // ─── drawUpgradeHighlight ─────────────────────────────────────────────────────
 void GameView::drawUpgradeHighlight() {
     if (!m_towerController.hasUpgradeTarget()) return;
-    // Le TowerController expose getUpgradeTargetPos via index → on dessine
-    // un cercle jaune via getTowerIndexAt (pas besoin d'exposer la position
-    // directement : le render des tours le fait déjà, on ajoute juste le ring)
-    // Note : pour avoir la position, on expose une méthode dans main.cpp
-    // via le cercle positionné dans handleClickAt.
+    // Le ring est positionné depuis main.cpp via upgradeRingPos
 }
 
 // ─── drawUIBar ────────────────────────────────────────────────────────────────
 void GameView::drawUIBar() {
+    // 1. Fond des panels
     m_window.draw(m_topPanel);
     m_window.draw(m_goldPanel);
     m_window.draw(m_heartPanel);
 
-    // Textes coins / vies par-dessus les panels
+    // 2. Textes par-dessus (coins en or, vies en rouge)
     m_window.draw(m_coinsText);
     m_window.draw(m_livesText);
 
+    // 3. Boutons tours
     for (const auto& btn : m_towerButtons)
         btn.draw(m_window);
 
@@ -232,7 +245,7 @@ void GameView::updateHoverAt(sf::Vector2f logicalPos) { updateHover(logicalPos);
 // ─── handleClickAt ────────────────────────────────────────────────────────────
 MenuAction GameView::handleClickAt(sf::Vector2f logicalPos) {
     for (const auto& btn : m_towerButtons)
-        if (btn.contains(logicalPos)) return MenuAction::None; // géré dans main
+        if (btn.contains(logicalPos)) return MenuAction::None;
 
     if (m_sellButton && m_sellButton->contains(logicalPos))
         return m_sellButton->getAction();

@@ -1,5 +1,5 @@
 #include <SFML/Graphics.hpp>
-#include <iostream>                         
+#include <iostream>
 
 #include "View/MainMenu.hpp"
 #include "View/SettingsMenu.hpp"
@@ -14,6 +14,7 @@
 #include "Model/WaveManager.hpp"
 #include "Model/Enemy.hpp"
 #include "Model/CountdownTimer.hpp"
+#include "Model/Castle.hpp"
 
 static bool s_fullscreen = false;
 
@@ -98,21 +99,34 @@ int main() {
             );
             waveManager.startNextWave();
 
-            CountdownTimer    timer(120.f);
-            TowerController   towerController;
+            CountdownTimer  timer(120.f);
+            TowerController towerController;
             towerController.loadFromJson("../assets/data/tower_values.json");
 
-            GameView gameView(window, map, waveManager, timer, towerController);
+            // ── Château positionné sur le dernier waypoint ────────────────
+            sf::Vector2f castlePos = waypoints.empty()
+                ? sf::Vector2f(900.f, 550.f)
+                : waypoints.back();
 
-            // Cercle de surbrillance pour la tour sélectionnée à upgrader
+            Castle castle(
+                "../assets/sprites/big_buildings/castle.png",
+                castlePos,
+                20
+            );
+
+            GameView gameView(window, map, waveManager, timer, towerController);
+            gameView.setLives(castle.getLives());
+
+            // ── Cercle surbrillance upgrade ───────────────────────────────
             sf::CircleShape upgradeRing(28.f);
             upgradeRing.setOrigin({ 28.f, 28.f });
             upgradeRing.setFillColor(sf::Color::Transparent);
             upgradeRing.setOutlineColor(sf::Color::Yellow);
             upgradeRing.setOutlineThickness(3.f);
-            bool showUpgradeRing = false;
+            bool         showUpgradeRing = false;
             sf::Vector2f upgradeRingPos;
 
+            int prevReached = 0;
             clock.restart();
 
             while (window.isOpen()) {
@@ -123,11 +137,12 @@ int main() {
                     window.getSize().x, window.getSize().y);
                 window.setView(view);
 
-                // ── Événements ───────────────────────────────────────────
+                // ── Événements ────────────────────────────────────────────
                 while (const auto event = window.pollEvent()) {
 
                     if (event->is<sf::Event::Closed>()) {
-                        window.close(); break;
+                        window.close();
+                        break;
                     }
 
                     if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
@@ -155,56 +170,36 @@ int main() {
 
                         if (mb->button == sf::Mouse::Button::Left) {
 
-                            // ── Clic dans l'UI ───────────────────────────
                             std::string type = gameView.getTowerTypeAt(wp);
 
                             if (!type.empty()) {
-                                // Mode upgrade : on applique le choix lv2
                                 if (towerController.hasUpgradeTarget()) {
                                     if (type != "basic") {
-                                        // Tenter l'upgrade
-                                        if (!towerController.upgradeTower(type)) {
-                                            // pas assez de coins → feedback console
+                                        if (!towerController.upgradeTower(type))
                                             std::cerr << "[main] Not enough coins to upgrade to "
                                                       << type << "\n";
-                                        }
                                         showUpgradeRing = false;
                                     }
-                                    // clic sur "basic" en mode upgrade → ignorer
-                                }
-                                else {
-                                    // Mode placement normal
-                                    // basic = gratuit, lv2 = 10 coins
-                                    if (!towerController.selectTower(type)) {
+                                } else {
+                                    if (!towerController.selectTower(type))
                                         std::cerr << "[main] Not enough coins for "
                                                   << type << "\n";
-                                    }
                                 }
-                            }
-                            else {
-                                // ── Clic sur Back / Sell ─────────────────
+                            } else {
                                 MenuAction act = gameView.handleClickAt(wp);
                                 if (act == MenuAction::Exit)
                                     goto backToMenu;
 
-                                // ── Clic sur la carte ─────────────────────
                                 if (act == MenuAction::None && wp.y < MAP_H) {
-
                                     if (towerController.hasSelection()) {
-                                        // Poser la tour
                                         towerController.placeTower(wp);
                                         showUpgradeRing = false;
-                                    }
-                                    else {
-                                        // Sélectionner une tour existante pour upgrade
+                                    } else {
                                         int idx = towerController.getTowerIndexAt(wp);
                                         if (idx >= 0) {
                                             towerController.selectTowerForUpgrade(idx);
-                                            // Positionner le ring
-                                            // On passe par getTowerIndexAt qui connaît la pos
-                                            // On expose getPosition via index dans le controller
                                             showUpgradeRing = true;
-                                            upgradeRingPos  = wp; // approx — raffinée ci-dessous
+                                            upgradeRingPos  = wp;
                                         } else {
                                             towerController.clearSelection();
                                             showUpgradeRing = false;
@@ -223,15 +218,34 @@ int main() {
 
                 // ── Logique ───────────────────────────────────────────────
                 waveManager.update(dt);
+
+                // Vies château : décrémenter selon ennemis arrivés
+                {
+                    int totalReached = waveManager.getTotalReached();
+                    int delta        = totalReached - prevReached;
+                    if (delta > 0) {
+                        castle.loseLife(delta);
+                        gameView.setLives(castle.getLives());
+                        prevReached = totalReached;
+                        std::cout << "[main] Castle lives: " << castle.getLives() << "\n";
+                    }
+                }
+
+                if (castle.isDead()) {
+                    std::cout << "[main] Game Over!\n";
+                    goto backToMenu;
+                }
+
                 towerController.update(dt, waveManager.getActiveEnemies());
                 timer.update(dt);
                 gameView.update(dt);
 
                 // ── Rendu ─────────────────────────────────────────────────
                 window.clear(sf::Color::Black);
-                gameView.render();
+                gameView.render();          // carte + ennemis + UI bar
 
-                // Ring de surbrillance upgrade
+                castle.render(window);      // sprite château + barre de vie
+
                 if (showUpgradeRing && towerController.hasUpgradeTarget()) {
                     upgradeRing.setPosition(upgradeRingPos);
                     window.draw(upgradeRing);
