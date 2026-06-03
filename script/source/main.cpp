@@ -12,11 +12,6 @@
 #include "Model/WaveManager.hpp"
 #include "Model/Enemy.hpp"
 
-// ─────────────────────────────────────────────
-// CONSTANTES D'ÉCRAN
-// ─────────────────────────────────────────────
-constexpr unsigned WIN_W = 960;
-constexpr unsigned WIN_H = 540;
 
 static bool s_fullscreen = false;
 

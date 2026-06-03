@@ -22,17 +22,14 @@ bool TowerController::loadFromJson(const std::string& jsonPath) {
         return false;
     }
 
-    // Structure attendue :
-    //   { "lvl1": { "basic": { "attackdatas": {...}, "paths": {...} } },
-    //     "lvl2": { "fire":  { ... }, "ice": { ... } } }
     for (auto& [levelKey, levelNode] : root.items()) {
         if (!levelNode.is_object()) continue;
+
         for (auto& [towerName, towerNode] : levelNode.items()) {
             if (towerNode.contains("attackdatas")) {
-                // Nœud direct
                 parseTowerEntry(towerName, towerNode);
-            } else if (towerNode.is_object()) {
-                // Niveau imbriqué supplémentaire
+            }
+            else if (towerNode.is_object()) {
                 for (auto& [subName, subNode] : towerNode.items()) {
                     if (subNode.contains("attackdatas"))
                         parseTowerEntry(subName, subNode);
@@ -53,8 +50,7 @@ void TowerController::parseTowerEntry(const std::string& name, const json& node)
     data.name = name;
     data.id   = node.value("id", 0);
 
-    // AttackData
-    const auto& ad          = node["attackdatas"];
+    const auto& ad = node["attackdatas"];
     data.attackData.damage          = ad.value("damage",          0.f);
     data.attackData.range           = ad.value("range",           0.f);
     data.attackData.fireRate        = ad.value("firerate",        0.f);
@@ -64,13 +60,14 @@ void TowerController::parseTowerEntry(const std::string& name, const json& node)
     data.attackData.aoeRadius       = ad.value("aoeradius",       0.f);
     data.attackData.nbTarget        = ad.value("nbtarget",        1);
 
-    // Chemins sprites
     if (node.contains("paths")) {
         data.buildingSpritePath   = node["paths"].value("building",   "");
         data.projectileSpritePath = node["paths"].value("projectile", "");
     }
 
+    // ─────────────────────────────────────────────
     // Chargement texture bâtiment
+    // ─────────────────────────────────────────────
     {
         sf::Texture tex;
         if (!data.buildingSpritePath.empty() && tex.loadFromFile(data.buildingSpritePath)) {
@@ -78,12 +75,15 @@ void TowerController::parseTowerEntry(const std::string& name, const json& node)
         } else {
             std::cerr << "[TowerController] Missing building sprite for '"
                       << name << "': " << data.buildingSpritePath << "\n";
+
             sf::Image img({32, 32}, sf::Color(180, 180, 180));
-            buildingTextures_[name].loadFromImage(img);
+            (void)buildingTextures_[name].loadFromImage(img); // ✔️ warning SFML3 supprimé
         }
     }
 
+    // ─────────────────────────────────────────────
     // Chargement texture projectile
+    // ─────────────────────────────────────────────
     {
         sf::Texture tex;
         if (!data.projectileSpritePath.empty() && tex.loadFromFile(data.projectileSpritePath)) {
@@ -91,8 +91,9 @@ void TowerController::parseTowerEntry(const std::string& name, const json& node)
         } else {
             std::cerr << "[TowerController] Missing projectile sprite for '"
                       << name << "': " << data.projectileSpritePath << "\n";
+
             sf::Image img({8, 8}, sf::Color(255, 220, 0));
-            projectileTextures_[name].loadFromImage(img);
+            (void)projectileTextures_[name].loadFromImage(img); // ✔️ warning SFML3 supprimé
         }
     }
 

@@ -10,6 +10,15 @@
 #include "Button.hpp"
 #include "TowerController.hpp"
 
+// ─────────────────────────────────────────────
+// CONSTANTES UTILISÉES PAR GameView
+// ─────────────────────────────────────────────
+constexpr unsigned WIN_W = 960;
+constexpr unsigned WIN_H = 540;
+constexpr float MAP_SCALE = 2.f;
+// ─────────────────────────────────────────────
+// GameView
+// ─────────────────────────────────────────────
 class GameView {
 public:
     GameView(sf::RenderWindow& window,
