@@ -62,8 +62,8 @@ void GameView::buildUI() {
 
     m_topPanel = makePanelShape(m_topPanelTex, 0.f, MAP_H, toWinW(192.f), UI_H);
 
-    // gold_pannel : x=192, y=0, w=64, h=48  (moitié haute)
-    // heart_pannel: x=192, y=48, w=64, h=48 (moitié basse)
+    // gold_pannel : x=192, y=0, w=64, h=48  
+    // heart_pannel: x=192, y=48, w=64, h=48 
     float gx = toWinX(192.f);
     float gw = toWinW(64.f);
     float gh = toUIH(48.f);
@@ -74,7 +74,7 @@ void GameView::buildUI() {
     // ── Textes coins/vies dans les panels ─────────────────────────────────────
     // gold_pannel.png : pièce à DROITE → texte à gauche
     unsigned int charSize = 22u;
-    float textX = gx + gw * 0.18f;  // décalé à droite, avant l'icône
+    float textX = gx + gw * 0.18f;  
     float padY  = (gh - float(charSize)) / 2.f;
 
     m_coinsText.setFont(m_font);
@@ -190,7 +190,7 @@ void GameView::drawUpgradeHighlight() {
 void GameView::drawUIBar() {
     // Ordre de dessin : fond d'abord, textes par-dessus
     m_window.draw(m_topPanel);
-    m_window.draw(m_goldPanel);   // visible à x=192..256 (entre sell et back)
+    m_window.draw(m_goldPanel);   
     m_window.draw(m_heartPanel);
 
     // Textes PAR-DESSUS les panels

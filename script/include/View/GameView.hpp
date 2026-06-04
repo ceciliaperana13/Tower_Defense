@@ -11,7 +11,7 @@
 #include "Button.hpp"
 #include "TowerController.hpp"
 
-// Map exacte : 33*16*2 = 1056 x 22*16*2 = 704
+// Map 
 constexpr unsigned WIN_W  = 1056u;
 constexpr float    UI_H   = 128.f;
 constexpr unsigned WIN_H  = static_cast<unsigned>(704.f + UI_H);  // 832
@@ -34,7 +34,7 @@ public:
     MenuAction handleClickAt(sf::Vector2f logicalPos);
     MenuAction handleEvent(const sf::Event& event);
 
-    // Retourne le type de tour du bouton cliqué ("" sinon)
+    
     // En mode upgrade, retourne le type lv2 correspondant
     std::string getTowerTypeAt(sf::Vector2f logicalPos) const;
 
@@ -54,7 +54,7 @@ private:
     TowerController&  m_towerController;
     TimerView         m_timerView;
 
-    // ── Panels fond UI ───────────────────────────────────────────────────────
+    // ── Panels fond UI 
     sf::Texture        m_topPanelTex;
     sf::Texture        m_goldPanelTex;
     sf::Texture        m_heartPanelTex;
@@ -62,14 +62,14 @@ private:
     sf::RectangleShape m_goldPanel;
     sf::RectangleShape m_heartPanel;
 
-    // ── Boutons tours (placement + upgrade) ──────────────────────────────────
+    // ── Boutons tours (placement + upgrade) 
     std::vector<Button>      m_towerButtons;   // 5 boutons : basic + 4 lv2
     std::vector<std::string> m_towerTypes;     // type associé à chaque bouton
 
     std::optional<Button> m_sellButton;
     std::optional<Button> m_backButton;
 
-    // ── Texte coins / vies ───────────────────────────────────────────────────
+    // ── Texte coins / vies 
     sf::Font m_font;
     sf::Text m_coinsText;
     sf::Text m_livesText;

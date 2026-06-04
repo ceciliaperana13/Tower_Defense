@@ -21,7 +21,7 @@ private:
     CountdownTimer& m_timer;
 
     sf::Texture               m_texture;
-    std::optional<sf::Sprite> m_sprite;   // SFML3 : pas de constructeur par défaut
+    std::optional<sf::Sprite> m_sprite;   
 
     sf::Font                  m_font;
     std::optional<sf::Text>   m_text;     // idem pour sf::Text

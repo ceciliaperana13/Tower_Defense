@@ -32,7 +32,7 @@ public:
     int  getId()      const { return m_id; }
     int  getReward()  const { return m_reward; }
 
-    // 🔥 AJOUTS OBLIGATOIRES POUR SFML 3 + TowerController
+    // Accesseurs pour position et bounds (utiles pour les collisions)
     sf::Vector2f getPosition() const {
         if (m_sprite.has_value())
             return m_sprite->getPosition();
