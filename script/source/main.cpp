@@ -61,7 +61,7 @@ int main() {
     openWindowed(window);
 
     GameSettings   settings;
-    SaveController saveCtrl;   // chemin par défaut : ../assets/data/scores.json
+    SaveController saveCtrl;
     sf::Clock      clock;
 
     while (window.isOpen()) {
@@ -82,7 +82,7 @@ int main() {
         if (action == MenuAction::Scoreboard) {
             window.setView(windowedView());
             Leaderboard lb(window, saveCtrl);
-            lb.run();   // run() recharge loadScores() → toujours à jour
+            lb.run();
             continue;
         }
 
@@ -128,14 +128,13 @@ int main() {
             int prevReached = 0;
             clock.restart();
 
-            // ── Construit et sauvegarde le ScoreData de la session ────────
+            
             auto flushScore = [&]() {
                 ScoreData sd;
                 sd.playerName  = "Player";
                 sd.score       = towerController.getCoins();
-                sd.enemyCount  = waveManager.getTotalWaves();    // était getTotalKills()
-                sd.wave        = waveManager.getCurrentWaveId(); // était getCurrentWave()
-                // date auto-remplie par saveScore() si vide
+                sd.enemyCount  = waveManager.getTotalKills();   // kill
+                sd.wave        = waveManager.getCurrentWaveId();
                 saveCtrl.saveScore(sd);
             };
 
@@ -147,11 +146,10 @@ int main() {
                     window.getSize().x, window.getSize().y);
                 window.setView(view);
 
-                // ── Événements ───────────────────────────────────────────
+                // ── Événements 
                 while (const auto event = window.pollEvent()) {
 
                     if (event->is<sf::Event::Closed>()) {
-                        // Fermeture brutale : sauvegarde quand même
                         flushScore();
                         window.close();
                         break;
@@ -200,7 +198,6 @@ int main() {
                             } else {
                                 MenuAction act = gameView.handleClickAt(wp);
 
-                                // Bouton retour → sauvegarde avant de quitter
                                 if (act == MenuAction::Exit) {
                                     flushScore();
                                     goto backToMenu;
@@ -232,7 +229,7 @@ int main() {
                     }
                 }
 
-                // ── Logique ──────────────────────────────────────────────
+                // ── Logique 
                 for (auto& e : waveManager.getActiveEnemies()) {
                     if (e->isDead() && !e->hasReached())
                         towerController.addCoins(e->getReward());
@@ -251,7 +248,6 @@ int main() {
                     }
                 }
 
-                // Game Over → sauvegarde avant de quitter
                 if (castle.isDead()) {
                     std::cout << "[main] Game Over!\n";
                     flushScore();
@@ -262,7 +258,7 @@ int main() {
                 timer.update(dt);
                 gameView.update(dt);
 
-                // ── Rendu ─────────────────────────────────────────────────
+                // ── Rendu 
                 window.clear(sf::Color::Black);
                 gameView.render();
 
