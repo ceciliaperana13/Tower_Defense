@@ -10,7 +10,7 @@
 #include "TimerView.hpp"
 #include "Button.hpp"
 #include "TowerController.hpp"
-
+#include "WaveView.hpp"
 // Map 
 constexpr unsigned WIN_W  = 1056u;
 constexpr float    UI_H   = 128.f;
@@ -53,7 +53,7 @@ private:
     CountdownTimer&   m_timer;
     TowerController&  m_towerController;
     TimerView         m_timerView;
-
+    WaveView          m_waveView;
     // ── Panels fond UI 
     sf::Texture        m_topPanelTex;
     sf::Texture        m_goldPanelTex;

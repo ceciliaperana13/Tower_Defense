@@ -250,9 +250,8 @@ int main() {
                     }
                 }
 
-                // ───────────────────────────────────────────────
+                
                 // Logique
-                // ───────────────────────────────────────────────
                 for (auto& e : waveManager.getActiveEnemies()) {
                     if (e->isDead() && !e->hasReached())
                         towerController.addCoins(e->getReward());
@@ -284,7 +283,7 @@ int main() {
                     goto backToMenu;
                 }
 
-                // Victoire : toutes les vagues + plus d’ennemis
+                // Victoire : toutes les vagues + plus d'ennemis
                 if (waveManager.isWaveComplete() &&
                     waveManager.getCurrentWaveId() == waveManager.getTotalWaves() &&
                     waveManager.getActiveEnemies().empty() &&

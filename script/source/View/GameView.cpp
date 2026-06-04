@@ -7,7 +7,7 @@ static void loadTex(sf::Texture& tex, const std::string& path) {
         std::cerr << "[GameView] Missing texture: " << path << "\n";
 }
 
-// ─── Constructeur 
+// ─── Constructeur
 GameView::GameView(sf::RenderWindow& window,
                    Map& map,
                    WaveManager& waveManager,
@@ -19,6 +19,7 @@ GameView::GameView(sf::RenderWindow& window,
     , m_timer(timer)
     , m_towerController(towerController)
     , m_timerView(timer)
+    , m_waveView(waveManager)
     , m_coinsText(m_font)
     , m_livesText(m_font)
 {
@@ -34,6 +35,9 @@ GameView::GameView(sf::RenderWindow& window,
     m_timerView.setScale(sf::Vector2f(1.5f, 1.5f));
     m_timerView.setPosition(sf::Vector2f(float(WIN_W) / 2.f - 48.f, 8.f));
 
+    // WaveView positionné à droite du timer
+    m_waveView.setPosition(sf::Vector2f(float(WIN_W) / 2.f + 64.f, 8.f));
+
     m_upgradeHighlight.setRadius(28.f);
     m_upgradeHighlight.setOrigin({ 28.f, 28.f });
     m_upgradeHighlight.setFillColor(sf::Color::Transparent);
@@ -41,7 +45,7 @@ GameView::GameView(sf::RenderWindow& window,
     m_upgradeHighlight.setOutlineThickness(3.f);
 }
 
-// ─── makePanelShape ───────────────────────────────────────────────────────────
+// ─── makePanelShape 
 sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
                                             float px, float py,
                                             float pw, float ph) const {
@@ -52,18 +56,14 @@ sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
     return shape;
 }
 
-// ─── buildUI ──────────────────────────────────────────────────────────────────
+// ─── buildUI 
 void GameView::buildUI() {
     loadTex(m_topPanelTex,   "../assets/sprites/buttons/top_panel.png");
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
     loadTex(m_heartPanelTex, "../assets/sprites/buttons/heart_pannel.png");
 
-    
-
     m_topPanel = makePanelShape(m_topPanelTex, 0.f, MAP_H, toWinW(192.f), UI_H);
 
-    // gold_pannel : x=192, y=0, w=64, h=48  
-    // heart_pannel: x=192, y=48, w=64, h=48 
     float gx = toWinX(192.f);
     float gw = toWinW(64.f);
     float gh = toUIH(48.f);
@@ -71,10 +71,8 @@ void GameView::buildUI() {
     m_goldPanel  = makePanelShape(m_goldPanelTex,  gx, MAP_H,        gw, gh);
     m_heartPanel = makePanelShape(m_heartPanelTex, gx, MAP_H + gh,   gw, gh);
 
-    // ── Textes coins/vies dans les panels ─────────────────────────────────────
-    // gold_pannel.png : pièce à DROITE → texte à gauche
     unsigned int charSize = 22u;
-    float textX = gx + gw * 0.18f;  
+    float textX = gx + gw * 0.18f;
     float padY  = (gh - float(charSize)) / 2.f;
 
     m_coinsText.setFont(m_font);
@@ -91,7 +89,6 @@ void GameView::buildUI() {
     m_livesText.setString("20");
     m_livesText.setPosition({ textX, MAP_H + gh + padY });
 
-    // ── Boutons tours ─────────────────────────────────────────────────────────
     struct BtnDef { const char* path; float x, y, w, h; const char* type; };
     constexpr BtnDef defs[] = {
         { "../assets/sprites/buttons/buy_normal_tower_button.png",  0.f,  0.f, 64.f, 96.f, "basic"  },
@@ -112,17 +109,15 @@ void GameView::buildUI() {
         m_towerTypes.push_back(d.type);
     }
 
-    // ── vendre 
     m_sellButton.emplace(
-    "../assets/sprites/buttons/sell_tower_button.png",
-    toWinX(128.f) + toWinW(64.f) / 2.f,
-    toUIY(0.f)    + toUIH(96.f)  / 2.f,
-    toWinW(64.f),
-    toUIH(96.f),
-    MenuAction::SellTower
-);
+        "../assets/sprites/buttons/sell_tower_button.png",
+        toWinX(128.f) + toWinW(64.f) / 2.f,
+        toUIY(0.f)    + toUIH(96.f)  / 2.f,
+        toWinW(64.f),
+        toUIH(96.f),
+        MenuAction::SellTower
+    );
 
-    // ── BACK : 
     float backW = toWinW(64.f);
     float backX = toWinX(256.f) + backW / 2.f;
     m_backButton.emplace(
@@ -152,7 +147,7 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     return view;
 }
 
-// ─── updateTexts 
+// ─── updateTexts
 void GameView::updateTexts() {
     m_coinsText.setString(std::to_string(m_towerController.getCoins()));
     m_livesText.setString(std::to_string(m_lives));
@@ -161,6 +156,7 @@ void GameView::updateTexts() {
 // ─── update 
 void GameView::update(float /*dt*/) {
     m_timerView.update();
+    m_waveView.update();
     updateTexts();
 }
 
@@ -171,6 +167,7 @@ void GameView::render() {
     drawUpgradeHighlight();
     drawUIBar();
     m_window.draw(m_timerView);
+    m_waveView.render(m_window);
 }
 
 void GameView::drawMap() {
@@ -186,14 +183,12 @@ void GameView::drawUpgradeHighlight() {
     if (!m_towerController.hasUpgradeTarget()) return;
 }
 
-// ─── drawUIBar 
+// ─── UIBar 
 void GameView::drawUIBar() {
-    // Ordre de dessin : fond d'abord, textes par-dessus
     m_window.draw(m_topPanel);
-    m_window.draw(m_goldPanel);   
+    m_window.draw(m_goldPanel);
     m_window.draw(m_heartPanel);
 
-    // Textes PAR-DESSUS les panels
     m_window.draw(m_coinsText);
     m_window.draw(m_livesText);
 
