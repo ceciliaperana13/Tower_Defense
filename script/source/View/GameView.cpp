@@ -36,7 +36,7 @@ GameView::GameView(sf::RenderWindow& window,
     m_timerView.setPosition(sf::Vector2f(float(WIN_W) / 2.f - 48.f, 8.f));
 
     // WaveView positionné à droite du timer
-    m_waveView.setPosition(sf::Vector2f(float(WIN_W) / 2.f + 64.f, 8.f));
+    m_waveView.setPosition(sf::Vector2f(float(WIN_W) / 2.f + 180.f, 14.f));
 
     m_upgradeHighlight.setRadius(28.f);
     m_upgradeHighlight.setOrigin({ 28.f, 28.f });

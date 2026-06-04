@@ -1,9 +1,6 @@
 #include "View/WaveView.hpp"
 #include <iostream>
 
-
-//TODO : faire un sprite de fond de texte pour que cela resorte mieux 
-//un peu plus a droite du timer pour pas que ca ce chevauche +reduire la taille du texte
 WaveView::WaveView(WaveManager& waveManager)
     : m_waveManager(waveManager)
     , m_text(m_font)
@@ -12,11 +9,10 @@ WaveView::WaveView(WaveManager& waveManager)
         std::cerr << "[WaveView] Impossible de charger la police\n";
 
     m_text.setFont(m_font);
-    m_text.setCharacterSize(28);
+    m_text.setCharacterSize(20);
     m_text.setFillColor(sf::Color::White);
     m_text.setOutlineColor(sf::Color::Black);
     m_text.setOutlineThickness(2.f);
-    // Position définie par GameView via setPosition()
 }
 
 void WaveView::setPosition(sf::Vector2f pos) {
