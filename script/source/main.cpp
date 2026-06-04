@@ -58,7 +58,7 @@ static void toggleFullscreen(sf::RenderWindow& window) {
 }
 
 
-// main
+// main  deplacer et mettre le systeme de rendu dans le state 
 int main() {
     sf::RenderWindow window;
     openWindowed(window);
