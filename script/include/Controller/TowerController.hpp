@@ -17,7 +17,7 @@ public:
 
     bool loadFromJson(const std::string& path);
 
-    // ── Sélection / placement ────────────────────────────────────────────────
+    // ── Sélection / placement 
     // Sélectionne un type de tour (vérifie les coins).
     // Retourne false si pas assez de coins.
     bool selectTower(const std::string& type);
@@ -28,7 +28,7 @@ public:
     // Place la tour sélectionnée à pos, déduit les coins.
     void placeTower(sf::Vector2f pos);
 
-    // ── Upgrade ──────────────────────────────────────────────────────────────
+    // ── Upgrade 
     // Retourne l'index de la tour cliquée (-1 si aucune)
     int  getTowerIndexAt(sf::Vector2f pos) const;
 
@@ -39,17 +39,17 @@ public:
     // Retourne false si pas assez de coins ou tour déjà lv2
     bool upgradeTower(const std::string& lv2Type);
 
-    // ── État ─────────────────────────────────────────────────────────────────
+    // ── État 
     bool hasSelection()     const { return !m_selectedType.empty(); }
     bool hasUpgradeTarget() const { return m_upgradeTargetIndex >= 0; }
     int  getCoins()         const { return m_coins; }
     void addCoins(int amount)     { m_coins += amount; }
     int  getCostOf(const std::string& type) const;
 
-    // ── Ghost ────────────────────────────────────────────────────────────────
+    // ── Ghost 
     void setGhostPosition(sf::Vector2f pos);
 
-    // ── Boucle ───────────────────────────────────────────────────────────────
+    // ── Boucle 
     void update(float dt, const std::vector<std::unique_ptr<Enemy>>& enemies);
     void render(sf::RenderWindow& window);
 

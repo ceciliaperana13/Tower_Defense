@@ -7,6 +7,7 @@ static void loadTex(sf::Texture& tex, const std::string& path) {
         std::cerr << "[GameView] Missing texture: " << path << "\n";
 }
 
+// ─── Constructeur 
 GameView::GameView(sf::RenderWindow& window,
                    Map& map,
                    WaveManager& waveManager,
@@ -40,6 +41,7 @@ GameView::GameView(sf::RenderWindow& window,
     m_upgradeHighlight.setOutlineThickness(3.f);
 }
 
+// ─── makePanelShape ───────────────────────────────────────────────────────────
 sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
                                             float px, float py,
                                             float pw, float ph) const {
@@ -50,38 +52,48 @@ sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
     return shape;
 }
 
+// ─── buildUI ──────────────────────────────────────────────────────────────────
 void GameView::buildUI() {
     loadTex(m_topPanelTex,   "../assets/sprites/buttons/top_panel.png");
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
     loadTex(m_heartPanelTex, "../assets/sprites/buttons/heart_pannel.png");
 
-    // ── Dimensions ────────────────────────────────────────────────────────────
-    
-    float panelX = toWinX(192.f);   // 633.6
-    float panelW = toWinW(64.f);    // 211.2
-    float halfH  = UI_H / 2.f;      // 64
+    // ── Layout logique (sur 320 unités de large, 96 de haut) ─────────────────
+    // x=0..128    : top_panel (boutons tour basic + lv2)
+    // x=128..192  : sell button
+    // x=192..256  : gold_pannel (haut) + heart_pannel (bas)  ← ICI
+    // x=256..320  : back_to_main_menu (réduit à 64 unités)
 
-    m_topPanel   = makePanelShape(m_topPanelTex,  0.f,    MAP_H,         toWinW(192.f), UI_H);
-    m_goldPanel  = makePanelShape(m_goldPanelTex,  panelX, MAP_H,         panelW,        halfH);
-    m_heartPanel = makePanelShape(m_heartPanelTex, panelX, MAP_H + halfH, panelW,        halfH);
+    m_topPanel = makePanelShape(m_topPanelTex, 0.f, MAP_H, toWinW(192.f), UI_H);
 
-    // ── Textes coins / vies ───────────────────────────────────────────────────
-    
-    unsigned int charSize = 26u;
-    float textX = panelX + panelW * 0.38f;        // après l'icône
-    float padY  = (halfH - float(charSize)) / 2.f; // centrage vertical
+    // gold_pannel : x=192, y=0, w=64, h=48  (moitié haute)
+    // heart_pannel: x=192, y=48, w=64, h=48 (moitié basse)
+    float gx = toWinX(192.f);
+    float gw = toWinW(64.f);
+    float gh = toUIH(48.f);
 
+    m_goldPanel  = makePanelShape(m_goldPanelTex,  gx, MAP_H,        gw, gh);
+    m_heartPanel = makePanelShape(m_heartPanelTex, gx, MAP_H + gh,   gw, gh);
+
+    // ── Textes coins/vies dans les panels ─────────────────────────────────────
+    // gold_pannel.png : pièce à DROITE → texte à gauche
+    unsigned int charSize = 22u;
+    float textX = gx + gw * 0.18f;  // décalé à droite, avant l'icône
+    float padY  = (gh - float(charSize)) / 2.f;
+
+    m_coinsText.setFont(m_font);
     m_coinsText.setCharacterSize(charSize);
     m_coinsText.setFillColor(sf::Color(255, 220, 0));
     m_coinsText.setStyle(sf::Text::Bold);
     m_coinsText.setString("100");
     m_coinsText.setPosition({ textX, MAP_H + padY });
 
+    m_livesText.setFont(m_font);
     m_livesText.setCharacterSize(charSize);
     m_livesText.setFillColor(sf::Color(255, 80, 80));
     m_livesText.setStyle(sf::Text::Bold);
     m_livesText.setString("20");
-    m_livesText.setPosition({ textX, MAP_H + halfH + padY });
+    m_livesText.setPosition({ textX, MAP_H + gh + padY });
 
     // ── Boutons tours ─────────────────────────────────────────────────────────
     struct BtnDef { const char* path; float x, y, w, h; const char* type; };
@@ -104,6 +116,7 @@ void GameView::buildUI() {
         m_towerTypes.push_back(d.type);
     }
 
+    // ── SELL : x=128..192 
     m_sellButton.emplace(
         "../assets/sprites/buttons/sell_tower_button.png",
         toWinX(128.f) + toWinW(64.f) / 2.f,
@@ -112,8 +125,9 @@ void GameView::buildUI() {
         MenuAction::None
     );
 
-    float backW = toWinW(128.f);
-    float backX = float(WIN_W) - backW / 2.f;
+    // ── BACK : x=256..320 (64 unités logiques) 
+    float backW = toWinW(64.f);
+    float backX = toWinX(256.f) + backW / 2.f;
     m_backButton.emplace(
         "../assets/sprites/buttons/back_to_main_menu_button.png",
         backX, toUIY(0.f) + toUIH(96.f) / 2.f,
@@ -122,6 +136,7 @@ void GameView::buildUI() {
     );
 }
 
+// ─── makeLetterboxView 
 sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     float contentRatio = float(WIN_W) / float(WIN_H);
     float screenRatio  = float(screenW) / float(screenH);
@@ -140,16 +155,19 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     return view;
 }
 
+// ─── updateTexts 
 void GameView::updateTexts() {
     m_coinsText.setString(std::to_string(m_towerController.getCoins()));
     m_livesText.setString(std::to_string(m_lives));
 }
 
+// ─── update 
 void GameView::update(float /*dt*/) {
     m_timerView.update();
     updateTexts();
 }
 
+// ─── render 
 void GameView::render() {
     drawMap();
     drawEnemies();
@@ -171,29 +189,17 @@ void GameView::drawUpgradeHighlight() {
     if (!m_towerController.hasUpgradeTarget()) return;
 }
 
+// ─── drawUIBar 
 void GameView::drawUIBar() {
-    // ── 1. Panels de fond 
+    // Ordre de dessin : fond d'abord, textes par-dessus
     m_window.draw(m_topPanel);
-    m_window.draw(m_goldPanel);
+    m_window.draw(m_goldPanel);   // visible à x=192..256 (entre sell et back)
     m_window.draw(m_heartPanel);
 
-    // ── 2. Textes coins/vies PAR-DESSUS les panels toujours pas mi en place
-    
-    auto drawWithBg = [&](sf::Text& txt) {
-        sf::FloatRect b = txt.getLocalBounds();
-        // Fond semi-transparent
-        sf::RectangleShape bg({ b.size.x + 10.f, float(txt.getCharacterSize()) + 4.f });
-        bg.setPosition({ txt.getPosition().x - 4.f,
-                         txt.getPosition().y + b.position.y });
-        bg.setFillColor(sf::Color(0, 0, 0, 140));
-        m_window.draw(bg);
-        m_window.draw(txt);
-    };
+    // Textes PAR-DESSUS les panels
+    m_window.draw(m_coinsText);
+    m_window.draw(m_livesText);
 
-    drawWithBg(m_coinsText);
-    drawWithBg(m_livesText);
-
-    // ── 3. Boutons 
     for (const auto& btn : m_towerButtons)
         btn.draw(m_window);
     if (m_sellButton) m_sellButton->draw(m_window);

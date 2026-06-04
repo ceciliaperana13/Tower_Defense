@@ -217,6 +217,12 @@ int main() {
                 }
 
                 // ── Logique ───────────────────────────────────────────────
+                // ── Gain de coins sur kill (avant update qui supprime les ennemis) ──
+                for (auto& e : waveManager.getActiveEnemies()) {
+                    if (e->isDead() && !e->hasReached())
+                        towerController.addCoins(e->getReward());
+                }
+
                 waveManager.update(dt);
 
                 // Vies château : décrémenter selon ennemis arrivés
