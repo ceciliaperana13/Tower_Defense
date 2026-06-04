@@ -74,7 +74,7 @@ void Castle::drawHealthBar(sf::RenderWindow& window) const {
     }
 }
 
-// ─── render ───────────────────────────────────────────────────────────────────
+// ─── render 
 void Castle::render(sf::RenderWindow& window) const {
     window.draw(m_sprite);
     drawHealthBar(window);

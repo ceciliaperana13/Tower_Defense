@@ -2,7 +2,7 @@
     "lvl1": {
         "basic": {
             "id": 1,
-            "cost": 0,
+            "cost": 1,
             "attackdatas": {
                 "damage": 10,
                 "range": 3,
@@ -22,7 +22,7 @@
     "lvl2": {
         "fire": {
             "id": 2,
-            "cost": 10,
+            "cost": 25,
             "attackdatas": {
                 "damage": 15,
                 "range": 3,
@@ -40,7 +40,7 @@
         },
         "ice": {
             "id": 3,
-            "cost": 10,
+            "cost": 25,
             "attackdatas": {
                 "damage": 8,
                 "range": 3,
@@ -58,7 +58,7 @@
         },
         "rock": {
             "id": 4,
-            "cost": 10,
+            "cost": 25,
             "attackdatas": {
                 "damage": 25,
                 "range": 2,
@@ -76,7 +76,7 @@
         },
         "arcane": {
             "id": 5,
-            "cost": 10,
+            "cost": 25,
             "attackdatas": {
                 "damage": 5,
                 "range": 4,

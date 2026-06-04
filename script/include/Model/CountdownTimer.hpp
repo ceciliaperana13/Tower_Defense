@@ -11,7 +11,7 @@ public:
     float remaining() const;
     bool  isFinished();
 
-    // 🔥 Ajout SFML3 : pour main.cpp
+    // pourmain.cpp
     void update(float dt);
 
 private:

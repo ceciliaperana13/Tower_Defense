@@ -2,37 +2,37 @@
     "waves": [
         {
             "id": 1,
-            "speedMultiplier": 1.0,
+            "speedMultiplier": 1.5,
             "groups": [
-                { "type": "goblin", "count": 5, "spawnInterval": 0.8 }
+                { "type": "goblin", "count": 10, "spawnInterval": 0.8 }
             ],
-            "pauseBetweenGroups": 2.0
+            "pauseBetweenGroups": 1.0
         },
         {
             "id": 2,
             "speedMultiplier": 1.1,
             "groups": [
-                { "type": "goblin", "count": 6, "spawnInterval": 0.7 },
-                { "type": "orc",    "count": 2, "spawnInterval": 1.2 }
+                { "type": "goblin", "count": 6, "spawnInterval": 0.9 },
+                { "type": "orc",    "count": 3, "spawnInterval": 1.2 }
+            ],
+            "pauseBetweenGroups": 1.5
+        },
+        {
+            "id": 3,
+            "speedMultiplier": 1.5,
+            "groups": [
+                { "type": "goblin", "count": 8, "spawnInterval":1.8},
+                { "type": "orc",    "count": 4, "spawnInterval": 1.0 }
             ],
             "pauseBetweenGroups": 2.5
         },
         {
-            "id": 3,
-            "speedMultiplier": 1.2,
-            "groups": [
-                { "type": "goblin", "count": 8, "spawnInterval": 0.6 },
-                { "type": "orc",    "count": 4, "spawnInterval": 1.0 }
-            ],
-            "pauseBetweenGroups": 3.0
-        },
-        {
             "id": 4,
-            "speedMultiplier": 1.3,
+            "speedMultiplier": 2.5,
             "groups": [
-                { "type": "orc",    "count": 5, "spawnInterval": 1.0 },
-                { "type": "goblin", "count": 6, "spawnInterval": 0.5 },
-                { "type": "ogre",   "count": 1, "spawnInterval": 0.0 }
+                { "type": "orc",    "count": 10, "spawnInterval": 1.0 },
+                { "type": "goblin", "count": 8, "spawnInterval": 0.5 },
+                { "type": "ogre",   "count": 10, "spawnInterval": 0.0 }
             ],
             "pauseBetweenGroups": 3.0
         },
@@ -40,9 +40,9 @@
             "id": 5,
             "speedMultiplier": 1.4,
             "groups": [
-                { "type": "goblin", "count": 10, "spawnInterval": 0.5 },
-                { "type": "orc",    "count": 6,  "spawnInterval": 0.9 },
-                { "type": "ogre",   "count": 2,  "spawnInterval": 2.0 }
+                { "type": "goblin", "count": 20, "spawnInterval": 0.5 },
+                { "type": "orc",    "count": 15,  "spawnInterval": 0.9 },
+                { "type": "ogre",   "count": 50,  "spawnInterval": 2.0 }
             ],
             "pauseBetweenGroups": 3.5
         },
@@ -50,9 +50,9 @@
             "id": 6,
             "speedMultiplier": 1.55,
             "groups": [
-                { "type": "orc",    "count": 8,  "spawnInterval": 0.8 },
-                { "type": "goblin", "count": 12, "spawnInterval": 0.4 },
-                { "type": "ogre",   "count": 2,  "spawnInterval": 2.0 }
+                { "type": "orc",    "count": 20,  "spawnInterval": 0.8 },
+                { "type": "goblin", "count": 75, "spawnInterval": 0.4 },
+                { "type": "ogre",   "count": 75,  "spawnInterval": 2.0 }
             ],
             "pauseBetweenGroups": 3.5
         },
