@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "playerName": "Player",
+    "score": 100,
+    "enemyCount": 0,
+    "wave": 3,
+    "date": "2026-06-04 12:38"
+  },
+  {
+    "playerName": "Player",
+    "score": 84,
+    "enemyCount": 10,
+    "wave": 1,
+    "date": "2026-06-04 12:36"
+  }
+]

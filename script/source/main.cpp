@@ -9,6 +9,7 @@
 #include "Controller/SaveController.hpp"
 #include "Controller/SoundManager.hpp"
 #include "Controller/TowerController.hpp"
+#include "EndGameManager.hpp"
 
 #include "Model/Map.hpp"
 #include "Model/WaveManager.hpp"
@@ -117,6 +118,8 @@ int main() {
             GameView gameView(window, map, waveManager, timer, towerController);
             gameView.setLives(castle.getLives());
 
+            EndGameManager endGame;
+
             sf::CircleShape upgradeRing(28.f);
             upgradeRing.setOrigin({ 28.f, 28.f });
             upgradeRing.setFillColor(sf::Color::Transparent);
@@ -128,12 +131,11 @@ int main() {
             int prevReached = 0;
             clock.restart();
 
-            
             auto flushScore = [&]() {
                 ScoreData sd;
                 sd.playerName  = "Player";
                 sd.score       = towerController.getCoins();
-                sd.enemyCount  = waveManager.getTotalKills();   // kill
+                sd.enemyCount  = waveManager.getTotalKills();
                 sd.wave        = waveManager.getCurrentWaveId();
                 saveCtrl.saveScore(sd);
             };
@@ -146,13 +148,20 @@ int main() {
                     window.getSize().x, window.getSize().y);
                 window.setView(view);
 
-                // ── Événements 
+                // ───────────────────────────────────────────────
+                // Événements
+                // ───────────────────────────────────────────────
                 while (const auto event = window.pollEvent()) {
 
                     if (event->is<sf::Event::Closed>()) {
                         flushScore();
                         window.close();
                         break;
+                    }
+
+                    if (endGame.hasEnded()) {
+                        endGame.showPopup(window);
+                        goto backToMenu;
                     }
 
                     if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
@@ -229,7 +238,8 @@ int main() {
                     }
                 }
 
-                // ── Logique 
+                
+                //logic
                 for (auto& e : waveManager.getActiveEnemies()) {
                     if (e->isDead() && !e->hasReached())
                         towerController.addCoins(e->getReward());
@@ -237,20 +247,40 @@ int main() {
 
                 waveManager.update(dt);
 
-                {
-                    int totalReached = waveManager.getTotalReached();
-                    int delta        = totalReached - prevReached;
-                    if (delta > 0) {
-                        castle.loseLife(delta);
-                        gameView.setLives(castle.getLives());
-                        prevReached = totalReached;
-                        std::cout << "[main] Castle lives: " << castle.getLives() << "\n";
-                    }
+                int totalReached = waveManager.getTotalReached();
+                int delta        = totalReached - prevReached;
+                if (delta > 0) {
+                    castle.loseLife(delta);
+                    gameView.setLives(castle.getLives());
+                    prevReached = totalReached;
                 }
 
+                // ─── Défaite : château détruit
                 if (castle.isDead()) {
-                    std::cout << "[main] Game Over!\n";
                     flushScore();
+                    endGame.triggerDefeat();
+                    endGame.showPopup(window);
+                    goto backToMenu;
+                }
+
+                // ─── Défaite : timer = 0
+                if (timer.remaining() <= 0.f) {
+
+                    flushScore();
+                    endGame.triggerDefeat();
+                    endGame.showPopup(window);
+                    goto backToMenu;
+                }
+
+                // ─── Victoire : toutes les vagues + plus d’ennemis
+                if (waveManager.isWaveComplete() &&
+                    waveManager.getCurrentWaveId() == waveManager.getTotalWaves() &&
+                    waveManager.getActiveEnemies().empty() &&
+                    !castle.isDead())
+                {
+                    flushScore();
+                    endGame.triggerVictory();
+                    endGame.showPopup(window);
                     goto backToMenu;
                 }
 
@@ -258,10 +288,9 @@ int main() {
                 timer.update(dt);
                 gameView.update(dt);
 
-                // ── Rendu 
+                
                 window.clear(sf::Color::Black);
                 gameView.render();
-
                 castle.render(window);
 
                 if (showUpgradeRing && towerController.hasUpgradeTarget()) {
