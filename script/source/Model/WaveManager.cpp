@@ -6,6 +6,7 @@
 
 using json = nlohmann::json;
 
+// ─── Constructeur
 WaveManager::WaveManager(const std::string& wavesJson,
                          const std::string& enemiesJson,
                          const std::vector<sf::Vector2f>& waypoints)
@@ -38,24 +39,33 @@ WaveManager::WaveManager(const std::string& wavesJson,
     std::cout << "[WaveManager] " << m_waves.size() << " vagues chargées.\n";
 }
 
+// ─── startNextWave
 void WaveManager::startNextWave() {
     if (allWavesDone()) return;
 
     ++m_currentWave;
-    m_currentGroup    = 0;
-    m_spawnedInGroup  = 0;
-    m_spawnTimer      = 0.f;
-    m_state           = State::Spawning;
+    m_currentGroup   = 0;
+    m_spawnedInGroup = 0;
+    m_spawnTimer     = 0.f;
+    m_state          = State::Spawning;
 
     std::cout << "[WaveManager] Vague " << getCurrentWaveId()
               << " | speedx" << m_waves[m_currentWave].speedMultiplier << "\n";
 }
 
+// ─── update
 void WaveManager::update(float dt) {
-    // Update all active enemies, remove those that reached the castle or are dead
+    // Met à jour tous les ennemis actifs
     for (auto& e : m_activeEnemies)
         e->update(dt);
 
+    // Compte les ennemis tués ET les ennemis arrivés, avant suppression
+    for (auto& e : m_activeEnemies) {
+        if (e->hasReached())        ++m_totalReached;  // atteint le château
+        if (e->isDead() && !e->hasReached()) ++m_totalKills;  // tué par une tour
+    }
+
+    // Supprime les ennemis morts ou arrivés
     m_activeEnemies.erase(
         std::remove_if(m_activeEnemies.begin(), m_activeEnemies.end(),
             [](const std::unique_ptr<Enemy>& e) {
@@ -67,7 +77,7 @@ void WaveManager::update(float dt) {
     if (m_state == State::Idle)
         return;
 
-    // Once all enemies are gone, wait then auto-start next wave
+    // Vague terminée : attend puis lance la suivante automatiquement
     if (m_state == State::WaveComplete && m_activeEnemies.empty()) {
         if (!allWavesDone()) {
             m_state     = State::WaitingNextWave;
@@ -119,6 +129,7 @@ void WaveManager::update(float dt) {
     }
 }
 
+// ─── spawnNext
 void WaveManager::spawnNext() {
     const Wave&       wave  = m_waves[m_currentWave];
     const EnemyGroup& group = wave.groups[m_currentGroup];
@@ -141,6 +152,7 @@ void WaveManager::spawnNext() {
     }
 }
 
+// ─── isWaveComplete
 bool WaveManager::isWaveComplete() const {
     return (m_state == State::WaveComplete || m_state == State::WaitingNextWave)
            && m_activeEnemies.empty();

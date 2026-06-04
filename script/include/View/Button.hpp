@@ -8,7 +8,8 @@ enum class MenuAction {
     Scoreboard,
     Settings,
     Exit,
-    None
+    None,
+    BasicTower
 };
 
 class Button {

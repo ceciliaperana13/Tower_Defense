@@ -29,10 +29,12 @@ public:
 
     std::vector<std::unique_ptr<Enemy>>& getActiveEnemies() { return m_activeEnemies; }
 
-    bool isWaveComplete()   const;
-    bool allWavesDone()     const { return m_currentWave >= (int)m_waves.size(); }
-    int  getCurrentWaveId() const { return m_currentWave + 1; }
-    int  getTotalWaves()    const { return (int)m_waves.size(); }
+    bool isWaveComplete()    const;
+    bool allWavesDone()      const { return m_currentWave >= (int)m_waves.size(); }
+    int  getCurrentWaveId()  const { return m_currentWave + 1; }
+    int  getTotalWaves()     const { return (int)m_waves.size(); }
+    int  getTotalReached()   const { return m_totalReached; }
+    int  getTotalKills()     const { return m_totalKills; }   // ← nouveau
 
 private:
     void spawnNext();
@@ -47,10 +49,12 @@ private:
     int   m_spawnedInGroup {  0 };
     float m_spawnTimer     { 0.f };
     float m_pauseTimer     { 0.f };
+    int   m_totalReached   {  0 };
+    int   m_totalKills     {  0 };   // ← nouveau : cumul ennemis tués
 
     static constexpr float INTER_WAVE_DELAY = 10.f;
 
     enum class State { Idle, Spawning, PauseBetweenGroups, WaveComplete, WaitingNextWave };
-    State m_state      { State::Idle };
-    float m_waveTimer  { 0.f };
+    State m_state     { State::Idle };
+    float m_waveTimer { 0.f };
 };

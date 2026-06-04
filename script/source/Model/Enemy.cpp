@@ -6,6 +6,20 @@
 
 using json = nlohmann::json;
 
+// ─── Membres statiques 
+sf::Texture Enemy::s_heartTex;
+bool        Enemy::s_heartLoaded = false;
+
+bool Enemy::loadHeartTexture(const std::string& path) {
+    if (!s_heartTex.loadFromFile(path)) {
+        std::cerr << "[Enemy] heart.png introuvable : " << path << "\n";
+        return false;
+    }
+    s_heartLoaded = true;
+    return true;
+}
+
+// ─── Constructeur 
 Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
              const std::string& sprite1Path,
              const std::string& sprite2Path,
@@ -27,6 +41,7 @@ Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
         m_sprite->setPosition(m_waypoints[0]);
 }
 
+// ─── fromJson 
 Enemy Enemy::fromJson(const std::string& jsonPath,
                       const std::string& type,
                       const std::vector<sf::Vector2f>& waypoints) {
@@ -52,6 +67,12 @@ Enemy Enemy::fromJson(const std::string& jsonPath,
     );
 }
 
+// ─── takeDamage 
+void Enemy::takeDamage(int dmg) {
+    m_hp = std::max(0, m_hp - dmg);
+}
+
+// ─── moveAlongPath 
 void Enemy::moveAlongPath(float dt) {
     if (m_reached || m_waypointIdx >= (int)m_waypoints.size())
         return;
@@ -64,16 +85,14 @@ void Enemy::moveAlongPath(float dt) {
     float step = m_speed * dt;
 
     if (step >= dist) {
-        // Reached this waypoint, advance to the next
         m_sprite->setPosition(target);
         ++m_waypointIdx;
 
         if (m_waypointIdx >= (int)m_waypoints.size()) {
-            m_reached = true;  // reached the castle
+            m_reached = true;
         } else {
-            // Continue with remaining movement this frame
             float remaining = step - dist;
-            sf::Vector2f next = m_waypoints[m_waypointIdx];
+            sf::Vector2f next      = m_waypoints[m_waypointIdx];
             sf::Vector2f nextDelta = next - target;
             float nextDist = std::sqrt(nextDelta.x*nextDelta.x + nextDelta.y*nextDelta.y);
             if (nextDist > 0.f) {
@@ -87,10 +106,10 @@ void Enemy::moveAlongPath(float dt) {
     }
 }
 
+// ─── update 
 void Enemy::update(float dt) {
     if (m_reached) return;
 
-    // Animate sprite
     m_animTimer += dt;
     if (m_animTimer >= 0.3f) {
         m_animTimer = 0.f;
@@ -101,7 +120,56 @@ void Enemy::update(float dt) {
     moveAlongPath(dt);
 }
 
+// ─── drawHealthBar 
+void Enemy::drawHealthBar(sf::RenderWindow& window) const {
+    if (!m_sprite.has_value()) return;
+
+    sf::FloatRect bounds = m_sprite->getGlobalBounds();
+
+    const float barW   = bounds.size.x;
+    const float barH   = 5.f;
+    const float margin = 2.f;
+    float barX = bounds.position.x;
+    float barY = bounds.position.y + bounds.size.y + margin;
+
+    // Fond gris
+    sf::RectangleShape bg({ barW, barH });
+    bg.setPosition({ barX, barY });
+    bg.setFillColor(sf::Color(60, 60, 60, 200));
+    window.draw(bg);
+
+    // Remplissage coloré selon le % de vie
+    float ratio = static_cast<float>(m_hp) / static_cast<float>(m_maxhp);
+    sf::Color barColor = ratio > 0.5f
+        ? sf::Color(80, 200, 80)    // vert
+        : ratio > 0.25f
+            ? sf::Color(220, 180, 0) // jaune
+            : sf::Color(220, 50, 50); // rouge
+
+    sf::RectangleShape fill({ barW * ratio, barH });
+    fill.setPosition({ barX, barY });
+    fill.setFillColor(barColor);
+    window.draw(fill);
+
+    // Icône cœur à gauche de la barre
+    if (s_heartLoaded) {
+        float heartSize = bounds.size.y * 0.35f;
+        float scale     = heartSize / static_cast<float>(s_heartTex.getSize().y);
+
+        sf::Sprite heart(s_heartTex);
+        heart.setScale({ scale, scale });
+        heart.setPosition({
+            barX - heartSize - 2.f,
+            barY + (barH - heartSize) / 2.f
+        });
+        window.draw(heart);
+    }
+}
+
+// ─── render 
 void Enemy::render(sf::RenderWindow& window) const {
-    if (!m_reached && m_sprite.has_value())
-        window.draw(*m_sprite);
+    if (m_reached || !m_sprite.has_value()) return;
+
+    window.draw(*m_sprite);
+    drawHealthBar(window);
 }

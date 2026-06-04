@@ -8,21 +8,22 @@ Leaderboard::Leaderboard(sf::RenderWindow& window, SaveController& saveCtrl)
 {
     loadAssets();
     buildUI();
+    // Chargement initial (run() recharge à chaque ouverture)
     m_scores = m_saveCtrl.loadScores();
 }
 
-// ─── loadAssets 
+// ─── loadAssets
 void Leaderboard::loadAssets() {
     if (!m_font.openFromFile("C:/Windows/Fonts/arialbd.ttf"))
         throw std::runtime_error("Leaderboard: police introuvable.");
 }
 
-// ─── buildUI 
+// ─── buildUI
 void Leaderboard::buildUI() {
     const float winW = m_window.getView().getSize().x;
     const float winH = m_window.getView().getSize().y;
 
-    m_panelW = 620.f;
+    m_panelW = 720.f;   // large pour 6 colonnes confortables
     m_panelH = 560.f;
     m_panelX = (winW - m_panelW) / 2.f;
     m_panelY = (winH - m_panelH) / 2.f;
@@ -60,7 +61,7 @@ void Leaderboard::buildUI() {
     });
 }
 
-// ─── handleEvents 
+// ─── handleEvents
 void Leaderboard::handleEvents() {
     while (const std::optional<sf::Event> event = m_window.pollEvent()) {
 
@@ -79,7 +80,8 @@ void Leaderboard::handleEvents() {
 
         if (const auto* mb = event->getIf<sf::Event::MouseButtonReleased>()) {
             if (mb->button == sf::Mouse::Button::Left) {
-                sf::Vector2f pos = m_window.mapPixelToCoords({ mb->position.x, mb->position.y }, m_window.getView());
+                sf::Vector2f pos = m_window.mapPixelToCoords(
+                    { mb->position.x, mb->position.y }, m_window.getView());
                 if (m_closeBtn.getGlobalBounds().contains(pos)) {
                     m_running = false;
                     return;
@@ -89,8 +91,9 @@ void Leaderboard::handleEvents() {
     }
 }
 
-// ─── run 
+// ─── run  →  rechargement frais à chaque ouverture
 void Leaderboard::run() {
+    m_scores  = m_saveCtrl.loadScores();
     m_running = true;
     while (m_running && m_window.isOpen()) {
         handleEvents();
@@ -98,8 +101,9 @@ void Leaderboard::run() {
     }
 }
 
-// ─── render 
+// ─── render
 void Leaderboard::render() {
+
     // Overlay sombre
     sf::RectangleShape overlay({
         m_window.getView().getSize().x,
@@ -124,30 +128,38 @@ void Leaderboard::render() {
     m_window.draw(m_closeBtn);
     if (m_closeLabel) m_window.draw(*m_closeLabel);
 
-    // ── En-tête colonnes ────────────────────────────────────────
-    const float colRank  = m_panelX + 30.f;
-    const float colName  = m_panelX + 80.f;
-    const float colScore = m_panelX + 340.f;
-    const float colWave  = m_panelX + 450.f;
-    const float colDate  = m_panelX + 510.f;
+    // ── Positions des colonnes
+    //    #    Joueur    Kills    Vague    Score    Date
+    const float colRank  = m_panelX + 22.f;
+    const float colName  = m_panelX + 65.f;
+    const float colKills = m_panelX + 300.f;
+    const float colWave  = m_panelX + 390.f;
+    const float colScore = m_panelX + 470.f;
+    const float colDate  = m_panelX + 560.f;
     const float headerY  = m_panelY + 82.f;
 
+    // Helper local
     auto makeText = [&](const std::string& str, float x, float y,
-                        unsigned size, sf::Color color) {
+                        unsigned size, sf::Color color) -> sf::Text {
         sf::Text t(m_font, str, size);
         t.setFillColor(color);
         t.setPosition({ x, y });
         return t;
     };
 
-    sf::Color gold(220, 180, 80);
-    sf::Color grey(160, 160, 160);
+    const sf::Color gold  (220, 180,  80);
+    const sf::Color grey  (160, 160, 160);
+    const sf::Color green (100, 220, 100);
+    const sf::Color cyan  ( 80, 200, 220);
+    const sf::Color yellow(240, 220,  60);
 
-    m_window.draw(makeText("#",       colRank,  headerY, 16u, gold));
-    m_window.draw(makeText("Joueur",  colName,  headerY, 16u, gold));
-    m_window.draw(makeText("Score",   colScore, headerY, 16u, gold));
-    m_window.draw(makeText("Vague",   colWave,  headerY, 16u, gold));
-    m_window.draw(makeText("Date",    colDate,  headerY, 16u, gold));
+    // ── En-têtes colonnes
+    m_window.draw(makeText("#",      colRank,  headerY, 15u, gold));
+    m_window.draw(makeText("Joueur", colName,  headerY, 15u, gold));
+    m_window.draw(makeText("Kills",  colKills, headerY, 15u, gold));
+    m_window.draw(makeText("Vague",  colWave,  headerY, 15u, gold));
+    m_window.draw(makeText("Score",  colScore, headerY, 15u, gold));
+    m_window.draw(makeText("Date",   colDate,  headerY, 15u, gold));
 
     // Séparateur header
     sf::RectangleShape sep2({ m_panelW - 40.f, 1.f });
@@ -167,8 +179,8 @@ void Leaderboard::render() {
         m_window.draw(empty);
     } else {
         for (std::size_t i = 0; i < m_scores.size(); ++i) {
-            const ScoreData& s = m_scores[i];
-            const float rowY   = m_panelY + 118.f + static_cast<float>(i) * 42.f;
+            const ScoreData& s   = m_scores[i];
+            const float      rowY = m_panelY + 118.f + static_cast<float>(i) * 42.f;
 
             // Fond alterné
             if (i % 2 == 0) {
@@ -178,18 +190,20 @@ void Leaderboard::render() {
                 m_window.draw(row);
             }
 
-            // Médaille top 3
+            // Couleur médaille top 3
             sf::Color rankColor = grey;
-            std::string rankStr = std::to_string(i + 1);
-            if      (i == 0) rankColor = sf::Color(255, 215,   0);   // or
-            else if (i == 1) rankColor = sf::Color(192, 192, 192);   // argent
-            else if (i == 2) rankColor = sf::Color(205, 127,  50);   // bronze
+            if      (i == 0) rankColor = sf::Color(255, 215,   0);  // or
+            else if (i == 1) rankColor = sf::Color(192, 192, 192);  // argent
+            else if (i == 2) rankColor = sf::Color(205, 127,  50);  // bronze
 
-            m_window.draw(makeText(rankStr,               colRank,  rowY + 8.f, 17u, rankColor));
-            m_window.draw(makeText(s.playerName,          colName,  rowY + 8.f, 17u, sf::Color::White));
-            m_window.draw(makeText(std::to_string(s.score), colScore, rowY + 8.f, 17u, sf::Color(100, 220, 100)));
-            m_window.draw(makeText(std::to_string(s.wave),  colWave,  rowY + 8.f, 17u, grey));
-            m_window.draw(makeText(s.date,                colDate,  rowY + 8.f, 14u, grey));
+            const float ty = rowY + 8.f;
+
+            m_window.draw(makeText(std::to_string(i + 1),       colRank,  ty, 16u, rankColor));
+            m_window.draw(makeText(s.playerName,                colName,  ty, 16u, sf::Color::White));
+            m_window.draw(makeText(std::to_string(s.enemyCount),colKills, ty, 16u, cyan));
+            m_window.draw(makeText("v" + std::to_string(s.wave),colWave,  ty, 16u, yellow));
+            m_window.draw(makeText(std::to_string(s.score),     colScore, ty, 16u, green));
+            m_window.draw(makeText(s.date,                      colDate,  ty, 13u, grey));
         }
     }
 

@@ -3,7 +3,7 @@
 #include <algorithm>
 
 SoundManager::SoundManager() {
-    // Tu pourras remettre les SFX plus tard si tu veux
+    m_music = std::make_unique<sf::Music>();
 }
 
 SoundManager& SoundManager::getInstance() {
@@ -11,25 +11,15 @@ SoundManager& SoundManager::getInstance() {
     return instance;
 }
 
-// ─────────────────────────────
-// MUSIQUE (uniquement Medieval)
-// ─────────────────────────────
 void SoundManager::playMusic(const std::string& id) {
-    // On ne garde qu’un seul ID : "menu"
-    if (id != "menu") {
-        std::cerr << "[SoundManager] Musique inconnue : " << id << "\n";
-        return;
-    }
-
-    const std::string path = "../assets/sound/music/Medieval.mp3";
-
-    // Si déjà en lecture → rien à faire
     if (m_currentMusicId == id && m_music &&
         m_music->getStatus() == sf::SoundSource::Status::Playing)
         return;
 
-    m_music = std::make_unique<sf::Music>();
+    m_music->stop();
 
+    // Chemin fixe vers Medieval.mp3 — ignore le id pour le fichier
+    const std::string path = "../assets/sound/music/Medieval.mp3";
     if (!m_music->openFromFile(path)) {
         std::cerr << "[SoundManager] Impossible de charger : " << path << "\n";
         return;
@@ -42,8 +32,7 @@ void SoundManager::playMusic(const std::string& id) {
 }
 
 void SoundManager::stopMusic() {
-    if (m_music)
-        m_music->stop();
+    if (m_music) m_music->stop();
     m_currentMusicId.clear();
 }
 
@@ -53,17 +42,12 @@ void SoundManager::setMusicVolume(float v) {
         m_music->setVolume(m_musicVolume);
 }
 
-// ─────────────────────────────
-// SFX (désactivés pour l’instant)
-// ─────────────────────────────
 void SoundManager::loadSFX(const std::string& id, const std::string& path) {
     auto entry = std::make_unique<SoundEntry>();
-
     if (!entry->buffer.loadFromFile(path)) {
         std::cerr << "[SoundManager] SFX introuvable : " << path << "\n";
         return;
     }
-
     entry->sound.setVolume(m_sfxVolume);
     m_sounds[id] = std::move(entry);
 }
@@ -74,27 +58,20 @@ void SoundManager::playSFX(const std::string& id) {
         std::cerr << "[SoundManager] SFX inconnu : " << id << "\n";
         return;
     }
-
     if (!m_muted)
         it->second->sound.play();
 }
 
 void SoundManager::setSFXVolume(float v) {
     m_sfxVolume = std::clamp(v, 0.f, 100.f);
-
     for (auto& [id, entry] : m_sounds)
         entry->sound.setVolume(m_muted ? 0.f : m_sfxVolume);
 }
 
-// ─────────────────────────────
-// MUTE
-// ─────────────────────────────
 void SoundManager::toggleMute() {
     m_muted = !m_muted;
-
     if (m_music)
         m_music->setVolume(m_muted ? 0.f : m_musicVolume);
-
     for (auto& [id, entry] : m_sounds)
         entry->sound.setVolume(m_muted ? 0.f : m_sfxVolume);
 }
