@@ -28,13 +28,13 @@
         },
         {
             "id": 4,
-            "speedMultiplier": 2.5,
+            "speedMultiplier": 1.5,
             "groups": [
                 { "type": "orc",    "count": 10, "spawnInterval": 1.0 },
                 { "type": "goblin", "count": 8, "spawnInterval": 0.5 },
                 { "type": "ogre",   "count": 10, "spawnInterval": 0.0 }
             ],
-            "pauseBetweenGroups": 3.0
+            "pauseBetweenGroups": 1.0
         },
         {
             "id": 5,
@@ -44,7 +44,7 @@
                 { "type": "orc",    "count": 15,  "spawnInterval": 0.9 },
                 { "type": "ogre",   "count": 50,  "spawnInterval": 2.0 }
             ],
-            "pauseBetweenGroups": 3.5
+            "pauseBetweenGroups": 1.5
         },
         {
             "id": 6,
@@ -54,7 +54,7 @@
                 { "type": "goblin", "count": 75, "spawnInterval": 0.4 },
                 { "type": "ogre",   "count": 75,  "spawnInterval": 2.0 }
             ],
-            "pauseBetweenGroups": 3.5
+            "pauseBetweenGroups": 2.5
         },
         {
             "id": 7,

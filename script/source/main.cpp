@@ -104,7 +104,7 @@ int main() {
             );
             waveManager.startNextWave();
 
-            CountdownTimer  timer(120.f);
+            CountdownTimer  timer(340.f);
             TowerController towerController;
             towerController.loadFromJson("../assets/data/tower_values.json");
 
