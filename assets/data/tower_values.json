@@ -14,7 +14,8 @@
             },
             "paths" : {
                 "building" : "../assets/sprites/towers/buildings/basic_tower.png",
-                "projectile" : "../assets/sprites/towers/projectiles/basic_projectile.png"
+                "projectile" : "../assets/sprites/towers/projectiles/basic_projectile.png",
+                "sound" : "../assets/sound/sfx/basicball.mp3"
             }
         },
         "lvl2" : {
@@ -32,7 +33,8 @@
                 },
                 "paths" : {
                     "building" : "../assets/sprites/towers/buildings/fire_tower.png",
-                    "projectile" : "../assets/sprites/towers/projectiles/fire_projectile.png"
+                    "projectile" : "../assets/sprites/towers/projectiles/fire_projectile.png",
+                    "sound" : "../assets/sound/sfx/fireball.mp3"
                 }
             },
             "ice" : {
@@ -49,7 +51,8 @@
                 },
                 "paths" : {
                     "building" : "../assets/sprites/towers/buildings/ice_tower.png",
-                    "projectile" : "../assets/sprites/towers/projectiles/ice_projectile.png"
+                    "projectile" : "../assets/sprites/towers/projectiles/ice_projectile.png",
+                    "sound" : "../assets/sound/sfx/iceball.mp3"
                 }
             },
             "rock" : {
@@ -66,7 +69,8 @@
                 },
                 "paths" : {
                     "building" : "../assets/sprites/towers/buildings/rock_tower.png",
-                    "projectile" : "../assets/sprites/towers/projectiles/rock_projectile.png"
+                    "projectile" : "../assets/sprites/towers/projectiles/rock_projectile.png",
+                    "sound" : "../assets/sound/sfx/rockball.mp3"
                 }
             },
             "arcane" : {
@@ -83,7 +87,8 @@
                 },
                 "paths" : {
                     "building" : "../assets/sprites/towers/buildings/arcane_tower.png",
-                    "projectile" : "../assets/sprites/towers/projectiles/arcane_projectile.png"
+                    "projectile" : "../assets/sprites/towers/projectiles/arcane_projectile.png",
+                    "sound" : "../assets/sound/sfx/arcaneball.mp3"
                 }
             }
         }
