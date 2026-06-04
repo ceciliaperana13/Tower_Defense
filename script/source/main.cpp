@@ -61,7 +61,7 @@ int main() {
     openWindowed(window);
 
     GameSettings   settings;
-    SaveController saveCtrl;
+    SaveController saveCtrl;   // chemin par défaut : ../assets/data/scores.json
     sf::Clock      clock;
 
     while (window.isOpen()) {
@@ -78,10 +78,11 @@ int main() {
             sm.run();
             continue;
         }
+
         if (action == MenuAction::Scoreboard) {
             window.setView(windowedView());
             Leaderboard lb(window, saveCtrl);
-            lb.run();
+            lb.run();   // run() recharge loadScores() → toujours à jour
             continue;
         }
 
@@ -103,7 +104,6 @@ int main() {
             TowerController towerController;
             towerController.loadFromJson("../assets/data/tower_values.json");
 
-            // ── Château positionné sur le dernier waypoint ────────────────
             sf::Vector2f castlePos = waypoints.empty()
                 ? sf::Vector2f(900.f, 550.f)
                 : waypoints.back();
@@ -117,7 +117,6 @@ int main() {
             GameView gameView(window, map, waveManager, timer, towerController);
             gameView.setLives(castle.getLives());
 
-            // ── Cercle surbrillance upgrade ───────────────────────────────
             sf::CircleShape upgradeRing(28.f);
             upgradeRing.setOrigin({ 28.f, 28.f });
             upgradeRing.setFillColor(sf::Color::Transparent);
@@ -129,6 +128,17 @@ int main() {
             int prevReached = 0;
             clock.restart();
 
+            // ── Construit et sauvegarde le ScoreData de la session ────────
+            auto flushScore = [&]() {
+                ScoreData sd;
+                sd.playerName  = "Player";
+                sd.score       = towerController.getCoins();
+                sd.enemyCount  = waveManager.getTotalWaves();    // était getTotalKills()
+                sd.wave        = waveManager.getCurrentWaveId(); // était getCurrentWave()
+                // date auto-remplie par saveScore() si vide
+                saveCtrl.saveScore(sd);
+            };
+
             while (window.isOpen()) {
                 float dt = clock.restart().asSeconds();
                 if (dt > 0.1f) dt = 0.1f;
@@ -137,10 +147,12 @@ int main() {
                     window.getSize().x, window.getSize().y);
                 window.setView(view);
 
-                // ── Événements ────────────────────────────────────────────
+                // ── Événements ───────────────────────────────────────────
                 while (const auto event = window.pollEvent()) {
 
                     if (event->is<sf::Event::Closed>()) {
+                        // Fermeture brutale : sauvegarde quand même
+                        flushScore();
                         window.close();
                         break;
                     }
@@ -187,8 +199,12 @@ int main() {
                                 }
                             } else {
                                 MenuAction act = gameView.handleClickAt(wp);
-                                if (act == MenuAction::Exit)
+
+                                // Bouton retour → sauvegarde avant de quitter
+                                if (act == MenuAction::Exit) {
+                                    flushScore();
                                     goto backToMenu;
+                                }
 
                                 if (act == MenuAction::None && wp.y < MAP_H) {
                                     if (towerController.hasSelection()) {
@@ -216,8 +232,7 @@ int main() {
                     }
                 }
 
-                // ── Logique ───────────────────────────────────────────────
-                // ── Gain de coins sur kill (avant update qui supprime les ennemis) ──
+                // ── Logique ──────────────────────────────────────────────
                 for (auto& e : waveManager.getActiveEnemies()) {
                     if (e->isDead() && !e->hasReached())
                         towerController.addCoins(e->getReward());
@@ -225,7 +240,6 @@ int main() {
 
                 waveManager.update(dt);
 
-                // Vies château : décrémenter selon ennemis arrivés
                 {
                     int totalReached = waveManager.getTotalReached();
                     int delta        = totalReached - prevReached;
@@ -237,8 +251,10 @@ int main() {
                     }
                 }
 
+                // Game Over → sauvegarde avant de quitter
                 if (castle.isDead()) {
                     std::cout << "[main] Game Over!\n";
+                    flushScore();
                     goto backToMenu;
                 }
 
@@ -248,9 +264,9 @@ int main() {
 
                 // ── Rendu ─────────────────────────────────────────────────
                 window.clear(sf::Color::Black);
-                gameView.render();          // carte + ennemis + UI bar
+                gameView.render();
 
-                castle.render(window);      // sprite château + barre de vie
+                castle.render(window);
 
                 if (showUpgradeRing && towerController.hasUpgradeTarget()) {
                     upgradeRing.setPosition(upgradeRingPos);
