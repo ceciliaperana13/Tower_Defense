@@ -4,12 +4,15 @@
 #include <string>
 
 enum class MenuAction {
+    None,
+
     NewGame,
     Scoreboard,
     Settings,
     Exit,
-    None,
-    BasicTower
+
+    BasicTower,
+    SellTower
 };
 
 class Button {

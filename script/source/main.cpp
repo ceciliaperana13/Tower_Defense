@@ -1,6 +1,3 @@
-#include <SFML/Graphics.hpp>
-#include <iostream>
-
 #include "View/MainMenu.hpp"
 #include "View/SettingsMenu.hpp"
 #include "View/Leaderboard.hpp"
@@ -16,13 +13,16 @@
 #include "Model/Enemy.hpp"
 #include "Model/CountdownTimer.hpp"
 #include "Model/Castle.hpp"
+#include <iostream>
 
+
+// Gestion plein écran / fenêtré
 static bool s_fullscreen = false;
 
 static sf::View windowedView() {
     return sf::View(sf::FloatRect(
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(float(WIN_W), float(WIN_H))
+        sf::Vector2f(static_cast<float>(WIN_W), static_cast<float>(WIN_H))
     ));
 }
 
@@ -47,7 +47,7 @@ static void openFullscreen(sf::RenderWindow& window) {
     window.setFramerateLimit(60);
     window.setView(sf::View(sf::FloatRect(
         sf::Vector2f(0.f, 0.f),
-        sf::Vector2f(float(WIN_W), float(WIN_H))
+        sf::Vector2f(static_cast<float>(WIN_W), static_cast<float>(WIN_H))
     )));
     s_fullscreen = true;
 }
@@ -57,6 +57,8 @@ static void toggleFullscreen(sf::RenderWindow& window) {
     else              openFullscreen(window);
 }
 
+
+// main
 int main() {
     sf::RenderWindow window;
     openWindowed(window);
@@ -71,7 +73,8 @@ int main() {
         MainMenu menu(window);
         MenuAction action = menu.run();
 
-        if (action == MenuAction::Exit || !window.isOpen()) break;
+        if (action == MenuAction::Exit || !window.isOpen())
+            break;
 
         if (action == MenuAction::Settings) {
             window.setView(windowedView());
@@ -175,7 +178,9 @@ int main() {
 
                         if (kp->code == sf::Keyboard::Key::Space &&
                             waveManager.isWaveComplete())
+                        {
                             waveManager.startNextWave();
+                        }
                     }
 
                     if (const auto* mm = event->getIf<sf::Event::MouseMoved>()) {
@@ -194,15 +199,17 @@ int main() {
                             if (!type.empty()) {
                                 if (towerController.hasUpgradeTarget()) {
                                     if (type != "basic") {
-                                        if (!towerController.upgradeTower(type))
+                                        if (!towerController.upgradeTower(type)) {
                                             std::cerr << "[main] Not enough coins to upgrade to "
                                                       << type << "\n";
+                                        }
                                         showUpgradeRing = false;
                                     }
                                 } else {
-                                    if (!towerController.selectTower(type))
+                                    if (!towerController.selectTower(type)) {
                                         std::cerr << "[main] Not enough coins for "
                                                   << type << "\n";
+                                    }
                                 }
                             } else {
                                 MenuAction act = gameView.handleClickAt(wp);
@@ -210,6 +217,11 @@ int main() {
                                 if (act == MenuAction::Exit) {
                                     flushScore();
                                     goto backToMenu;
+                                }
+
+                                if (act == MenuAction::SellTower) {
+                                    towerController.sellSelectedTower();
+                                    showUpgradeRing = false;
                                 }
 
                                 if (act == MenuAction::None && wp.y < MAP_H) {
@@ -238,8 +250,9 @@ int main() {
                     }
                 }
 
-                
-                //logic
+                // ───────────────────────────────────────────────
+                // Logique
+                // ───────────────────────────────────────────────
                 for (auto& e : waveManager.getActiveEnemies()) {
                     if (e->isDead() && !e->hasReached())
                         towerController.addCoins(e->getReward());
@@ -255,7 +268,7 @@ int main() {
                     prevReached = totalReached;
                 }
 
-                // ─── Défaite : château détruit
+                // Défaite : château détruit
                 if (castle.isDead()) {
                     flushScore();
                     endGame.triggerDefeat();
@@ -263,16 +276,15 @@ int main() {
                     goto backToMenu;
                 }
 
-                // ─── Défaite : timer = 0
+                // Défaite : timer = 0
                 if (timer.remaining() <= 0.f) {
-
                     flushScore();
                     endGame.triggerDefeat();
                     endGame.showPopup(window);
                     goto backToMenu;
                 }
 
-                // ─── Victoire : toutes les vagues + plus d’ennemis
+                // Victoire : toutes les vagues + plus d’ennemis
                 if (waveManager.isWaveComplete() &&
                     waveManager.getCurrentWaveId() == waveManager.getTotalWaves() &&
                     waveManager.getActiveEnemies().empty() &&
@@ -289,6 +301,7 @@ int main() {
                 gameView.update(dt);
 
                 
+                // Rendu
                 window.clear(sf::Color::Black);
                 gameView.render();
                 castle.render(window);
@@ -302,7 +315,7 @@ int main() {
                 window.display();
             }
 
-        backToMenu:;
+        backToMenu:
             if (s_fullscreen) openWindowed(window);
         }
     }

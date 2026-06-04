@@ -5,7 +5,6 @@
 #include <map>
 #include <optional>
 #include <string>
-#include <functional>
 
 #include "Tower.hpp"
 #include "Projectile.hpp"
@@ -17,39 +16,40 @@ public:
 
     bool loadFromJson(const std::string& path);
 
-    // ── Sélection / placement 
-    // Sélectionne un type de tour (vérifie les coins).
-    // Retourne false si pas assez de coins.
+    // ─────────────────────────────────────────────
+    // Sélection / placement
+    // ─────────────────────────────────────────────
     bool selectTower(const std::string& type);
-
-    // Surcharge sans vérif coins (pour désélectionner avec "")
     void clearSelection();
-
-    // Place la tour sélectionnée à pos, déduit les coins.
     void placeTower(sf::Vector2f pos);
 
-    // ── Upgrade 
-    // Retourne l'index de la tour cliquée (-1 si aucune)
+    // ─────────────────────────────────────────────
+    // Upgrade / Sell
+    // ─────────────────────────────────────────────
     int  getTowerIndexAt(sf::Vector2f pos) const;
-
-    // Sélectionne une tour existante pour upgrade
     void selectTowerForUpgrade(int index);
-
-    // Upgrade la tour sélectionnée vers le type lv2 donné
-    // Retourne false si pas assez de coins ou tour déjà lv2
     bool upgradeTower(const std::string& lv2Type);
 
-    // ── État 
+    // VENTE DE TOUR (ajout)
+    bool sellSelectedTower();
+
+    // ─────────────────────────────────────────────
+    // État
+    // ─────────────────────────────────────────────
     bool hasSelection()     const { return !m_selectedType.empty(); }
     bool hasUpgradeTarget() const { return m_upgradeTargetIndex >= 0; }
     int  getCoins()         const { return m_coins; }
     void addCoins(int amount)     { m_coins += amount; }
     int  getCostOf(const std::string& type) const;
 
-    // ── Ghost 
+    // ─────────────────────────────────────────────
+    // Ghost
+    // ─────────────────────────────────────────────
     void setGhostPosition(sf::Vector2f pos);
 
-    // ── Boucle 
+    // ─────────────────────────────────────────────
+    // Boucle
+    // ─────────────────────────────────────────────
     void update(float dt, const std::vector<std::unique_ptr<Enemy>>& enemies);
     void render(sf::RenderWindow& window);
 
@@ -76,7 +76,10 @@ private:
     std::optional<sf::Sprite> m_ghost;
     bool m_ghostVisible = false;
 
-    int m_coins = 100;  // coins de départ
+    int m_coins = 1;  // coins de départ
 
     void spawnGhost(const std::string& type);
+
+    // Pourcentage de remboursement lors de la vente
+    static constexpr float SELL_REFUND = 0.5f; // 50%
 };

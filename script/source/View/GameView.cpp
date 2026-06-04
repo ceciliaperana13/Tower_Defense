@@ -58,11 +58,7 @@ void GameView::buildUI() {
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
     loadTex(m_heartPanelTex, "../assets/sprites/buttons/heart_pannel.png");
 
-    // ── Layout logique (sur 320 unités de large, 96 de haut) ─────────────────
-    // x=0..128    : top_panel (boutons tour basic + lv2)
-    // x=128..192  : sell button
-    // x=192..256  : gold_pannel (haut) + heart_pannel (bas)  ← ICI
-    // x=256..320  : back_to_main_menu (réduit à 64 unités)
+    
 
     m_topPanel = makePanelShape(m_topPanelTex, 0.f, MAP_H, toWinW(192.f), UI_H);
 
@@ -116,16 +112,17 @@ void GameView::buildUI() {
         m_towerTypes.push_back(d.type);
     }
 
-    // ── SELL : x=128..192 
+    // ── vendre 
     m_sellButton.emplace(
-        "../assets/sprites/buttons/sell_tower_button.png",
-        toWinX(128.f) + toWinW(64.f) / 2.f,
-        toUIY(0.f)    + toUIH(96.f)  / 2.f,
-        toWinW(64.f),  toUIH(96.f),
-        MenuAction::None
-    );
+    "../assets/sprites/buttons/sell_tower_button.png",
+    toWinX(128.f) + toWinW(64.f) / 2.f,
+    toUIY(0.f)    + toUIH(96.f)  / 2.f,
+    toWinW(64.f),
+    toUIH(96.f),
+    MenuAction::SellTower
+);
 
-    // ── BACK : x=256..320 (64 unités logiques) 
+    // ── BACK : 
     float backW = toWinW(64.f);
     float backX = toWinX(256.f) + backW / 2.f;
     m_backButton.emplace(

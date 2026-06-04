@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <algorithm>
+#include "Tower.hpp"
 
 using json = nlohmann::json;
 
@@ -29,8 +31,8 @@ bool TowerController::loadFromJson(const std::string& path) {
 
     try {
         auto loadTower = [&](const std::string& name,
-                              const json& j,
-                              const std::string& level) {
+                             const json& j,
+                             const std::string& level) {
             TowerDef def;
             def.id    = j["id"].get<int>();
             def.cost  = j["cost"].get<int>();
@@ -86,30 +88,22 @@ void TowerController::spawnGhost(const std::string& type) {
     auto& def = m_defs.at(type);
     m_ghost.emplace(def.buildingTex);
     m_ghost->setColor(sf::Color(255, 255, 255, 150));
-    m_ghost->setOrigin(sf::Vector2f(
+    m_ghost->setOrigin({
         def.buildingTex.getSize().x / 2.f,
         def.buildingTex.getSize().y / 2.f
-    ));
-    m_ghost->setScale(sf::Vector2f(2.f, 2.f));
+    });
+    m_ghost->setScale({2.f, 2.f});
     m_ghostVisible = true;
 }
 
 // ─── selectTower
 bool TowerController::selectTower(const std::string& type) {
-    // Annuler l'upgrade en cours si on sélectionne un nouveau type
     m_upgradeTargetIndex = -1;
 
-    if (m_defs.find(type) == m_defs.end()) {
-        std::cerr << "[TC] Unknown type: " << type << "\n";
-        return false;
-    }
-    int cost = m_defs[type].cost;
-    if (m_coins < cost) {
-        std::cerr << "[TC] Not enough coins (" << m_coins
-                  << ") to select " << type
-                  << " (cost " << cost << ")\n";
-        return false;
-    }
+    if (m_defs.find(type) == m_defs.end()) return false;
+
+    int cost = m_defs.at(type).cost;
+    if (m_coins < cost) return false;
 
     m_selectedType = type;
     spawnGhost(type);
@@ -120,7 +114,7 @@ bool TowerController::selectTower(const std::string& type) {
 void TowerController::clearSelection() {
     m_selectedType.clear();
     m_ghost.reset();
-    m_ghostVisible    = false;
+    m_ghostVisible       = false;
     m_upgradeTargetIndex = -1;
 }
 
@@ -137,14 +131,13 @@ void TowerController::placeTower(sf::Vector2f pos) {
     auto& def = m_defs[m_selectedType];
     m_coins -= def.cost;
 
-    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, pos);
+    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, pos, def.cost);
 
     clearSelection();
 }
 
 // ─── getTowerIndexAt 
 int TowerController::getTowerIndexAt(sf::Vector2f pos) const {
-    // Rayon de clic : 32px (taille sprite / 2 * scale)
     constexpr float CLICK_RADIUS = 32.f;
     for (int i = 0; i < (int)m_towers.size(); ++i) {
         sf::Vector2f d = m_towers[i].getPosition() - pos;
@@ -154,68 +147,74 @@ int TowerController::getTowerIndexAt(sf::Vector2f pos) const {
     return -1;
 }
 
-// ─── selectTowerForUpgrade ───────────────────────────────────────────────────
+// ─── selectTowerForUpgrade 
 void TowerController::selectTowerForUpgrade(int index) {
-    // Annule tout placement en cours
-    m_selectedType.clear();
-    m_ghost.reset();
-    m_ghostVisible = false;
-
+    clearSelection();
     if (index >= 0 && index < (int)m_towers.size())
         m_upgradeTargetIndex = index;
-    else
-        m_upgradeTargetIndex = -1;
 }
 
-// ─── upgradeTower ─────────────────────────────────────────────────────────────
+// ─── upgradeTower 
 bool TowerController::upgradeTower(const std::string& lv2Type) {
     if (m_upgradeTargetIndex < 0 ||
         m_upgradeTargetIndex >= (int)m_towers.size())
         return false;
 
-    // Vérif que c'est bien une tour lv2
     auto it = m_defs.find(lv2Type);
     if (it == m_defs.end() || it->second.level != "lvl2") return false;
 
-    // Vérif coins
     int cost = it->second.cost;
-    if (m_coins < cost) {
-        std::cerr << "[TC] Not enough coins for upgrade (" << lv2Type << ")\n";
-        return false;
-    }
+    if (m_coins < cost) return false;
 
     m_coins -= cost;
 
-    // Remplace la tour sur place
     sf::Vector2f pos = m_towers[m_upgradeTargetIndex].getPosition();
     m_towers[m_upgradeTargetIndex] = Tower(
         it->second.buildingTex,
         it->second.projectileTex,
         it->second.attack,
-        pos
+        pos,
+        it->second.cost
     );
 
     m_upgradeTargetIndex = -1;
     return true;
 }
 
-// ─── update ───────────────────────────────────────────────────────────────────
+// ─── sellSelectedTower 
+bool TowerController::sellSelectedTower() {
+    if (m_upgradeTargetIndex < 0 ||
+        m_upgradeTargetIndex >= (int)m_towers.size())
+        return false;
+
+    int refund = int(m_defs["basic"].cost * SELL_REFUND);
+    m_coins += refund;
+
+    m_towers.erase(m_towers.begin() + m_upgradeTargetIndex);
+
+    clearSelection();
+    return true;
+}
+
+// ─── update 
 void TowerController::update(float dt,
                              const std::vector<std::unique_ptr<Enemy>>& enemies) {
+
     for (auto& t : m_towers) t.update(dt);
 
     for (auto& t : m_towers) {
         if (!t.canFire()) continue;
 
-        Enemy* best     = nullptr;
-        float  bestDist = 0.f;
+        Enemy* best = nullptr;
+        float bestDist = 0.f;
 
         for (auto& e : enemies) {
             if (e->isDead() || e->hasReached()) continue;
+
             float d = length(e->getPosition() - t.getPosition());
             if (d <= t.getAttack().range * 64.f) {
                 if (!best || d < bestDist) {
-                    best     = e.get();
+                    best = e.get();
                     bestDist = d;
                 }
             }
@@ -249,7 +248,7 @@ void TowerController::update(float dt,
     );
 }
 
-// ─── render ───────────────────────────────────────────────────────────────────
+// ─── render 
 void TowerController::render(sf::RenderWindow& window) {
     for (auto& t : m_towers)      t.render(window);
     for (auto& p : m_projectiles) p.render(window);
