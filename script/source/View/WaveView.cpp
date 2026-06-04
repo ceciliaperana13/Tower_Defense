@@ -1,6 +1,9 @@
 #include "View/WaveView.hpp"
 #include <iostream>
 
+
+//TODO : faire un sprite de fond de texte pour que cela resorte mieux 
+//un peu plus a droite du timer pour pas que ca ce chevauche +reduire la taille du texte
 WaveView::WaveView(WaveManager& waveManager)
     : m_waveManager(waveManager)
     , m_text(m_font)

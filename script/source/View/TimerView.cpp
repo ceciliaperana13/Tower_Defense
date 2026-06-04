@@ -98,4 +98,3 @@ void TimerView::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     if (m_text.has_value())
         target.draw(*m_text, states);
 }
-//compteur de vague, affiché en haut de l'écran pendant le chargement de la vague suivante, puis caché pendant la vague. Il doit clignoter en rouge lorsque le temps restant est inférieur à 10 secondes.
