@@ -35,14 +35,14 @@ void SoundManager::stopMusic() {
     m_currentMusicId.clear();
 }
 
-// ← nouveau : met en pause sans perdre la position dans le morceau
+//  met en pause sans perdre la position dans le morceau
 void SoundManager::pauseMusic() {
     if (m_music &&
         m_music->getStatus() == sf::SoundSource::Status::Playing)
         m_music->pause();
 }
 
-// ← nouveau : reprend là où on s'était arrêté
+//  reprend là où on s'était arrêté
 void SoundManager::resumeMusic() {
     if (m_music &&
         m_music->getStatus() == sf::SoundSource::Status::Paused)
@@ -54,7 +54,7 @@ void SoundManager::setMusicVolume(float v) {
     if (m_music && !m_muted)
         m_music->setVolume(m_musicVolume);
 }
-
+//sfx
 void SoundManager::loadSFX(const std::string& id, const std::string& path) {
     auto entry = std::make_unique<SoundEntry>();
     if (!entry->buffer.loadFromFile(path)) {

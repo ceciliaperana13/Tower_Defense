@@ -30,7 +30,7 @@ void Projectile::update(float dt) {
     m_life -= dt;
     m_sprite.move(m_velocity * dt);
 }
-
+//
 bool Projectile::checkCollision(Enemy& e) {
     auto inter = m_sprite.getGlobalBounds().findIntersection(e.getBounds());
     if (inter.has_value()) {
@@ -44,3 +44,4 @@ bool Projectile::checkCollision(Enemy& e) {
 void Projectile::render(sf::RenderWindow& window) {
     window.draw(m_sprite);
 }
+

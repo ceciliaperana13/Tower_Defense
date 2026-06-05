@@ -1,5 +1,7 @@
 #pragma once
+#pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <vector>
 #include <memory>
 #include <map>
@@ -20,7 +22,7 @@ public:
     bool        selectTower(const std::string& type);
     void        clearSelection();
     void        placeTower(sf::Vector2f pos);
-    std::string getSelectedType() const { return m_selectedType; } // ← nouveau
+    std::string getSelectedType() const { return m_selectedType; }
 
     // ─── Upgrade / Sell
     int  getTowerIndexAt(sf::Vector2f pos) const;
@@ -54,17 +56,37 @@ private:
         sf::Texture projectileTex;
     };
 
+    // Définitions des tours
     std::map<std::string, TowerDef> m_defs;
-    std::vector<Tower>              m_towers;
-    std::vector<Projectile>         m_projectiles;
 
+    // Tours et projectiles
+    std::vector<Tower>      m_towers;
+    std::vector<Projectile> m_projectiles;
+
+    // Sélection
     std::string               m_selectedType;
     int                       m_upgradeTargetIndex = -1;
+
+    // Ghost
     std::optional<sf::Sprite> m_ghost;
     bool                      m_ghostVisible = false;
-    int                       m_coins        = 1;
 
+    // Coins
+    int m_coins = 1;
+
+    // Sons de tir
+    sf::SoundBuffer m_basicShot;
+    sf::SoundBuffer m_fireShot;
+    sf::SoundBuffer m_iceShot;
+    sf::SoundBuffer m_rockShot;
+    sf::SoundBuffer m_arcaneShot;
+
+    // Sons en cours (pour éviter qu'ils soient détruits)
+    std::vector<sf::Sound> m_tempSounds;
+
+    // Ghost
     void spawnGhost(const std::string& type);
 
+    // Refund
     static constexpr float SELL_REFUND = 0.5f;
 };
