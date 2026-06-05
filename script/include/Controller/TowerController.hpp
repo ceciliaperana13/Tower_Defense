@@ -52,6 +52,7 @@ private:
         AttackData  attack;
         std::string buildingPath;
         std::string projectilePath;
+        std::string soundPath;
         sf::Texture buildingTex;
         sf::Texture projectileTex;
     };

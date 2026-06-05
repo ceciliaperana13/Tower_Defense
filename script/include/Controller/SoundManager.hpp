@@ -20,6 +20,7 @@ public:
     void resumeMusic();  // ← nouveau
     void setMusicVolume(float v);
 
+    void loadSFX(const std::string& path);
     void playSFX(const std::string& id);
     void setSFXVolume(float v);
 
@@ -34,7 +35,6 @@ private:
     SoundManager(const SoundManager&) = delete;
     SoundManager& operator=(const SoundManager&) = delete;
 
-    void loadSFX(const std::string& id, const std::string& path);
 
     float m_musicVolume { 50.f };
     float m_sfxVolume   { 50.f };

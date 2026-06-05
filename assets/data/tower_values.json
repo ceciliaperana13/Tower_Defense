@@ -15,7 +15,8 @@
             },
             "paths": {
                 "building": "../sprites/towers/buildings/basic_tower.png",
-                "projectile": "../sprites/towers/projectiles/normal_projectile.png"
+                "projectile": "../sprites/towers/projectiles/normal_projectile.png",
+                "sound" : "../assets/sound/sfx/basicball.mp3"
             }
         }
     },
@@ -35,7 +36,8 @@
             },
             "paths": {
                 "building": "../sprites/towers/buildings/fire_tower.png",
-                "projectile": "../sprites/towers/projectiles/fire_projectile.png"
+                "projectile": "../sprites/towers/projectiles/fire_projectile.png",
+                "sound" : "../assets/sound/sfx/fireball.mp3"
             }
         },
         "ice": {
@@ -53,7 +55,8 @@
             },
             "paths": {
                 "building": "../sprites/towers/buildings/ice_tower.png",
-                "projectile": "../sprites/towers/projectiles/ice_projectile.png"
+                "projectile": "../sprites/towers/projectiles/ice_projectile.png",
+                "sound" : "../assets/sound/sfx/iceball.mp3"
             }
         },
         "rock": {
@@ -71,7 +74,8 @@
             },
             "paths": {
                 "building": "../sprites/towers/buildings/rock_tower.png",
-                "projectile": "../sprites/towers/projectiles/rock_projectile.png"
+                "projectile": "../sprites/towers/projectiles/rock_projectile.png",
+                "sound" : "../assets/sound/sfx/rockball.mp3"
             }
         },
         "arcane": {
@@ -89,7 +93,8 @@
             },
             "paths": {
                 "building": "../sprites/towers/buildings/arcane_tower.png",
-                "projectile": "../sprites/towers/projectiles/arcane_projectile.png"
+                "projectile": "../sprites/towers/projectiles/arcane_projectile.png",
+                "sound" : "../assets/sound/sfx/arcaneball.mp3"
             }
         }
     }

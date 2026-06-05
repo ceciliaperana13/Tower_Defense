@@ -54,15 +54,15 @@ void SoundManager::setMusicVolume(float v) {
     if (m_music && !m_muted)
         m_music->setVolume(m_musicVolume);
 }
-//sfx
-void SoundManager::loadSFX(const std::string& id, const std::string& path) {
+
+void SoundManager::loadSFX(const std::string& path) {
     auto entry = std::make_unique<SoundEntry>();
     if (!entry->buffer.loadFromFile(path)) {
         std::cerr << "[SoundManager] SFX introuvable : " << path << "\n";
         return;
     }
     entry->sound.setVolume(m_sfxVolume);
-    m_sounds[id] = std::move(entry);
+    m_sounds[path] = std::move(entry);
 }
 
 void SoundManager::playSFX(const std::string& id) {

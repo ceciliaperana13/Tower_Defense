@@ -48,6 +48,7 @@ bool TowerController::loadFromJson(const std::string& path) {
 
             def.buildingPath   = j["paths"]["building"].get<std::string>();
             def.projectilePath = j["paths"]["projectile"].get<std::string>();
+            def.soundPath      = j["paths"]["sound"].get<std::string>();
 
             if (!def.buildingTex.loadFromFile(
                     "../assets/" + def.buildingPath.substr(3)))
@@ -118,8 +119,9 @@ void TowerController::placeTower(sf::Vector2f pos) {
     if (m_selectedType.empty()) return;
     auto& def = m_defs[m_selectedType];
     m_coins -= def.cost;
-    m_towers.emplace_back(def.buildingTex, def.projectileTex,
-                          def.attack, pos, def.cost);
+
+    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, def.soundPath, pos, def.cost);
+
     clearSelection();
 }
 
@@ -157,6 +159,7 @@ bool TowerController::upgradeTower(const std::string& lv2Type) {
         it->second.buildingTex,
         it->second.projectileTex,
         it->second.attack,
+        it->second.soundPath,
         pos,
         it->second.cost
     );
@@ -204,6 +207,7 @@ void TowerController::update(float dt,
                 t.getProjectileTexture(),
                 t.getPosition(),
                 best->getPosition(),
+                t.getSoundPath(),
                 t.getAttack().damage
             );
         }

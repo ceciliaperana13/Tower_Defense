@@ -3,11 +3,13 @@
 Tower::Tower(const sf::Texture& buildingTex,
              const sf::Texture& projectileTex,
              const AttackData& attack,
+             const std::string soundPath,
              sf::Vector2f pos,
              int cost)
     : m_sprite(buildingTex)
     , m_projectileTex(projectileTex)
     , m_attack(attack)
+    , m_soundPath(soundPath)
     , m_position(pos)
     , m_cost(cost)
 {
