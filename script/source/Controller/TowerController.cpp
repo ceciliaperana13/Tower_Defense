@@ -50,6 +50,7 @@ bool TowerController::loadFromJson(const std::string& path) {
 
             def.buildingPath   = j["paths"]["building"].get<std::string>();
             def.projectilePath = j["paths"]["projectile"].get<std::string>();
+            def.soundPath      = j["paths"]["sound"].get<std::string>();
 
             if (!def.buildingTex.loadFromFile(
                     "../assets/" + def.buildingPath.substr(3)))

@@ -8,8 +8,10 @@ static float length(sf::Vector2f v) {
 Projectile::Projectile(const sf::Texture& tex,
                        sf::Vector2f start,
                        sf::Vector2f target,
+                       const std::string path,
                        int damage)
-    : m_sprite(tex)          
+    : m_sprite(tex)
+    , m_soundPath(path)
     , m_damage(damage)
 {
     m_sprite.setOrigin(sf::Vector2f(
@@ -35,6 +37,8 @@ bool Projectile::checkCollision(Enemy& e) {
     auto inter = m_sprite.getGlobalBounds().findIntersection(e.getBounds());
     if (inter.has_value()) {
         e.takeDamage(m_damage);
+        SoundManager::getInstance().loadSFX(m_soundPath);
+        SoundManager::getInstance().playSFX(m_soundPath);
         m_life = 0.f;
         return true;
     }
