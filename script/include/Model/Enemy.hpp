@@ -14,6 +14,8 @@ public:
           const std::string& sprite2Path,
           const std::vector<sf::Vector2f>& waypoints);
 
+    Enemy(Enemy&& other) noexcept;
+
     static Enemy fromJson(const std::string& jsonPath,
                           const std::string& type,
                           const std::vector<sf::Vector2f>& waypoints);

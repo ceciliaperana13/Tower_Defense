@@ -46,6 +46,26 @@ Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
         m_sprite->setPosition(m_waypoints[0]);
 }
 
+// ─── Move constructor: rebind sprite to the new texture addresses
+Enemy::Enemy(Enemy&& other) noexcept
+    : m_id(other.m_id), m_maxhp(other.m_maxhp), m_hp(other.m_hp),
+      m_maxspeed(other.m_maxspeed), m_speed(other.m_speed),
+      m_reward(other.m_reward),
+      m_tex1(std::move(other.m_tex1)),
+      m_tex2(std::move(other.m_tex2)),
+      m_sprite(std::nullopt),
+      m_animTimer(other.m_animTimer), m_useFirst(other.m_useFirst),
+      m_waypoints(std::move(other.m_waypoints)),
+      m_waypointIdx(other.m_waypointIdx),
+      m_reached(other.m_reached)
+{
+    if (other.m_sprite.has_value()) {
+        m_sprite.emplace(m_useFirst ? m_tex1 : m_tex2);
+        m_sprite->setScale(other.m_sprite->getScale());
+        m_sprite->setPosition(other.m_sprite->getPosition());
+    }
+}
+
 // ─── fromJson 
 Enemy Enemy::fromJson(const std::string& jsonPath,
                       const std::string& type,
