@@ -2,11 +2,11 @@
     "lvl1": {
         "basic": {
             "id": 1,
-            "cost": 1,
+            "cost": 50,
             "attackdatas": {
-                "damage": 10,
+                "damage": 18,
                 "range": 3,
-                "firerate": 1.0,
+                "firerate": 1.2,
                 "damagepersecond": 0,
                 "slowness": 0,
                 "effectduration": 0,
@@ -16,19 +16,19 @@
             "paths": {
                 "building": "../sprites/towers/buildings/basic_tower.png",
                 "projectile": "../sprites/towers/projectiles/normal_projectile.png",
-                "sound" : "../assets/sound/sfx/basicball.mp3"
+                "sound": "../assets/sound/sfx/basicball.mp3"
             }
         }
     },
     "lvl2": {
         "fire": {
             "id": 2,
-            "cost": 25,
+            "cost": 120,
             "attackdatas": {
-                "damage": 15,
+                "damage": 22,
                 "range": 3,
-                "firerate": 1.2,
-                "damagepersecond": 5,
+                "firerate": 1.4,
+                "damagepersecond": 8,
                 "slowness": 0,
                 "effectduration": 3,
                 "aoeradius": 0,
@@ -37,16 +37,16 @@
             "paths": {
                 "building": "../sprites/towers/buildings/fire_tower.png",
                 "projectile": "../sprites/towers/projectiles/fire_projectile.png",
-                "sound" : "../assets/sound/sfx/fireball.mp3"
+                "sound": "../assets/sound/sfx/fireball.mp3"
             }
         },
         "ice": {
             "id": 3,
-            "cost": 25,
+            "cost": 100,
             "attackdatas": {
-                "damage": 8,
+                "damage": 10,
                 "range": 3,
-                "firerate": 0.8,
+                "firerate": 1.0,
                 "damagepersecond": 0,
                 "slowness": 0.5,
                 "effectduration": 2,
@@ -56,16 +56,16 @@
             "paths": {
                 "building": "../sprites/towers/buildings/ice_tower.png",
                 "projectile": "../sprites/towers/projectiles/ice_projectile.png",
-                "sound" : "../assets/sound/sfx/iceball.mp3"
+                "sound": "../assets/sound/sfx/iceball.mp3"
             }
         },
         "rock": {
             "id": 4,
-            "cost": 25,
+            "cost": 150,
             "attackdatas": {
-                "damage": 25,
+                "damage": 45,
                 "range": 2,
-                "firerate": 0.5,
+                "firerate": 0.6,
                 "damagepersecond": 0,
                 "slowness": 0,
                 "effectduration": 0,
@@ -75,16 +75,16 @@
             "paths": {
                 "building": "../sprites/towers/buildings/rock_tower.png",
                 "projectile": "../sprites/towers/projectiles/rock_projectile.png",
-                "sound" : "../assets/sound/sfx/rockball.mp3"
+                "sound": "../assets/sound/sfx/rockball.mp3"
             }
         },
         "arcane": {
             "id": 5,
-            "cost": 25,
+            "cost": 130,
             "attackdatas": {
-                "damage": 5,
+                "damage": 8,
                 "range": 4,
-                "firerate": 2.0,
+                "firerate": 2.2,
                 "damagepersecond": 0,
                 "slowness": 0,
                 "effectduration": 0,
@@ -94,7 +94,7 @@
             "paths": {
                 "building": "../sprites/towers/buildings/arcane_tower.png",
                 "projectile": "../sprites/towers/projectiles/arcane_projectile.png",
-                "sound" : "../assets/sound/sfx/arcaneball.mp3"
+                "sound": "../assets/sound/sfx/arcaneball.mp3"
             }
         }
     }

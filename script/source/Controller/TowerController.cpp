@@ -14,7 +14,7 @@ static float length(sf::Vector2f v) {
 
 TowerController::TowerController()
     : m_ghostVisible(false)
-    , m_coins(1)   // commence avec 1 coin
+    , m_coins(150) // starting gold: enough for 3 basic towers
 {}
 //loadFromJson
 bool TowerController::loadFromJson(const std::string& path) {
