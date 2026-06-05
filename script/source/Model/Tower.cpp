@@ -1,4 +1,4 @@
-#include "Tower.hpp"
+#include "Model/Tower.hpp"
 
 Tower::Tower(const sf::Texture& buildingTex,
              const sf::Texture& projectileTex,

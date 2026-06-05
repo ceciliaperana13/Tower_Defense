@@ -1,4 +1,4 @@
-#include "GameView.hpp"
+#include "View/GameView.hpp"
 #include <iostream>
 #include <string>
 

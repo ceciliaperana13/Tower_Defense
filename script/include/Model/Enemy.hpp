@@ -18,7 +18,6 @@ public:
                           const std::string& type,
                           const std::vector<sf::Vector2f>& waypoints);
 
-    // Charge le sprite de cœur partagé (à appeler une fois avant le jeu)
     static bool loadHeartTexture(const std::string& path);
 
     void update(float dt);
@@ -32,17 +31,12 @@ public:
     int  getId()      const { return m_id; }
     int  getReward()  const { return m_reward; }
 
-    // Accesseurs pour position et bounds (utiles pour les collisions)
     sf::Vector2f getPosition() const {
-        if (m_sprite.has_value())
-            return m_sprite->getPosition();
-        return sf::Vector2f(0.f, 0.f);
+        return m_sprite.has_value() ? m_sprite->getPosition() : sf::Vector2f(0.f, 0.f);
     }
 
     sf::FloatRect getBounds() const {
-        if (m_sprite.has_value())
-            return m_sprite->getGlobalBounds();
-        return sf::FloatRect();
+        return m_sprite.has_value() ? m_sprite->getGlobalBounds() : sf::FloatRect();
     }
 
 private:
@@ -67,7 +61,6 @@ private:
     int                       m_waypointIdx { 1 };
     bool                      m_reached     { false };
 
-    // Texture partagée entre tous les ennemis (static)
     static sf::Texture s_heartTex;
     static bool        s_heartLoaded;
 };

@@ -1,5 +1,5 @@
 #pragma once
-#include "Enemy.hpp"
+#include "Model/Enemy.hpp"
 #include "json.hpp"
 #include <vector>
 #include <string>

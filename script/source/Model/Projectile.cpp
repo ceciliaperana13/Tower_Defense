@@ -1,4 +1,4 @@
-#include "Projectile.hpp"
+#include "Model/Projectile.hpp"
 #include <cmath>
 
 static float length(sf::Vector2f v) {

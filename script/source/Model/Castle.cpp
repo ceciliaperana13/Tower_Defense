@@ -1,4 +1,4 @@
-#include "Castle.hpp"
+#include "Model/Castle.hpp"
 #include <iostream>
 #include <algorithm>
 

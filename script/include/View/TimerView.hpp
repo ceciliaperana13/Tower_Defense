@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <optional>
-#include "CountdownTimer.hpp"
+#include "Model/CountdownTimer.hpp"
 
 class TimerView : public sf::Drawable {
 public:

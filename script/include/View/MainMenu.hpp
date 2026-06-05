@@ -8,8 +8,6 @@
 #include <memory>
 #include <string>
 
-// MenuAction est désormais défini dans Button.hpp
-
 struct WalkingCharacter {
     sf::Texture        frames[2];
     sf::RectangleShape shape;
@@ -27,15 +25,24 @@ public:
 
     MenuAction run();
 
+    // ← Ajouts pour MenuState
+    std::vector<Button>& getButtons() { return m_buttons; }
+
+    bool settingsSpriteContains(sf::Vector2f pos) const {
+        return m_settingsSprite.has_value() &&
+               m_settingsSprite->getGlobalBounds().contains(pos);
+    }
+
+    void update(sf::Vector2f mousePos, float dt);
+    void render();
+
 private:
     void loadAssets();
     void buildButtons();
     void loadCharacters();
 
     void handleEvents(MenuAction& result);
-    void update(sf::Vector2f mousePos, float dt);
     void updateCharacters(float dt);
-    void render();
     void renderCharacters();
 
     sf::RenderWindow& m_window;
@@ -49,7 +56,7 @@ private:
     sf::Font                  m_font;
     std::optional<sf::Text>   m_title;
 
-    std::vector<Button>           m_buttons;       // ← std::vector<Button> au lieu de MenuButton
+    std::vector<Button>           m_buttons;
     std::vector<WalkingCharacter> m_characters;
 
     std::unique_ptr<sf::Music>    m_music;

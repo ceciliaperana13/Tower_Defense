@@ -6,9 +6,9 @@
 #include <optional>
 #include <string>
 
-#include "Tower.hpp"
-#include "Projectile.hpp"
-#include "Enemy.hpp"
+#include "Model/Tower.hpp"
+#include "Model/Projectile.hpp"
+#include "Model/Enemy.hpp"
 
 class TowerController {
 public:

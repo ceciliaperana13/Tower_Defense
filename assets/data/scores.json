@@ -1,72 +1,16 @@
 [
   {
     "playerName": "Player",
-    "score": 257,
-    "enemyCount": 258,
-    "wave": 6,
-    "date": "2026-06-04 14:34"
-  },
-  {
-    "playerName": "Player",
-    "score": 109,
-    "enemyCount": 10,
-    "wave": 1,
-    "date": "2026-06-04 12:52"
-  },
-  {
-    "playerName": "Player",
-    "score": 108,
-    "enemyCount": 9,
-    "wave": 1,
-    "date": "2026-06-04 12:40"
-  },
-  {
-    "playerName": "Player",
-    "score": 107,
-    "enemyCount": 9,
-    "wave": 1,
-    "date": "2026-06-04 14:07"
-  },
-  {
-    "playerName": "Player",
-    "score": 105,
-    "enemyCount": 8,
-    "wave": 1,
-    "date": "2026-06-04 14:01"
-  },
-  {
-    "playerName": "Player",
-    "score": 105,
-    "enemyCount": 6,
-    "wave": 1,
-    "date": "2026-06-04 14:25"
+    "score": 125,
+    "enemyCount": 52,
+    "wave": 5,
+    "date": "2026-06-05 11:57"
   },
   {
     "playerName": "Player",
     "score": 100,
     "enemyCount": 0,
     "wave": 3,
-    "date": "2026-06-04 12:38"
-  },
-  {
-    "playerName": "Player",
-    "score": 100,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-04 14:56"
-  },
-  {
-    "playerName": "Player",
-    "score": 100,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-04 14:56"
-  },
-  {
-    "playerName": "Player",
-    "score": 100,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-04 20:28"
+    "date": "2026-06-05 12:00"
   }
 ]

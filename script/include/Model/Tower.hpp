@@ -1,7 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include "Enemy.hpp"
+#include "Model/Enemy.hpp"
 #include <string>
 
 struct AttackData {

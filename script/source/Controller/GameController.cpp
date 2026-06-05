@@ -1,4 +1,4 @@
-#include "GameController.hpp"
+#include "Controller/GameController.hpp"
 #include <iostream>
 
 GameController::GameController(sf::RenderWindow& window)

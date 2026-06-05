@@ -1,4 +1,4 @@
-#include "CountdownTimer.hpp"
+#include "Model/CountdownTimer.hpp"
 
 CountdownTimer::CountdownTimer(float durationSec)
     : duration(durationSec), finished(false)

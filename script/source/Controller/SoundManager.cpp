@@ -1,4 +1,4 @@
-#include "SoundManager.hpp"
+#include "Controller/SoundManager.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -18,7 +18,6 @@ void SoundManager::playMusic(const std::string& id) {
 
     m_music->stop();
 
-    // Chemin fixe vers Medieval.mp3 — ignore le id pour le fichier
     const std::string path = "../assets/sound/music/Medieval.mp3";
     if (!m_music->openFromFile(path)) {
         std::cerr << "[SoundManager] Impossible de charger : " << path << "\n";
@@ -34,6 +33,20 @@ void SoundManager::playMusic(const std::string& id) {
 void SoundManager::stopMusic() {
     if (m_music) m_music->stop();
     m_currentMusicId.clear();
+}
+
+// ← nouveau : met en pause sans perdre la position dans le morceau
+void SoundManager::pauseMusic() {
+    if (m_music &&
+        m_music->getStatus() == sf::SoundSource::Status::Playing)
+        m_music->pause();
+}
+
+// ← nouveau : reprend là où on s'était arrêté
+void SoundManager::resumeMusic() {
+    if (m_music &&
+        m_music->getStatus() == sf::SoundSource::Status::Paused)
+        m_music->play();
 }
 
 void SoundManager::setMusicVolume(float v) {

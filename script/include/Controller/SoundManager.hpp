@@ -16,6 +16,8 @@ public:
 
     void playMusic(const std::string& id);
     void stopMusic();
+    void pauseMusic();   // ← nouveau
+    void resumeMusic();  // ← nouveau
     void setMusicVolume(float v);
 
     void playSFX(const std::string& id);
@@ -29,13 +31,11 @@ public:
 private:
     SoundManager();
     ~SoundManager() = default;
-
     SoundManager(const SoundManager&) = delete;
     SoundManager& operator=(const SoundManager&) = delete;
 
     void loadSFX(const std::string& id, const std::string& path);
 
-private:
     float m_musicVolume { 50.f };
     float m_sfxVolume   { 50.f };
     bool  m_muted       { false };

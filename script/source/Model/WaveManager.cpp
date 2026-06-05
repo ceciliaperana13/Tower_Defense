@@ -1,4 +1,4 @@
-#include "WaveManager.hpp"
+#include "Model/WaveManager.hpp"
 #include <fstream>
 #include <stdexcept>
 #include <iostream>

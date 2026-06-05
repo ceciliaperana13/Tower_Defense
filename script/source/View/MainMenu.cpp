@@ -1,5 +1,5 @@
-#include "MainMenu.hpp"
-#include "SoundManager.hpp"
+#include "View/MainMenu.hpp"
+#include "Controller/SoundManager.hpp"
 #include <iostream>
 #include <stdexcept>
 
@@ -218,7 +218,6 @@ void MainMenu::update(sf::Vector2f mousePos, float dt) {
 }
 
 void MainMenu::render() {
-    m_window.clear(sf::Color(20, 20, 40));
 
     if (m_bgSprite.has_value())
         m_window.draw(*m_bgSprite);
@@ -239,5 +238,4 @@ void MainMenu::render() {
     if (m_settingsSprite.has_value())
         m_window.draw(*m_settingsSprite);
 
-    m_window.display();
 }

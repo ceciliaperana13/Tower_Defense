@@ -4,12 +4,12 @@
 #include <optional>
 #include <string>
 
-#include "Map.hpp"
-#include "WaveManager.hpp"
-#include "CountdownTimer.hpp"
+#include "Model/Map.hpp"
+#include "Model/WaveManager.hpp"
+#include "Model/CountdownTimer.hpp"
 #include "TimerView.hpp"
 #include "Button.hpp"
-#include "TowerController.hpp"
+#include "Controller/TowerController.hpp"
 #include "WaveView.hpp"
 // Map 
 constexpr unsigned WIN_W  = 1056u;

@@ -1,10 +1,10 @@
-#include "TowerController.hpp"
+#include "Controller/TowerController.hpp"
 #include "json.hpp"
 #include <fstream>
 #include <iostream>
 #include <cmath>
 #include <algorithm>
-#include "Tower.hpp"
+#include "Model/Tower.hpp"
 
 using json = nlohmann::json;
 

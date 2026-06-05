@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 #include <string>
-#include "SaveController.hpp"
+#include "Controller/SaveController.hpp"
 
 class Leaderboard {
 public:
@@ -13,11 +13,16 @@ public:
 
     void run();
 
+    // ← Ajouts pour LeaderboardState
+    void reloadScores();
+    bool closeBtnContains(sf::Vector2f pos) const;
+    void render(sf::RenderWindow& window);
+
 private:
     void loadAssets();
     void buildUI();
     void handleEvents();
-    void render();
+    void render(); // interne pour run()
 
     sf::RenderWindow& m_window;
     SaveController&   m_saveCtrl;

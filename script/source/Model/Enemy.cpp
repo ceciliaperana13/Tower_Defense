@@ -1,4 +1,4 @@
-#include "Enemy.hpp"
+#include "Model/Enemy.hpp"
 #include "json.hpp"
 #include <fstream>
 #include <iostream>
@@ -6,7 +6,7 @@
 
 using json = nlohmann::json;
 
-// ─── Membres statiques 
+// ─── Membres statiques ────────────────────────────────────────
 sf::Texture Enemy::s_heartTex;
 bool        Enemy::s_heartLoaded = false;
 
@@ -19,7 +19,7 @@ bool Enemy::loadHeartTexture(const std::string& path) {
     return true;
 }
 
-// ─── Constructeur 
+// ─── Constructeur ─────────────────────────────────────────────
 Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
              const std::string& sprite1Path,
              const std::string& sprite2Path,
@@ -29,15 +29,20 @@ Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
       m_reward(reward),
       m_waypoints(waypoints)
 {
-    if (!m_tex1.loadFromFile(sprite1Path))
-        std::cerr << "[Enemy] Introuvable : " << sprite1Path << "\n";
-    if (!m_tex2.loadFromFile(sprite2Path))
-        std::cerr << "[Enemy] Introuvable : " << sprite2Path << "\n";
+    bool ok1 = m_tex1.loadFromFile(sprite1Path);
+    bool ok2 = m_tex2.loadFromFile(sprite2Path);
 
-    m_sprite.emplace(m_tex1);
-    m_sprite->setScale(sf::Vector2f(2.f, 2.f));
+    if (!ok1) std::cerr << "[Enemy] Introuvable : " << sprite1Path << "\n";
+    if (!ok2) std::cerr << "[Enemy] Introuvable : " << sprite2Path << "\n";
 
-    if (!m_waypoints.empty())
+    // Créer le sprite uniquement si la texture est chargée
+    if (ok1) {
+        m_sprite.emplace(m_tex1);
+        m_sprite->setScale(sf::Vector2f(2.f, 2.f));
+        m_sprite->setTexture(m_tex1, true);  // true = reset le rect
+    }
+
+    if (!m_waypoints.empty() && m_sprite.has_value())
         m_sprite->setPosition(m_waypoints[0]);
 }
 
@@ -67,7 +72,7 @@ Enemy Enemy::fromJson(const std::string& jsonPath,
     );
 }
 
-// ─── takeDamage 
+// ─── takeDamage
 void Enemy::takeDamage(int dmg) {
     m_hp = std::max(0, m_hp - dmg);
 }
@@ -91,10 +96,10 @@ void Enemy::moveAlongPath(float dt) {
         if (m_waypointIdx >= (int)m_waypoints.size()) {
             m_reached = true;
         } else {
-            float remaining = step - dist;
+            float remaining        = step - dist;
             sf::Vector2f next      = m_waypoints[m_waypointIdx];
             sf::Vector2f nextDelta = next - target;
-            float nextDist = std::sqrt(nextDelta.x*nextDelta.x + nextDelta.y*nextDelta.y);
+            float nextDist = std::sqrt(nextDelta.x * nextDelta.x + nextDelta.y * nextDelta.y);
             if (nextDist > 0.f) {
                 float t = std::min(remaining / nextDist, 1.f);
                 m_sprite->setPosition(target + nextDelta * t);
@@ -108,13 +113,13 @@ void Enemy::moveAlongPath(float dt) {
 
 // ─── update 
 void Enemy::update(float dt) {
-    if (m_reached) return;
+    if (m_reached || !m_sprite.has_value()) return;
 
     m_animTimer += dt;
     if (m_animTimer >= 0.3f) {
         m_animTimer = 0.f;
         m_useFirst  = !m_useFirst;
-        m_sprite->setTexture(m_useFirst ? m_tex1 : m_tex2);
+        m_sprite->setTexture(m_useFirst ? m_tex1 : m_tex2, true);
     }
 
     moveAlongPath(dt);
@@ -132,26 +137,23 @@ void Enemy::drawHealthBar(sf::RenderWindow& window) const {
     float barX = bounds.position.x;
     float barY = bounds.position.y + bounds.size.y + margin;
 
-    // Fond gris
     sf::RectangleShape bg({ barW, barH });
     bg.setPosition({ barX, barY });
     bg.setFillColor(sf::Color(60, 60, 60, 200));
     window.draw(bg);
 
-    // Remplissage coloré selon le % de vie
     float ratio = static_cast<float>(m_hp) / static_cast<float>(m_maxhp);
     sf::Color barColor = ratio > 0.5f
-        ? sf::Color(80, 200, 80)    // vert
+        ? sf::Color(80, 200, 80)
         : ratio > 0.25f
-            ? sf::Color(220, 180, 0) // jaune
-            : sf::Color(220, 50, 50); // rouge
+            ? sf::Color(220, 180, 0)
+            : sf::Color(220, 50, 50);
 
     sf::RectangleShape fill({ barW * ratio, barH });
     fill.setPosition({ barX, barY });
     fill.setFillColor(barColor);
     window.draw(fill);
 
-    // Icône cœur à gauche de la barre
     if (s_heartLoaded) {
         float heartSize = bounds.size.y * 0.35f;
         float scale     = heartSize / static_cast<float>(s_heartTex.getSize().y);

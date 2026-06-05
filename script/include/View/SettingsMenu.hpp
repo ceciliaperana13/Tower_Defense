@@ -21,17 +21,21 @@ public:
 
     void run();
 
+    // ← Ajouts pour OptionsState
+    void handleClick(sf::Vector2f pos);
+    void stopDragging();
+    bool closeBtnContains(sf::Vector2f pos) const;
+    void update(sf::Vector2f mouse);
+    void render(sf::RenderWindow& window);
+
 private:
     void buildUI();
     void handleEvents();
-    void update(sf::Vector2f mouse);
-    void render();
+    void render(); // version interne pour run()
 
-    // UI helpers
     void drawSliderRow(const std::string& label, float value, sf::FloatRect track);
     void drawLabel    (const std::string& txt,   sf::Vector2f pos);
 
-    // Actions — délèguent au SoundManager
     void onMusicSlider(float mx);
     void onSfxSlider  (float mx);
     void onFullscreenToggle();
