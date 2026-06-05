@@ -65,6 +65,7 @@ void SoundManager::loadSFX(const std::string& path) {
     m_sounds[path] = std::move(entry);
 }
 
+//sfx
 void SoundManager::playSFX(const std::string& id) {
     auto it = m_sounds.find(id);
     if (it == m_sounds.end()) {
