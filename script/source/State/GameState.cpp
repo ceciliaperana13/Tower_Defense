@@ -49,6 +49,7 @@ void GameState::onExit() {
     SoundManager::getInstance().stopMusic();
 }
 
+// ─── Events 
 void GameState::handleEvents(const sf::Event& event) {
     if (m_ended) return;
 
@@ -57,8 +58,14 @@ void GameState::handleEvents(const sf::Event& event) {
 
     if (const auto* kp = event.getIf<sf::Event::KeyPressed>()) {
         if (kp->code == sf::Keyboard::Key::Escape) {
-            Game::getInstance().getStateManager()
-                .push(std::make_unique<PauseState>(m_window));
+            // Escape ferme la popup si ouverte, sinon ouvre la pause
+            if (m_gameView.hasConfirmPending()) {
+                m_towerController.clearSelection();
+                m_gameView.cancelConfirm();
+            } else {
+                Game::getInstance().getStateManager()
+                    .push(std::make_unique<PauseState>(m_window));
+            }
             return;
         }
         if (kp->code == sf::Keyboard::Key::Space &&
@@ -80,21 +87,34 @@ void GameState::handleEvents(const sf::Event& event) {
             handleMouseClick(wp);
         if (mb->button == sf::Mouse::Button::Right) {
             m_towerController.clearSelection();
+            m_gameView.cancelConfirm();
             m_showUpgradeRing = false;
         }
     }
 }
 
+// ─── handleMouseClick 
 void GameState::handleMouseClick(sf::Vector2f wp) {
+    // Popup ouverte : lui déléguer le clic en priorité
+    if (m_gameView.hasConfirmPending()) {
+        m_gameView.handleConfirmClick(wp);
+        return;
+    }
+
     std::string type = m_gameView.getTowerTypeAt(wp);
 
     if (!type.empty()) {
-        if (m_towerController.hasUpgradeTarget()) {
-            if (type != "basic")
-                m_towerController.upgradeTower(type);
-            m_showUpgradeRing = false;
-        } else {
+        if (type == "basic") {
+            // Tour basic : sélection directe, pas de popup
             m_towerController.selectTower(type);
+        } else {
+            if (m_towerController.hasUpgradeTarget()) {
+                // Upgrade : popup de confirmation
+                m_gameView.showConfirm(type, true, wp);
+            } else {
+                // Placement : sélectionne le fantôme, popup au clic sur la map
+                m_towerController.selectTower(type);
+            }
         }
         return;
     }
@@ -115,8 +135,16 @@ void GameState::handleMouseClick(sf::Vector2f wp) {
 
     if (act == MenuAction::None && wp.y < MAP_H) {
         if (m_towerController.hasSelection()) {
-            m_towerController.placeTower(wp);
-            m_showUpgradeRing = false;
+            std::string sel = m_towerController.getSelectedType();
+            if (sel == "basic") {
+                // Basic : placement direct
+                m_towerController.placeTower(wp);
+                m_showUpgradeRing = false;
+            } else {
+                // Spéciale : annule le fantôme, ouvre popup
+                m_towerController.clearSelection();
+                m_gameView.showConfirm(sel, false, wp);
+            }
         } else {
             int idx = m_towerController.getTowerIndexAt(wp);
             if (idx >= 0) {
@@ -125,12 +153,14 @@ void GameState::handleMouseClick(sf::Vector2f wp) {
                 m_upgradeRingPos  = wp;
             } else {
                 m_towerController.clearSelection();
+                m_gameView.cancelConfirm();
                 m_showUpgradeRing = false;
             }
         }
     }
 }
 
+// ─── Update 
 void GameState::update(float dt) {
     if (m_ended) return;
 
@@ -154,7 +184,7 @@ void GameState::update(float dt) {
 
     checkEndConditions();
 }
-
+// ─── checkEndConditions 
 void GameState::checkEndConditions() {
     auto& sm = Game::getInstance().getStateManager();
 
@@ -198,6 +228,7 @@ void GameState::checkEndConditions() {
     }
 }
 
+// ─── Render 
 void GameState::render(sf::RenderWindow& window) {
     auto view = GameView::makeLetterboxView(
         window.getSize().x, window.getSize().y);
@@ -214,6 +245,7 @@ void GameState::render(sf::RenderWindow& window) {
     m_towerController.render(window);
 }
 
+// ─── Helpers 
 void GameState::flushScore() {
     ScoreData sd;
     sd.playerName = "Player";

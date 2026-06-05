@@ -12,13 +12,11 @@ static float length(sf::Vector2f v) {
     return std::sqrt(v.x * v.x + v.y * v.y);
 }
 
-// ─── Constructeur 
 TowerController::TowerController()
     : m_ghostVisible(false)
-    , m_coins(100)
+    , m_coins(1)   //commence avec 1 coin
 {}
-
-// ─── loadFromJson
+//loadFromJson
 bool TowerController::loadFromJson(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) {
@@ -75,15 +73,13 @@ bool TowerController::loadFromJson(const std::string& path) {
 
     return true;
 }
-
-// ─── getCostOf 
+//prix de la tour
 int TowerController::getCostOf(const std::string& type) const {
     auto it = m_defs.find(type);
     if (it == m_defs.end()) return 9999;
     return it->second.cost;
 }
 
-// ─── spawnGhost
 void TowerController::spawnGhost(const std::string& type) {
     auto& def = m_defs.at(type);
     m_ghost.emplace(def.buildingTex);
@@ -96,21 +92,16 @@ void TowerController::spawnGhost(const std::string& type) {
     m_ghostVisible = true;
 }
 
-// ─── selectTower
 bool TowerController::selectTower(const std::string& type) {
     m_upgradeTargetIndex = -1;
-
     if (m_defs.find(type) == m_defs.end()) return false;
-
     int cost = m_defs.at(type).cost;
     if (m_coins < cost) return false;
-
     m_selectedType = type;
     spawnGhost(type);
     return true;
 }
-
-// ─── clearSelection 
+//Selection d'une tour pour upgrade
 void TowerController::clearSelection() {
     m_selectedType.clear();
     m_ghost.reset();
@@ -118,25 +109,20 @@ void TowerController::clearSelection() {
     m_upgradeTargetIndex = -1;
 }
 
-// ─── setGhostPosition 
 void TowerController::setGhostPosition(sf::Vector2f pos) {
     if (m_ghostVisible && m_ghost.has_value())
         m_ghost->setPosition(pos);
 }
-
-// ─── placeTower 
+//placeTower
 void TowerController::placeTower(sf::Vector2f pos) {
     if (m_selectedType.empty()) return;
-
     auto& def = m_defs[m_selectedType];
     m_coins -= def.cost;
-
-    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, pos, def.cost);
-
+    m_towers.emplace_back(def.buildingTex, def.projectileTex,
+                          def.attack, pos, def.cost);
     clearSelection();
 }
 
-// ─── getTowerIndexAt 
 int TowerController::getTowerIndexAt(sf::Vector2f pos) const {
     constexpr float CLICK_RADIUS = 32.f;
     for (int i = 0; i < (int)m_towers.size(); ++i) {
@@ -147,14 +133,12 @@ int TowerController::getTowerIndexAt(sf::Vector2f pos) const {
     return -1;
 }
 
-// ─── selectTowerForUpgrade 
 void TowerController::selectTowerForUpgrade(int index) {
     clearSelection();
     if (index >= 0 && index < (int)m_towers.size())
         m_upgradeTargetIndex = index;
 }
-
-// ─── upgradeTower 
+//upgradeTower
 bool TowerController::upgradeTower(const std::string& lv2Type) {
     if (m_upgradeTargetIndex < 0 ||
         m_upgradeTargetIndex >= (int)m_towers.size())
@@ -181,7 +165,6 @@ bool TowerController::upgradeTower(const std::string& lv2Type) {
     return true;
 }
 
-// ─── sellSelectedTower 
 bool TowerController::sellSelectedTower() {
     if (m_upgradeTargetIndex < 0 ||
         m_upgradeTargetIndex >= (int)m_towers.size())
@@ -189,32 +172,27 @@ bool TowerController::sellSelectedTower() {
 
     int refund = int(m_defs["basic"].cost * SELL_REFUND);
     m_coins += refund;
-
     m_towers.erase(m_towers.begin() + m_upgradeTargetIndex);
-
     clearSelection();
     return true;
 }
-
-// ─── update 
+//update
 void TowerController::update(float dt,
                              const std::vector<std::unique_ptr<Enemy>>& enemies) {
-
     for (auto& t : m_towers) t.update(dt);
 
     for (auto& t : m_towers) {
         if (!t.canFire()) continue;
 
-        Enemy* best = nullptr;
-        float bestDist = 0.f;
+        Enemy* best     = nullptr;
+        float  bestDist = 0.f;
 
         for (auto& e : enemies) {
             if (e->isDead() || e->hasReached()) continue;
-
             float d = length(e->getPosition() - t.getPosition());
             if (d <= t.getAttack().range * 64.f) {
                 if (!best || d < bestDist) {
-                    best = e.get();
+                    best     = e.get();
                     bestDist = d;
                 }
             }
@@ -248,7 +226,6 @@ void TowerController::update(float dt,
     );
 }
 
-// ─── render 
 void TowerController::render(sf::RenderWindow& window) {
     for (auto& t : m_towers)      t.render(window);
     for (auto& p : m_projectiles) p.render(window);

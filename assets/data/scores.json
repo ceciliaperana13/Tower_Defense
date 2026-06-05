@@ -12,5 +12,19 @@
     "enemyCount": 0,
     "wave": 3,
     "date": "2026-06-05 12:00"
+  },
+  {
+    "playerName": "Player",
+    "score": 100,
+    "enemyCount": 0,
+    "wave": 3,
+    "date": "2026-06-05 12:08"
+  },
+  {
+    "playerName": "Player",
+    "score": 7,
+    "enemyCount": 33,
+    "wave": 4,
+    "date": "2026-06-05 12:29"
   }
 ]

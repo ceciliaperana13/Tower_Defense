@@ -17,22 +17,17 @@ enum class MenuAction {
 
 class Button {
 public:
-    // Construit un bouton centré en (cx, cy) avec la texture donnée
     Button(const std::string& texturePath,
            float cx, float cy,
            float width, float height,
            MenuAction action);
 
-    // Retourne vrai si le point est dans le bouton
     bool contains(sf::Vector2f point) const;
-
-    // Change l'apparence selon le survol
     void setHovered(bool hovered);
 
-    // Retourne l'action associée
-    MenuAction getAction() const { return m_action; }
+    MenuAction    getAction() const { return m_action; }
+    sf::FloatRect getBounds() const { return m_shape.getGlobalBounds(); }
 
-    // Dessine le bouton dans la fenêtre
     void draw(sf::RenderWindow& window) const;
 
 private:
