@@ -132,7 +132,7 @@ void TowerController::placeTower(sf::Vector2f pos) {
     auto& def = m_defs[m_selectedType];
     m_coins -= def.cost;
 
-    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, pos, def.cost);
+    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, def.soundPath, pos, def.cost);
 
     clearSelection();
 }
@@ -174,6 +174,7 @@ bool TowerController::upgradeTower(const std::string& lv2Type) {
         it->second.buildingTex,
         it->second.projectileTex,
         it->second.attack,
+        it->second.soundPath,
         pos,
         it->second.cost
     );
@@ -227,6 +228,7 @@ void TowerController::update(float dt,
                 t.getProjectileTexture(),
                 t.getPosition(),
                 best->getPosition(),
+                t.getSoundPath(),
                 t.getAttack().damage
             );
         }
