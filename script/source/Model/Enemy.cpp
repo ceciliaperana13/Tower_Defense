@@ -92,6 +92,12 @@ Enemy Enemy::fromJson(const std::string& jsonPath,
     );
 }
 
+// ─── applyHpMultiplier
+void Enemy::applyHpMultiplier(float multiplier) {
+    m_maxhp = static_cast<int>(m_maxhp * multiplier);
+    m_hp    = m_maxhp;
+}
+
 // ─── takeDamage
 void Enemy::takeDamage(int dmg) {
     m_hp = std::max(0, m_hp - dmg);

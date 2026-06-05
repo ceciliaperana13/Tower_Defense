@@ -27,6 +27,7 @@ public:
 
     void takeDamage(int dmg);
     void applySpeedMultiplier(float multiplier) { m_speed = m_maxspeed * multiplier; }
+    void applyHpMultiplier(float multiplier);     // scales both current and max HP
 
     bool isDead()     const { return m_hp <= 0; }
     bool hasReached() const { return m_reached; }

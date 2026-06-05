@@ -23,6 +23,7 @@ WaveManager::WaveManager(const std::string& wavesJson,
         Wave wave;
         wave.id                 = w["id"].get<int>();
         wave.speedMultiplier    = w["speedMultiplier"].get<float>();
+        wave.hpMultiplier       = w["hpMultiplier"].get<float>();
         wave.pauseBetweenGroups = w["pauseBetweenGroups"].get<float>();
 
         for (const auto& g : w["groups"]) {
@@ -139,13 +140,15 @@ void WaveManager::spawnNext() {
             Enemy::fromJson(m_enemiesJson, group.type, m_waypoints)
         );
         enemy->applySpeedMultiplier(wave.speedMultiplier);
+        enemy->applyHpMultiplier(wave.hpMultiplier);
 
         m_activeEnemies.push_back(std::move(enemy));
         ++m_spawnedInGroup;
 
         std::cout << "[WaveManager] Spawn " << group.type
                   << " (" << m_spawnedInGroup << "/" << group.count
-                  << ") speed x" << wave.speedMultiplier << "\n";
+                  << ") speed x" << wave.speedMultiplier
+                  << " hp x" << wave.hpMultiplier << "\n";
     }
     catch (const std::exception& ex) {
         std::cerr << "[WaveManager] Erreur spawn : " << ex.what() << "\n";

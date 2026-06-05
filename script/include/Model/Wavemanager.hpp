@@ -14,6 +14,7 @@ struct EnemyGroup {
 struct Wave {
     int                     id;
     float                   speedMultiplier;
+    float                   hpMultiplier;       // scales all enemies' HP for this wave
     std::vector<EnemyGroup> groups;
     float                   pauseBetweenGroups;
 };
@@ -34,7 +35,7 @@ public:
     int  getCurrentWaveId()  const { return m_currentWave + 1; }
     int  getTotalWaves()     const { return (int)m_waves.size(); }
     int  getTotalReached()   const { return m_totalReached; }
-    int  getTotalKills()     const { return m_totalKills; }   // ← nouveau
+    int  getTotalKills()     const { return m_totalKills; }
 
 private:
     void spawnNext();
@@ -50,7 +51,7 @@ private:
     float m_spawnTimer     { 0.f };
     float m_pauseTimer     { 0.f };
     int   m_totalReached   {  0 };
-    int   m_totalKills     {  0 };   // ← nouveau : cumul ennemis tués
+    int   m_totalKills     {  0 };
 
     static constexpr float INTER_WAVE_DELAY = 10.f;
 
