@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include <optional>
+#include <../json.hpp>
 
 struct SoundEntry {
     sf::SoundBuffer buffer;
@@ -21,6 +23,9 @@ public:
     void playSFX(const std::string& id);
     void setSFXVolume(float v);
 
+    void loadProjectileSFXConfig(const std::string& path);
+    void playProjectileImpact(int id);
+
     void toggleMute();
     bool  isMuted()        const { return m_muted; }
     float getMusicVolume() const { return m_musicVolume; }
@@ -34,6 +39,7 @@ private:
     SoundManager& operator=(const SoundManager&) = delete;
 
     void loadSFX(const std::string& id, const std::string& path);
+    std::optional<std::string> findProjectileSoundPath(int id) const;
 
 private:
     float m_musicVolume { 50.f };
@@ -44,4 +50,7 @@ private:
     std::unique_ptr<sf::Music> m_music;
 
     std::unordered_map<std::string, std::unique_ptr<SoundEntry>> m_sounds;
+
+    nlohmann::json m_projectileSfxJson;
+    bool m_projectileSfxLoaded { false };
 };
