@@ -24,7 +24,7 @@ void Game::openWindowed() {
     m_window.setView(makeWindowedView());
     m_fullscreen = false;
 }
-
+// plein écran
 void Game::openFullscreen() {
     auto desk = sf::VideoMode::getDesktopMode();
     m_window.create(
