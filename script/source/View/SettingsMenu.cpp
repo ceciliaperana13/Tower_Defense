@@ -1,9 +1,10 @@
 #include "View/SettingsMenu.hpp"
 #include "Controller/SoundManager.hpp"
+#include "Game.hpp"
 #include <iostream>
 
 const std::vector<std::string> GameSettings::LANGUAGES = {
-    "Francais", "English", "Espanol"
+    "French", "English", "Espanol"
 };
 
 SettingsMenu::SettingsMenu(sf::RenderWindow& window, GameSettings& settings)
@@ -138,13 +139,7 @@ void SettingsMenu::onSfxSlider(float mx) {
 }
 
 void SettingsMenu::onFullscreenToggle() {
-    m_settings.fullscreen = !m_settings.fullscreen;
-    sf::VideoMode mode = m_settings.fullscreen
-        ? sf::VideoMode::getDesktopMode()
-        : sf::VideoMode({ 1080u, 720u });
-    m_window.create(mode, "Defend the Castle",
-        m_settings.fullscreen ? sf::State::Fullscreen : sf::State::Windowed);
-    m_window.setFramerateLimit(60);
+    Game::getInstance().toggleFullscreen();
     buildUI();
 }
 
@@ -227,10 +222,10 @@ void SettingsMenu::render(sf::RenderWindow& window) {
     window.draw(m_closeBtn);
     if (m_closeLabel) window.draw(*m_closeLabel);
 
-    drawSliderRow("Musique",        m_settings.musicVolume, m_musicTrack);
-    drawSliderRow("Effets sonores", m_settings.sfxVolume,   m_sfxTrack);
+    drawSliderRow("Music",        m_settings.musicVolume, m_musicTrack);
+    drawSliderRow("Sound effects", m_settings.sfxVolume,   m_sfxTrack);
 
-    drawLabel("Plein ecran", { m_panelX + 30.f, m_fullscreenBox.position.y + 2.f });
+    drawLabel("Fullscreen", { m_panelX + 30.f, m_fullscreenBox.position.y + 2.f });
     {
         sf::RectangleShape box({ 24.f, 24.f });
         box.setPosition(m_fullscreenBox.position);
@@ -250,7 +245,7 @@ void SettingsMenu::render(sf::RenderWindow& window) {
         }
     }
 
-    drawLabel("Langue", { m_panelX + 30.f, m_langLeftBtn.position.y + 4.f });
+    drawLabel("Language", { m_panelX + 30.f, m_langLeftBtn.position.y + 4.f });
     {
         float trackW = m_langRightBtn.position.x + 28.f - m_langLeftBtn.position.x;
         auto arrowBtn = [&](sf::FloatRect r, const std::string& lbl) {

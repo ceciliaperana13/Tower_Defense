@@ -21,7 +21,7 @@ void Game::openWindowed() {
         sf::State::Windowed
     );
     m_window.setFramerateLimit(60);
-    m_window.setView(makeWindowedView());
+    m_window.setView(makeWindowedView()); // 1:1 view, no letterbox needed
     m_fullscreen = false;
 }
 // plein écran
@@ -33,7 +33,7 @@ void Game::openFullscreen() {
         sf::State::Fullscreen
     );
     m_window.setFramerateLimit(60);
-    m_window.setView(makeWindowedView());
+    m_window.setView(GameView::makeLetterboxView(desk.size.x, desk.size.y));
     m_fullscreen = true;
 }
 
@@ -77,6 +77,15 @@ void Game::update(float dt) {
 
 void Game::render() {
     m_window.clear(sf::Color::Black);
+
+    // Reapply the correct view every frame — guards against any state
+    // or external code that might reset it after a window.create() call.
+    auto sz = m_window.getSize();
+    if (m_fullscreen)
+        m_window.setView(GameView::makeLetterboxView(sz.x, sz.y));
+    else
+        m_window.setView(makeWindowedView());
+
     m_stateManager.render(m_window);
     m_window.display();
 }
