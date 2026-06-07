@@ -5,7 +5,7 @@
 
 class IntroState : public IState {
 public:
-    explicit IntroState(sf::RenderWindow& window);
+    explicit IntroState(sf::RenderWindow& window, bool demoMode = false);
 
     void onEnter() override {}
     void onExit()  override {}
@@ -16,6 +16,8 @@ public:
 
 private:
     void goToGame();
+
+    bool m_demoMode { false };
 
     sf::RenderWindow& m_window;
 

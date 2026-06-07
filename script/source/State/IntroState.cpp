@@ -4,8 +4,9 @@
 #include <cmath>
 #include <iostream>
 
-IntroState::IntroState(sf::RenderWindow& window)
+IntroState::IntroState(sf::RenderWindow& window, bool demoMode)
     : m_window(window)
+    , m_demoMode(demoMode)
 {
     const float W = float(WIN_W);
     const float H = float(WIN_H);
@@ -118,7 +119,7 @@ void IntroState::update(float dt) {
         m_fadeAlpha += dt * 255.f / 0.6f;
         if (m_fadeAlpha >= 255.f) {
             Game::getInstance().getStateManager()
-                .change(std::make_unique<GameState>(m_window));
+                .change(std::make_unique<GameState>(m_window, m_demoMode));
         }
         return;
     }

@@ -2,13 +2,16 @@
     "waves": [
         {
             "id": 1,
-            "speedMultiplier": 1.0,
-            "hpMultiplier": 1.0,
+            "speedMultiplier": 0.5,
+            "hpMultiplier": 0.2,
             "groups": [
-                { "type": "goblin", "count": 1, "spawnInterval": 1.0 },
-                { "type": "orc",    "count": 1, "spawnInterval": 1.5 }
+                {
+                    "type": "goblin",
+                    "count": 3,
+                    "spawnInterval": 2.0
+                }
             ],
-            "pauseBetweenGroups": 2.0
+            "pauseBetweenGroups": 1.0
         }
     ]
 }

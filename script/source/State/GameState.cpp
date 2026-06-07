@@ -7,10 +7,12 @@
 #include "Model/Enemy.hpp"
 #include "Game.hpp"
 
-GameState::GameState(sf::RenderWindow& window)
+GameState::GameState(sf::RenderWindow& window, bool demoMode)
     : m_window(window)
+    , m_demoMode(demoMode)
     , m_waveManager(
-        "../assets/data/waves.json",
+        m_demoMode ? "../assets/data/waves_test_victory.json"
+                       : "../assets/data/waves.json",
         "../assets/data/enemy_values.json",
         [&]() {
             Map tmp;

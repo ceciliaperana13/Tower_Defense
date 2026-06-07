@@ -10,7 +10,7 @@
 
 class GameState : public IState {
 public:
-    explicit GameState(sf::RenderWindow& window);
+    explicit GameState(sf::RenderWindow& window, bool demoMode = false);
 
     void onEnter() override;
     void onExit()  override;
@@ -26,6 +26,8 @@ private:
     void goBackToMenu();
 
     sf::RenderWindow& m_window;
+
+    bool m_demoMode { false }; // must be first: used during m_waveManager init
 
     Map             m_map;
     WaveManager     m_waveManager;
