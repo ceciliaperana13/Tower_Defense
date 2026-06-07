@@ -40,6 +40,7 @@ GameState::GameState(sf::RenderWindow& window)
 void GameState::onEnter() {
     Enemy::loadHeartTexture("../assets/sprites/icons/heart.png");
     m_towerController.loadFromJson("../assets/data/tower_values.json");
+    m_towerController.setMap(&m_map, MAP_SCALE);
     m_gameView.setLives(m_castle.getLives());
     m_waveManager.startNextWave();
     SoundManager::getInstance().playMusic("game");
@@ -137,11 +138,11 @@ void GameState::handleMouseClick(sf::Vector2f wp) {
         if (m_towerController.hasSelection()) {
             std::string sel = m_towerController.getSelectedType();
             if (sel == "basic") {
-                // Basic : placement direct
+                // Basic : placement direct avec validation
                 m_towerController.placeTower(wp);
                 m_showUpgradeRing = false;
             } else {
-                // Spéciale : annule le fantôme, ouvre popup
+                // Spéciale : annule le fantôme, ouvre popup seulement si emplacement valide
                 m_towerController.clearSelection();
                 m_gameView.showConfirm(sel, false, wp);
             }

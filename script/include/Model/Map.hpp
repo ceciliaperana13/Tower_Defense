@@ -30,6 +30,13 @@ public:
     // Waypoints for enemy path, pre-scaled to the given render scale
     std::vector<sf::Vector2f> getWaypoints(float scale) const;
 
+    // Returns tile coordinates from a world position
+    sf::Vector2i worldToTile(sf::Vector2f worldPos, float scale) const;
+
+    // Returns true if a tower can be placed at worldPos
+    bool canPlaceAt(sf::Vector2f worldPos, float scale,
+                    const std::vector<sf::Vector2f>& occupiedPositions) const;
+
 private:
     using Layer = std::array<int, COLS * ROWS>;
 
@@ -39,6 +46,10 @@ private:
                    sf::Vector2f offset, float scale) const;
     void drawTile(sf::RenderTarget& target, int gid,
                   float px, float py, float scale) const;
+
+    bool isPathTile(int col, int row) const;
+    bool isForegroundBlocked(int col, int row) const;
+    bool isInBounds(int col, int row) const;
 
     sf::Texture m_floorTexture;
     sf::Texture m_natureTexture;

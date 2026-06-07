@@ -160,3 +160,49 @@ void Map::drawTile(sf::RenderTarget& target, int gid,
 
     target.draw(shape);
 }
+bool Map::isInBounds(int col, int row) const {
+    return col >= 0 && col < COLS && row >= 0 && row < ROWS;
+}
+
+// Background GIDs that belong to the enemy path (not grass)
+bool Map::isPathTile(int col, int row) const {
+    if (!isInBounds(col, row)) return false;
+    int gid = m_bgLayer[row * COLS + col];
+    // Grass tiles are 265-269; everything else in bg layer is path
+    return gid != 0 && (gid < 265 || gid > 269);
+}
+
+// Foreground GIDs that block tower placement (cave, castle, trees)
+bool Map::isForegroundBlocked(int col, int row) const {
+    if (!isInBounds(col, row)) return false;
+    int gid = m_fgLayer[row * COLS + col];
+    return gid != 0;
+}
+
+sf::Vector2i Map::worldToTile(sf::Vector2f worldPos, float scale) const {
+    float tilePixels = TILE_SIZE * scale;
+    return {
+        static_cast<int>(worldPos.x / tilePixels),
+        static_cast<int>(worldPos.y / tilePixels)
+    };
+}
+
+bool Map::canPlaceAt(sf::Vector2f worldPos, float scale,
+                     const std::vector<sf::Vector2f>& occupiedPositions) const {
+    sf::Vector2i tile = worldToTile(worldPos, scale);
+    int col = tile.x;
+    int row = tile.y;
+
+    if (!isInBounds(col, row))         return false;
+    if (isPathTile(col, row))          return false;
+    if (isForegroundBlocked(col, row)) return false;
+
+    // Prevent stacking towers on the same tile
+    float tilePixels = TILE_SIZE * scale;
+    for (const auto& pos : occupiedPositions) {
+        sf::Vector2i oTile = worldToTile(pos, scale);
+        if (oTile.x == col && oTile.y == row) return false;
+    }
+
+    return true;
+}

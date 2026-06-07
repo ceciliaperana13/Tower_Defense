@@ -93,6 +93,27 @@ void TowerController::spawnGhost(const std::string& type) {
     m_ghostVisible = true;
 }
 
+void TowerController::setMap(const Map* map, float mapScale) {
+    m_map      = map;
+    m_mapScale = mapScale;
+}
+
+std::vector<sf::Vector2f> TowerController::getTowerPositions() const {
+    std::vector<sf::Vector2f> positions;
+    positions.reserve(m_towers.size());
+    for (const auto& t : m_towers)
+        positions.push_back(t.getPosition());
+    return positions;
+}
+
+void TowerController::updateGhostColor(sf::Vector2f pos) {
+    if (!m_ghost.has_value()) return;
+    bool valid = m_map && m_map->canPlaceAt(pos, m_mapScale, getTowerPositions());
+    sf::Color c = valid ? sf::Color(100, 255, 100, 150)
+                        : sf::Color(255, 80,  80,  150);
+    m_ghost->setColor(c);
+}
+
 bool TowerController::selectTower(const std::string& type) {
     m_upgradeTargetIndex = -1;
     if (m_defs.find(type) == m_defs.end()) return false;
@@ -111,18 +132,25 @@ void TowerController::clearSelection() {
 }
 
 void TowerController::setGhostPosition(sf::Vector2f pos) {
-    if (m_ghostVisible && m_ghost.has_value())
+    if (m_ghostVisible && m_ghost.has_value()) {
         m_ghost->setPosition(pos);
+        updateGhostColor(pos);
+    }
 }
 //placeTower
-void TowerController::placeTower(sf::Vector2f pos) {
-    if (m_selectedType.empty()) return;
+bool TowerController::placeTower(sf::Vector2f pos) {
+    if (m_selectedType.empty()) return false;
+
+    if (m_map && !m_map->canPlaceAt(pos, m_mapScale, getTowerPositions()))
+        return false;
+
     auto& def = m_defs[m_selectedType];
     m_coins -= def.cost;
 
     m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, def.soundPath, pos, def.cost);
 
     clearSelection();
+    return true;
 }
 
 int TowerController::getTowerIndexAt(sf::Vector2f pos) const {

@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 
+#include "Model/Map.hpp"
 #include "Model/Tower.hpp"
 #include "Model/Projectile.hpp"
 #include "Model/Enemy.hpp"
@@ -18,10 +19,13 @@ public:
 
     bool loadFromJson(const std::string& path);
 
+    // Map reference needed for placement validation
+    void setMap(const Map* map, float mapScale);
+
     // ─── Sélection / placement
     bool        selectTower(const std::string& type);
     void        clearSelection();
-    void        placeTower(sf::Vector2f pos);
+    bool        placeTower(sf::Vector2f pos);
     std::string getSelectedType() const { return m_selectedType; }
 
     // ─── Upgrade / Sell
@@ -87,6 +91,13 @@ private:
 
     // Ghost
     void spawnGhost(const std::string& type);
+    void updateGhostColor(sf::Vector2f pos);
+
+    // Placement validation
+    std::vector<sf::Vector2f> getTowerPositions() const;
+
+    const Map* m_map      = nullptr;
+    float      m_mapScale = 2.f;
 
     // Refund
     static constexpr float SELL_REFUND = 0.5f;
