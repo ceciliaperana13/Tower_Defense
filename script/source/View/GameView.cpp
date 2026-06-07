@@ -61,7 +61,13 @@ void GameView::buildUI() {
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
     loadTex(m_heartPanelTex, "../assets/sprites/buttons/heart_pannel.png");
 
-    m_topPanel = makePanelShape(m_topPanelTex, 0.f, MAP_H, toWinW(192.f), UI_H);
+    m_topPanel = makePanelShape(m_topPanelTex, 0.f, MAP_H, toWinW(128.f), UI_H);
+
+    // Background for the upgrade+sell zone (128-192 logical), hidden until tower selected
+    m_upgradePanelBg.setSize({ toWinW(64.f), UI_H });
+    m_upgradePanelBg.setPosition({ toWinX(128.f), MAP_H });
+    m_upgradePanelBg.setTexture(&m_topPanelTex);
+    m_upgradePanelBg.setFillColor(sf::Color::White);
 
     float gx = toWinX(192.f);
     float gw = toWinW(64.f);
@@ -362,7 +368,6 @@ void GameView::drawUpgradeHighlight() {
 }
 
 void GameView::drawUIBar() {
-    m_window.draw(m_topPanel);
     m_window.draw(m_goldPanel);
     m_window.draw(m_heartPanel);
     m_window.draw(m_coinsText);
@@ -373,6 +378,10 @@ void GameView::drawUIBar() {
     for (std::size_t i = 0; i < m_towerButtons.size(); ++i)
         m_towerButtons[i].setVisible(i == 0 || upgradeMode);
     if (m_sellButton) m_sellButton->setVisible(upgradeMode);
+
+    // Draw upgrade+sell background panel only when a tower is selected
+    if (upgradeMode)
+        m_window.draw(m_upgradePanelBg);
 
     for (auto& btn : m_towerButtons) btn.draw(m_window);
     if (m_sellButton) m_sellButton->draw(m_window);

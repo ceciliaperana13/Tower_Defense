@@ -60,6 +60,7 @@ private:
     sf::Texture        m_goldPanelTex;
     sf::Texture        m_heartPanelTex;
     sf::RectangleShape m_topPanel;
+    sf::RectangleShape m_upgradePanelBg;  // shown only when a tower is selected
     sf::RectangleShape m_goldPanel;
     sf::RectangleShape m_heartPanel;
 
