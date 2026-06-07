@@ -37,6 +37,12 @@ public:
     int  getTotalReached()   const { return m_totalReached; }
     int  getTotalKills()     const { return m_totalKills; }
 
+    // Returns seconds until next wave, or 0 if not waiting
+    float getNextWaveCountdown() const {
+        return (m_state == State::WaitingNextWave) ? m_waveTimer : 0.f;
+    }
+    bool isWaitingNextWave() const { return m_state == State::WaitingNextWave; }
+
 private:
     void spawnNext();
 

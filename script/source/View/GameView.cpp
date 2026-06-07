@@ -17,7 +17,7 @@ GameView::GameView(sf::RenderWindow& window,
     , m_waveManager(waveManager)
     , m_timer(timer)
     , m_towerController(towerController)
-    , m_timerView(timer)
+    , m_timerView(waveManager)
     , m_waveView(waveManager)
     , m_coinsText(m_font)
     , m_livesText(m_font)
@@ -27,12 +27,12 @@ GameView::GameView(sf::RenderWindow& window,
 
     buildUI();
 
-    if (!m_timerView.load("../assets/sprites/icons/timer.png",
+    if (!m_timerView.load("../assets/sprites/buttons/button_empty.png",
                           "C:/Windows/Fonts/arialbd.ttf"))
         std::cerr << "[GameView] TimerView: missing assets.\n";
 
-    m_timerView.setScale(sf::Vector2f(1.5f, 1.5f));
-    m_timerView.setPosition(sf::Vector2f(float(WIN_W) / 2.f - 48.f, 8.f));
+    m_timerView.setScale(sf::Vector2f(3.5f, 2.2f));
+    m_timerView.setPosition(sf::Vector2f(float(WIN_W) / 2.f - 157.f, 6.f));
     m_waveView.setPosition(sf::Vector2f(float(WIN_W) / 2.f + 180.f, 14.f));
 
     // Highlight box drawn around selected tower (2x2 tiles = 64px at scale 2)
