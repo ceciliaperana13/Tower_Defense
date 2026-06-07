@@ -54,7 +54,7 @@ void TimerView::update() {
     if (!m_visible) return;
 
     int secs = static_cast<int>(std::ceil(m_waveManager.getNextWaveCountdown()));
-    std::string label = "Prochaine vague : " + std::to_string(secs) + "s";
+    std::string label = "Next wave in " + std::to_string(secs) + "s";
     m_text->setString(label);
 
     // Pulse color: gold → orange as countdown approaches zero

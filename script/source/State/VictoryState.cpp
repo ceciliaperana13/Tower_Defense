@@ -47,7 +47,7 @@ void VictoryState::buildUI() {
     m_panel.setOutlineThickness(3.f);
 
     // ── Titre ────────────────────────────────────────────────
-    m_titleText.emplace(m_font, "VICTOIRE !", 54u);
+    m_titleText.emplace(m_font, "VICTORY!", 54u);
     m_titleText->setFillColor(sf::Color(100, 255, 100));
     m_titleText->setStyle(sf::Text::Bold);
 
@@ -58,7 +58,7 @@ void VictoryState::buildUI() {
     m_killsLabel.emplace(m_font, "Kills   :  0", 24u);
     m_killsLabel->setFillColor(sf::Color(210, 210, 210));
 
-    m_waveLabel.emplace(m_font, "Vague :  0", 24u);
+    m_waveLabel.emplace(m_font, "Wave :  0", 24u);
     m_waveLabel->setFillColor(sf::Color(210, 210, 210));
 
     // ── Bouton Rejouer ───────────────────────────────────────
@@ -67,7 +67,7 @@ void VictoryState::buildUI() {
     m_replayBtn.setOutlineColor(sf::Color(100, 220, 100));
     m_replayBtn.setOutlineThickness(2.f);
 
-    m_replayLabel.emplace(m_font, "Rejouer", 20u);
+    m_replayLabel.emplace(m_font, "Play again", 20u);
     m_replayLabel->setFillColor(sf::Color::White);
 
     // ── Bouton Menu ──────────────────────────────────────────
@@ -154,7 +154,7 @@ void VictoryState::update(float dt) {
 
     if (m_scoreLabel) m_scoreLabel->setString("Score  :  " + std::to_string(int(m_scoreAnim)));
     if (m_killsLabel) m_killsLabel->setString("Kills   :  " + std::to_string(int(m_killsAnim)));
-    if (m_waveLabel)  m_waveLabel->setString ("Vague :  " + std::to_string(int(m_waveAnim)));
+    if (m_waveLabel)  m_waveLabel->setString ("Wave :  " + std::to_string(int(m_waveAnim)));
 
     // Positions stats
     if (m_scoreLabel) m_scoreLabel->setPosition({ px + 40.f, py + 110.f });

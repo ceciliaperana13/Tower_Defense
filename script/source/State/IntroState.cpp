@@ -55,7 +55,7 @@ IntroState::IntroState(sf::RenderWindow& window, bool demoMode)
     m_ogreSprite->setPosition({ m_ogreX, H * 0.42f });
 
     // ── Titre ────────────────────────────────────────────────
-    m_titleText.emplace(m_font, "L'assaut commence !", 52u);
+    m_titleText.emplace(m_font, "The assault begins!", 52u);
     m_titleText->setFillColor(sf::Color(255, 80, 30));
     m_titleText->setStyle(sf::Text::Bold);
     sf::FloatRect tb = m_titleText->getLocalBounds();
@@ -65,7 +65,7 @@ IntroState::IntroState(sf::RenderWindow& window, bool demoMode)
     });
 
     // ── Skip ─────────────────────────────────────────────────
-    m_skipText.emplace(m_font, "Appuyez sur ESPACE pour passer", 15u);
+    m_skipText.emplace(m_font, "Press SPACE to skip", 15u);
     m_skipText->setFillColor(sf::Color(160, 160, 160));
     sf::FloatRect sk = m_skipText->getLocalBounds();
     m_skipText->setPosition({
@@ -89,7 +89,7 @@ IntroState::IntroState(sf::RenderWindow& window, bool demoMode)
     m_barFill.setPosition({ barX, barY });
     m_barFill.setFillColor(sf::Color(220, 60, 20));
 
-    m_barLabel.emplace(m_font, "Preparation de l'assaut...", 13u);
+    m_barLabel.emplace(m_font, "Preparing the assault...", 13u);
     m_barLabel->setFillColor(sf::Color(200, 200, 200));
     sf::FloatRect lb = m_barLabel->getLocalBounds();
     m_barLabel->setPosition({

@@ -140,7 +140,7 @@ void Leaderboard::render(sf::RenderWindow& window) {
     window.draw(makeText("#",      colRank,  headerY, 15u, gold));
     window.draw(makeText("Joueur", colName,  headerY, 15u, gold));
     window.draw(makeText("Kills",  colKills, headerY, 15u, gold));
-    window.draw(makeText("Vague",  colWave,  headerY, 15u, gold));
+    window.draw(makeText("Wave",  colWave,  headerY, 15u, gold));
     window.draw(makeText("Score",  colScore, headerY, 15u, gold));
     window.draw(makeText("Date",   colDate,  headerY, 15u, gold));
 

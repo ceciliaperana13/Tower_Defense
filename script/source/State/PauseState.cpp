@@ -41,7 +41,7 @@ void PauseState::buildUI() {
     m_resumeBtn.setOutlineColor(sf::Color(180, 140, 60));
     m_resumeBtn.setOutlineThickness(1.5f);
 
-    m_resumeLabel.emplace(m_font, "Reprendre", 20u);
+    m_resumeLabel.emplace(m_font, "Resume", 20u);
     m_resumeLabel->setFillColor(sf::Color::White);
     sf::FloatRect rb = m_resumeLabel->getLocalBounds();
     m_resumeLabel->setPosition({
@@ -56,7 +56,7 @@ void PauseState::buildUI() {
     m_menuBtn.setOutlineColor(sf::Color(180, 140, 60));
     m_menuBtn.setOutlineThickness(1.5f);
 
-    m_menuLabel.emplace(m_font, "Menu principal", 20u);
+    m_menuLabel.emplace(m_font, "Main Menu", 20u);
     m_menuLabel->setFillColor(sf::Color::White);
     sf::FloatRect mb2 = m_menuLabel->getLocalBounds();
     m_menuLabel->setPosition({

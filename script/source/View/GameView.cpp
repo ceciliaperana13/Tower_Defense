@@ -163,7 +163,7 @@ void GameView::buildConfirmPopup() {
     int cost = m_towerController.getCostOf(m_confirmType);
     bool canAfford = m_towerController.getCoins() >= cost;
 
-    std::string action = m_confirmIsUpgrade ? "Ameliorer" : "Placer";
+    std::string action = m_confirmIsUpgrade ? "Upgrade" : "Place";
     std::string title  = action + " " + m_confirmType +
                          " (" + std::to_string(cost) + " coins) ?";
 
@@ -185,7 +185,7 @@ void GameView::buildConfirmPopup() {
     m_confirmYesBtn.setOutlineColor(sf::Color(180, 140, 60));
     m_confirmYesBtn.setOutlineThickness(1.5f);
 
-    m_confirmYesLabel.emplace(m_font, canAfford ? "Oui" : "Pas assez", 16u);
+    m_confirmYesLabel.emplace(m_font, canAfford ? "Yes" : "Not enough", 16u);
     m_confirmYesLabel->setFillColor(sf::Color::White);
     centerText(*m_confirmYesLabel, m_confirmYesBtn);
 
@@ -195,7 +195,7 @@ void GameView::buildConfirmPopup() {
     m_confirmNoBtn.setOutlineColor(sf::Color(180, 140, 60));
     m_confirmNoBtn.setOutlineThickness(1.5f);
 
-    m_confirmNoLabel.emplace(m_font, "Non", 16u);
+    m_confirmNoLabel.emplace(m_font, "No", 16u);
     m_confirmNoLabel->setFillColor(sf::Color::White);
     centerText(*m_confirmNoLabel, m_confirmNoBtn);
 }

@@ -39,7 +39,7 @@ void MenuState::openModePicker() {
     m_pickerPanel.setOutlineColor(sf::Color(200, 160, 60));
     m_pickerPanel.setOutlineThickness(2.5f);
 
-    m_pickerTitle.emplace(m_font, "Choisir un mode de jeu", 20u);
+    m_pickerTitle.emplace(m_font, "Choose a game mode", 20u);
     m_pickerTitle->setFillColor(sf::Color(220, 200, 120));
     m_pickerTitle->setStyle(sf::Text::Bold);
     sf::FloatRect tb = m_pickerTitle->getLocalBounds();
@@ -60,7 +60,7 @@ void MenuState::openModePicker() {
     m_normalBtn.setOutlineColor(sf::Color(140, 200, 100));
     m_normalBtn.setOutlineThickness(2.f);
 
-    m_normalLabel.emplace(m_font, "Mode Normal", 17u);
+    m_normalLabel.emplace(m_font, "Normal Mode", 17u);
     m_normalLabel->setFillColor(sf::Color::White);
     sf::FloatRect nl = m_normalLabel->getLocalBounds();
     m_normalLabel->setPosition({
@@ -75,7 +75,7 @@ void MenuState::openModePicker() {
     m_demoBtn.setOutlineColor(sf::Color(220, 160, 60));
     m_demoBtn.setOutlineThickness(2.f);
 
-    m_demoLabel.emplace(m_font, "Demo Victoire", 17u);
+    m_demoLabel.emplace(m_font, "Victory Demo", 17u);
     m_demoLabel->setFillColor(sf::Color::White);
     sf::FloatRect dl = m_demoLabel->getLocalBounds();
     m_demoLabel->setPosition({

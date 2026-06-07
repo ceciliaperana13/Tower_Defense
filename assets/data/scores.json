@@ -8,6 +8,20 @@
   },
   {
     "playerName": "Player",
+    "score": 250,
+    "enemyCount": 0,
+    "wave": 1,
+    "date": "2026-06-07 23:11"
+  },
+  {
+    "playerName": "Player",
+    "score": 250,
+    "enemyCount": 0,
+    "wave": 1,
+    "date": "2026-06-07 23:11"
+  },
+  {
+    "playerName": "Player",
     "score": 224,
     "enemyCount": 3,
     "wave": 1,
@@ -54,19 +68,5 @@
     "enemyCount": 6,
     "wave": 1,
     "date": "2026-06-07 22:57"
-  },
-  {
-    "playerName": "Player",
-    "score": 125,
-    "enemyCount": 52,
-    "wave": 5,
-    "date": "2026-06-05 11:57"
-  },
-  {
-    "playerName": "Player",
-    "score": 124,
-    "enemyCount": 3,
-    "wave": 1,
-    "date": "2026-06-07 22:56"
   }
 ]

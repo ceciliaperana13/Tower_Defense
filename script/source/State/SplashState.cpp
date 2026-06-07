@@ -63,7 +63,7 @@ SplashState::SplashState(sf::RenderWindow& window)
         H * 0.06f
     });
 
-    m_skipText.emplace(m_font, "Appuyez sur ESPACE pour passer", 16u);
+    m_skipText.emplace(m_font, "Press SPACE to skip", 16u);
     m_skipText->setFillColor(sf::Color(180, 180, 180));
     sf::FloatRect sb = m_skipText->getLocalBounds();
     m_skipText->setPosition({
@@ -87,7 +87,7 @@ SplashState::SplashState(sf::RenderWindow& window)
     m_barFill.setPosition({ barX, barY });
     m_barFill.setFillColor(sf::Color(200, 80, 30));
 
-    m_barLabel.emplace(m_font, "Chargement...", 14u);
+    m_barLabel.emplace(m_font, "Loading...", 14u);
     m_barLabel->setFillColor(sf::Color::White);
     sf::FloatRect lb = m_barLabel->getLocalBounds();
     m_barLabel->setPosition({
