@@ -4,7 +4,7 @@
 #include <iostream>
 
 const std::vector<std::string> GameSettings::LANGUAGES = {
-    "French", "English", "Espanol"
+    "English"
 };
 
 SettingsMenu::SettingsMenu(sf::RenderWindow& window, GameSettings& settings)
@@ -227,15 +227,19 @@ void SettingsMenu::render(sf::RenderWindow& window) {
 
     drawLabel("Fullscreen", { m_panelX + 30.f, m_fullscreenBox.position.y + 2.f });
     {
+        bool fs = Game::getInstance().isFullscreen();
+        m_settings.fullscreen = fs; // keep in sync
+
         sf::RectangleShape box({ 24.f, 24.f });
         box.setPosition(m_fullscreenBox.position);
-        box.setFillColor(m_settings.fullscreen ? sf::Color(220, 175, 60) : sf::Color(40, 40, 50));
+        box.setFillColor(fs ? sf::Color(220, 175, 60) : sf::Color(40, 40, 50));
         box.setOutlineColor(sf::Color(180, 140, 60));
         box.setOutlineThickness(2.f);
         window.draw(box);
-        if (m_settings.fullscreen) {
-            sf::Text tick(m_font, "v", 16u);
+        if (fs) {
+            sf::Text tick(m_font, "X", 18u);
             tick.setFillColor(sf::Color(20, 20, 20));
+            tick.setStyle(sf::Text::Bold);
             sf::FloatRect tb2 = tick.getLocalBounds();
             tick.setPosition({
                 m_fullscreenBox.position.x + (24.f - tb2.size.x) / 2.f - tb2.position.x,

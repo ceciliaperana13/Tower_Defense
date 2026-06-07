@@ -5,6 +5,7 @@
 #include "View/GameView.hpp"
 #include "View/GameView.hpp"
 #include "Controller/SaveController.hpp"
+#include "View/SettingsMenu.hpp"
 class Game {
 public:
     static Game& getInstance() {
@@ -17,6 +18,7 @@ public:
     SaveController&   getSaveController(){ return m_saveCtrl; }
     void toggleFullscreen();
     bool isFullscreen() const { return m_fullscreen; }
+    GameSettings& getSettings() { return m_settings; }
 private:
     Game();
     Game(const Game&)            = delete;
@@ -28,6 +30,7 @@ private:
     void     openWindowed();
     void     openFullscreen();
     sf::RenderWindow m_window;
+    GameSettings     m_settings;  // persistent across OptionsState instances
     StateManager     m_stateManager;
     SaveController   m_saveCtrl;
     sf::Clock        m_clock;

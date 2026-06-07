@@ -3,7 +3,7 @@
 
 OptionsState::OptionsState(sf::RenderWindow& window)
     : m_window(window)
-    , m_settingsMenu(window, m_settings)
+    , m_settingsMenu(window, Game::getInstance().getSettings())
 {}
 
 void OptionsState::handleEvents(const sf::Event& event) {

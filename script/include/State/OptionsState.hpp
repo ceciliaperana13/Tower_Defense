@@ -20,7 +20,6 @@ private:
     void popSelf();
 
     sf::RenderWindow& m_window;
-    GameSettings      m_settings;
     SettingsMenu      m_settingsMenu;
     sf::Vector2f      m_mousePos;
 };
