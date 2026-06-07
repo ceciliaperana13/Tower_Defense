@@ -4,8 +4,8 @@
             "id": 1,
             "cost": 50,
             "attackdatas": {
-                "damage": 18,
-                "range": 4.0,
+                "damage": 20,
+                "range": 3.5,
                 "firerate": 1.2,
                 "damagepersecond": 0,
                 "slowness": 0,
@@ -25,12 +25,12 @@
             "id": 2,
             "cost": 125,
             "attackdatas": {
-                "damage": 15,
-                "range": 4.0,
-                "firerate": 1.0,
-                "damagepersecond": 12,
+                "damage": 10,
+                "range": 3.5,
+                "firerate": 0.9,
+                "damagepersecond": 18,
                 "slowness": 0,
-                "effectduration": 4.0,
+                "effectduration": 5.0,
                 "aoeradius": 0,
                 "nbtarget": 1
             },
@@ -44,12 +44,12 @@
             "id": 3,
             "cost": 100,
             "attackdatas": {
-                "damage": 8,
+                "damage": 5,
                 "range": 4.0,
-                "firerate": 0.9,
+                "firerate": 1.1,
                 "damagepersecond": 0,
-                "slowness": 0.55,
-                "effectduration": 2.5,
+                "slowness": 0.65,
+                "effectduration": 3.0,
                 "aoeradius": 0,
                 "nbtarget": 1
             },
@@ -63,14 +63,14 @@
             "id": 4,
             "cost": 150,
             "attackdatas": {
-                "damage": 50,
-                "range": 4.0,
-                "firerate": 0.5,
+                "damage": 60,
+                "range": 3.0,
+                "firerate": 0.4,
                 "damagepersecond": 0,
                 "slowness": 0,
                 "effectduration": 0,
-                "aoeradius": 1.5,
-                "nbtarget": 5
+                "aoeradius": 2.0,
+                "nbtarget": 1
             },
             "paths": {
                 "building": "../sprites/towers/buildings/rock_tower.png",
@@ -82,9 +82,9 @@
             "id": 5,
             "cost": 140,
             "attackdatas": {
-                "damage": 10,
-                "range": 4.0,
-                "firerate": 2.0,
+                "damage": 14,
+                "range": 4.5,
+                "firerate": 1.5,
                 "damagepersecond": 0,
                 "slowness": 0,
                 "effectduration": 0,

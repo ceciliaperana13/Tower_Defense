@@ -6,7 +6,6 @@
 
 using json = nlohmann::json;
 
-// ─── Membres statiques ────────────────────────────────────────
 sf::Texture Enemy::s_heartTex;
 bool        Enemy::s_heartLoaded = false;
 
@@ -19,7 +18,6 @@ bool Enemy::loadHeartTexture(const std::string& path) {
     return true;
 }
 
-// ─── Constructeur ─────────────────────────────────────────────
 Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
              const std::string& sprite1Path,
              const std::string& sprite2Path,
@@ -35,18 +33,16 @@ Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
     if (!ok1) std::cerr << "[Enemy] Introuvable : " << sprite1Path << "\n";
     if (!ok2) std::cerr << "[Enemy] Introuvable : " << sprite2Path << "\n";
 
-    // Créer le sprite uniquement si la texture est chargée
     if (ok1) {
         m_sprite.emplace(m_tex1);
         m_sprite->setScale(sf::Vector2f(2.f, 2.f));
-        m_sprite->setTexture(m_tex1, true);  // true = reset le rect
+        m_sprite->setTexture(m_tex1, true);
     }
 
     if (!m_waypoints.empty() && m_sprite.has_value())
         m_sprite->setPosition(m_waypoints[0]);
 }
 
-// ─── Move constructor: rebind sprite to the new texture addresses
 Enemy::Enemy(Enemy&& other) noexcept
     : m_id(other.m_id), m_maxhp(other.m_maxhp), m_hp(other.m_hp),
       m_maxspeed(other.m_maxspeed), m_speed(other.m_speed),
@@ -57,7 +53,10 @@ Enemy::Enemy(Enemy&& other) noexcept
       m_animTimer(other.m_animTimer), m_useFirst(other.m_useFirst),
       m_waypoints(std::move(other.m_waypoints)),
       m_waypointIdx(other.m_waypointIdx),
-      m_reached(other.m_reached)
+      m_reached(other.m_reached),
+      m_burnDps(other.m_burnDps), m_burnTimer(other.m_burnTimer),
+      m_burnAccum(other.m_burnAccum),
+      m_slowFactor(other.m_slowFactor), m_slowTimer(other.m_slowTimer)
 {
     if (other.m_sprite.has_value()) {
         m_sprite.emplace(m_useFirst ? m_tex1 : m_tex2);
@@ -66,7 +65,6 @@ Enemy::Enemy(Enemy&& other) noexcept
     }
 }
 
-// ─── fromJson 
 Enemy Enemy::fromJson(const std::string& jsonPath,
                       const std::string& type,
                       const std::vector<sf::Vector2f>& waypoints) {
@@ -92,18 +90,53 @@ Enemy Enemy::fromJson(const std::string& jsonPath,
     );
 }
 
-// ─── applyHpMultiplier
 void Enemy::applyHpMultiplier(float multiplier) {
     m_maxhp = static_cast<int>(m_maxhp * multiplier);
     m_hp    = m_maxhp;
 }
 
-// ─── takeDamage
 void Enemy::takeDamage(int dmg) {
     m_hp = std::max(0, m_hp - dmg);
 }
 
-// ─── moveAlongPath 
+// Refreshes burn — keeps the strongest dps and longest duration
+void Enemy::applyBurn(float dps, float duration) {
+    m_burnDps   = std::max(m_burnDps, dps);
+    m_burnTimer = std::max(m_burnTimer, duration);
+}
+
+// Refreshes slow — keeps the strongest slow (lowest factor) and longest duration
+void Enemy::applySlow(float factor, float duration) {
+    m_slowFactor = std::min(m_slowFactor, factor);
+    m_slowTimer  = std::max(m_slowTimer, duration);
+}
+
+// Ticks burn damage and slow expiry every frame
+void Enemy::tickStatusEffects(float dt) {
+    if (m_burnTimer > 0.f) {
+        m_burnTimer -= dt;
+        m_burnAccum += m_burnDps * dt;
+        if (m_burnAccum >= 1.f) {
+            int dmg = static_cast<int>(m_burnAccum);
+            takeDamage(dmg);
+            m_burnAccum -= static_cast<float>(dmg);
+        }
+        if (m_burnTimer <= 0.f) {
+            m_burnDps   = 0.f;
+            m_burnAccum = 0.f;
+        }
+    }
+
+    if (m_slowTimer > 0.f) {
+        m_speed = m_maxspeed * m_slowFactor;
+        m_slowTimer -= dt;
+        if (m_slowTimer <= 0.f) {
+            m_slowFactor = 1.f;
+            m_speed      = m_maxspeed;
+        }
+    }
+}
+
 void Enemy::moveAlongPath(float dt) {
     if (m_reached || m_waypointIdx >= (int)m_waypoints.size())
         return;
@@ -137,9 +170,10 @@ void Enemy::moveAlongPath(float dt) {
     }
 }
 
-// ─── update 
 void Enemy::update(float dt) {
     if (m_reached || !m_sprite.has_value()) return;
+
+    tickStatusEffects(dt);
 
     m_animTimer += dt;
     if (m_animTimer >= 0.3f) {
@@ -151,7 +185,6 @@ void Enemy::update(float dt) {
     moveAlongPath(dt);
 }
 
-// ─── drawHealthBar 
 void Enemy::drawHealthBar(sf::RenderWindow& window) const {
     if (!m_sprite.has_value()) return;
 
@@ -169,11 +202,9 @@ void Enemy::drawHealthBar(sf::RenderWindow& window) const {
     window.draw(bg);
 
     float ratio = static_cast<float>(m_hp) / static_cast<float>(m_maxhp);
-    sf::Color barColor = ratio > 0.5f
-        ? sf::Color(80, 200, 80)
-        : ratio > 0.25f
-            ? sf::Color(220, 180, 0)
-            : sf::Color(220, 50, 50);
+    sf::Color barColor = ratio > 0.5f ? sf::Color(80, 200, 80)
+                       : ratio > 0.25f ? sf::Color(220, 180, 0)
+                       : sf::Color(220, 50, 50);
 
     sf::RectangleShape fill({ barW * ratio, barH });
     fill.setPosition({ barX, barY });
@@ -194,10 +225,8 @@ void Enemy::drawHealthBar(sf::RenderWindow& window) const {
     }
 }
 
-// ─── render 
 void Enemy::render(sf::RenderWindow& window) const {
     if (m_reached || !m_sprite.has_value()) return;
-
     window.draw(*m_sprite);
     drawHealthBar(window);
 }

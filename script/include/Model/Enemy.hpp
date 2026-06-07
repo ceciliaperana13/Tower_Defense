@@ -26,8 +26,13 @@ public:
     void render(sf::RenderWindow& window) const;
 
     void takeDamage(int dmg);
+    void applyHpMultiplier(float multiplier);
+
+    // Status effects
+    void applyBurn(float dps, float duration);
+    void applySlow(float factor, float duration);
+
     void applySpeedMultiplier(float multiplier) { m_speed = m_maxspeed * multiplier; }
-    void applyHpMultiplier(float multiplier);     // scales both current and max HP
 
     bool isDead()     const { return m_hp <= 0; }
     bool hasReached() const { return m_reached; }
@@ -45,6 +50,7 @@ public:
 private:
     void moveAlongPath(float dt);
     void drawHealthBar(sf::RenderWindow& window) const;
+    void tickStatusEffects(float dt);
 
     int   m_id;
     int   m_maxhp;
@@ -63,6 +69,15 @@ private:
     std::vector<sf::Vector2f> m_waypoints;
     int                       m_waypointIdx { 1 };
     bool                      m_reached     { false };
+
+    // Burn effect
+    float m_burnDps      { 0.f };
+    float m_burnTimer    { 0.f };
+    float m_burnAccum    { 0.f }; // accumulates fractional damage
+
+    // Slow effect
+    float m_slowFactor   { 1.f }; // 1 = no slow
+    float m_slowTimer    { 0.f };
 
     static sf::Texture s_heartTex;
     static bool        s_heartLoaded;

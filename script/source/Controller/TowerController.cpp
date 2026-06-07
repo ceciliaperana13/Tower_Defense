@@ -245,30 +245,46 @@ void TowerController::update(float dt,
     for (auto& t : m_towers) {
         if (!t.canFire()) continue;
 
-        Enemy* best     = nullptr;
-        float  bestDist = 0.f;
+        const AttackData& atk     = t.getAttack();
+        float             rangePx = atk.range * 64.f;
+        sf::Vector2f      origin  = t.getPosition() - sf::Vector2f(0.f, 64.f);
+        bool              fired   = false;
 
-        for (auto& e : enemies) {
-            if (e->isDead() || e->hasReached()) continue;
-            float d = length(e->getPosition() - t.getPosition());
-            if (d <= t.getAttack().range * 64.f) {
-                if (!best || d < bestDist) {
-                    best     = e.get();
-                    bestDist = d;
+        if (atk.nbTarget > 1) {
+            // Arcane: fire one projectile per enemy in range (up to nbTarget)
+            int count = 0;
+            for (auto& e : enemies) {
+                if (count >= atk.nbTarget) break;
+                if (e->isDead() || e->hasReached()) continue;
+                float d = length(e->getPosition() - t.getPosition());
+                if (d <= rangePx) {
+                    m_projectiles.emplace_back(
+                        t.getProjectileTexture(), origin,
+                        e.get(), t.getSoundPath(), atk, &enemies);
+                    ++count;
+                    fired = true;
                 }
+            }
+        } else {
+            // Basic / fire / ice / rock: target nearest enemy in range
+            Enemy* best     = nullptr;
+            float  bestDist = 0.f;
+            for (auto& e : enemies) {
+                if (e->isDead() || e->hasReached()) continue;
+                float d = length(e->getPosition() - t.getPosition());
+                if (d <= rangePx && (!best || d < bestDist)) {
+                    best = e.get(); bestDist = d;
+                }
+            }
+            if (best) {
+                m_projectiles.emplace_back(
+                    t.getProjectileTexture(), origin,
+                    best, t.getSoundPath(), atk, &enemies);
+                fired = true;
             }
         }
 
-        if (best) {
-            t.resetCooldown();
-            m_projectiles.emplace_back(
-                t.getProjectileTexture(),
-                t.getPosition() - sf::Vector2f(0.f, 64.f), // top of sprite
-                best,                       // tracked enemy pointer
-                t.getSoundPath(),
-                t.getAttack().damage
-            );
-        }
+        if (fired) t.resetCooldown();
     }
 
     for (auto& p : m_projectiles) p.update(dt);
