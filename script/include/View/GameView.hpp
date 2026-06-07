@@ -76,7 +76,15 @@ private:
     int      m_lives { 20 };
  
     sf::CircleShape m_upgradeHighlight;
- 
+
+    // Placement overlay (rebuilt once per selection)
+    std::vector<sf::RectangleShape> m_placementOverlay;
+    bool                            m_overlayDirty { true };
+
+    // Hover cell highlight (2x2 block under the cursor)
+    sf::RectangleShape m_hoverCell;
+    sf::Vector2f       m_lastMousePos;
+
     // ── Popup au-dessus de l'UI 
     bool         m_confirmPending   { false };
     bool         m_confirmIsUpgrade { false };
@@ -99,6 +107,8 @@ private:
                                       float px, float py,
                                       float pw, float ph) const;
     void drawMap();
+    void drawPlacementOverlay();
+    void drawHoverCell();
     void drawEnemies();
     void drawUIBar();
     void drawPriceTags();

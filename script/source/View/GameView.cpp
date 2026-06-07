@@ -40,6 +40,9 @@ GameView::GameView(sf::RenderWindow& window,
     m_upgradeHighlight.setFillColor(sf::Color::Transparent);
     m_upgradeHighlight.setOutlineColor(sf::Color::Yellow);
     m_upgradeHighlight.setOutlineThickness(3.f);
+
+    // Hover cell (resized each frame)
+    m_hoverCell.setOutlineThickness(2.f);
 }
 
 sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
@@ -273,6 +276,8 @@ void GameView::update(float /*dt*/) {
 // ─── render 
 void GameView::render() {
     drawMap();
+    drawPlacementOverlay();
+    drawHoverCell();
     drawEnemies();
     drawUpgradeHighlight();
     drawUIBar();
@@ -283,6 +288,74 @@ void GameView::render() {
 
 void GameView::drawMap() {
     m_map.draw(m_window, { 0.f, 0.f }, MAP_SCALE);
+}
+
+// Full-map overlay: one colored quad per blocked tile, shown while placing a tower.
+void GameView::drawPlacementOverlay() {
+    if (!m_towerController.hasSelection()) {
+        m_placementOverlay.clear();
+        m_overlayDirty = true;  // rebuild next time selection starts
+        return;
+    }
+
+    // Rebuild the static (non-tower) part whenever the selection just became active
+    if (m_overlayDirty) {
+        auto positions = m_towerController.getTowerPositions();
+        auto statusMap = m_map.buildPlacementOverlay(positions, MAP_SCALE);
+
+        float tp = Map::TILE_SIZE * MAP_SCALE;
+        m_placementOverlay.clear();
+        m_placementOverlay.reserve(Map::COLS * Map::ROWS);
+
+        for (int row = 0; row < Map::ROWS; ++row) {
+            for (int col = 0; col < Map::COLS; ++col) {
+                auto status = statusMap[row * Map::COLS + col];
+                if (status == Map::TileStatus::Free) continue;
+
+                sf::Color fill;
+                switch (status) {
+                    case Map::TileStatus::Path:     fill = {200,  60,  60,  70}; break;
+                    case Map::TileStatus::Building: fill = {200,  60,  60,  80}; break;
+                    case Map::TileStatus::Decor:    fill = {200,  60,  60,  60}; break;
+                    case Map::TileStatus::Tower:    fill = {200,  60,  60,  90}; break;
+                    default: continue;
+                }
+
+                sf::RectangleShape rect({ tp, tp });
+                rect.setPosition({ col * tp, row * tp });
+                rect.setFillColor(fill);
+                rect.setOutlineColor({ 160, 40, 40, 60 });
+                rect.setOutlineThickness(0.5f);
+                m_placementOverlay.push_back(rect);
+            }
+        }
+        m_overlayDirty = false;
+    }
+
+    for (const auto& r : m_placementOverlay)
+        m_window.draw(r);
+}
+
+// Highlights the 2x2 cell under the cursor (green = valid, red = invalid).
+void GameView::drawHoverCell() {
+    if (!m_towerController.hasSelection()) return;
+    if (m_lastMousePos.y >= MAP_H) return;
+
+    sf::FloatRect rect = m_towerController.getHoverCellRect(m_lastMousePos);
+    bool valid = m_towerController.isValidPlacement(m_lastMousePos);
+
+    m_hoverCell.setPosition(rect.position);
+    m_hoverCell.setSize(rect.size);
+
+    if (valid) {
+        m_hoverCell.setFillColor({  80, 200,  80,  70});
+        m_hoverCell.setOutlineColor({100, 220, 100, 200});
+    } else {
+        m_hoverCell.setFillColor({ 220,  60,  60,  70});
+        m_hoverCell.setOutlineColor({220,  80,  80, 200});
+    }
+
+    m_window.draw(m_hoverCell);
 }
 
 void GameView::drawEnemies() {
@@ -321,6 +394,7 @@ void GameView::updateHover(sf::Vector2f mousePos) {
 }
 
 void GameView::updateHoverAt(sf::Vector2f logicalPos) {
+    m_lastMousePos = logicalPos;
     updateHover(logicalPos);
 }
 

@@ -15,7 +15,7 @@ Tower::Tower(const sf::Texture& buildingTex,
 {
     m_sprite.setOrigin(sf::Vector2f(
         buildingTex.getSize().x / 2.f,
-        buildingTex.getSize().y / 2.f
+        buildingTex.getSize().y * 1.f   // bottom of texture = anchor point
     ));
 
     m_sprite.setScale(sf::Vector2f(2.f, 2.f));

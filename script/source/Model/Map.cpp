@@ -160,49 +160,125 @@ void Map::drawTile(sf::RenderTarget& target, int gid,
 
     target.draw(shape);
 }
+
 bool Map::isInBounds(int col, int row) const {
     return col >= 0 && col < COLS && row >= 0 && row < ROWS;
 }
 
-// Background GIDs that belong to the enemy path (not grass)
 bool Map::isPathTile(int col, int row) const {
     if (!isInBounds(col, row)) return false;
     int gid = m_bgLayer[row * COLS + col];
-    // Grass tiles are 265-269; everything else in bg layer is path
+    // Grass GIDs are 265-269; everything else in the bg layer is path
     return gid != 0 && (gid < 265 || gid > 269);
 }
 
-// Foreground GIDs that block tower placement (cave, castle, trees)
 bool Map::isForegroundBlocked(int col, int row) const {
     if (!isInBounds(col, row)) return false;
-    int gid = m_fgLayer[row * COLS + col];
-    return gid != 0;
+    return m_fgLayer[row * COLS + col] != 0;
+}
+
+// Hard-coded 5-tile exclusion zones around the castle and orc cave sprites.
+// Orc cave anchor: col=1, row=5 (sprite covers cols 1-4, rows 2-5).
+// Castle anchor:   col=28, row=18 (sprite covers cols 28-31, rows 15-18).
+// We extend BUILDING_EXCLUSION tiles beyond the sprite on every side.
+bool Map::isBuildingExclusion(int col, int row) const {
+    constexpr int E = BUILDING_EXCLUSION;
+
+    // Orc cave exclusion: cols 0-5, rows 1-6  (sprite cols 1-4, rows 2-5 + 1 border)
+    if (col >= 1 - E && col <= 4 + E && row >= 2 - E && row <= 5 + E)
+        return true;
+
+    // Castle exclusion: cols 27-32, rows 14-19  (sprite cols 28-31, rows 15-18 + 1 border)
+    if (col >= 28 - E && col <= 31 + E && row >= 15 - E && row <= 18 + E)
+        return true;
+
+    return false;
+}
+
+bool Map::isTileBlocked(int col, int row) const {
+    if (!isInBounds(col, row))    return true;
+    if (isPathTile(col, row))     return true;
+    if (isForegroundBlocked(col, row)) return true;
+    if (isBuildingExclusion(col, row)) return true;
+    return false;
 }
 
 sf::Vector2i Map::worldToTile(sf::Vector2f worldPos, float scale) const {
-    float tilePixels = TILE_SIZE * scale;
-    return {
-        static_cast<int>(worldPos.x / tilePixels),
-        static_cast<int>(worldPos.y / tilePixels)
-    };
+    float tp = TILE_SIZE * scale;
+    return { static_cast<int>(worldPos.x / tp),
+             static_cast<int>(worldPos.y / tp) };
 }
 
-bool Map::canPlaceAt(sf::Vector2f worldPos, float scale,
-                     const std::vector<sf::Vector2f>& occupiedPositions) const {
-    sf::Vector2i tile = worldToTile(worldPos, scale);
-    int col = tile.x;
-    int row = tile.y;
+// Top-left tile of the aligned 2x2 block containing worldPos
+sf::Vector2i Map::cellOrigin(sf::Vector2f worldPos, float scale) const {
+    sf::Vector2i t = worldToTile(worldPos, scale);
+    // +1 on row before even-align so the hovered tile falls in the bottom half
+    // of the 2x2 block, matching the sprite anchor (bottom of sprite = anchor tile)
+    return { (t.x / 2) * 2, ((t.y + 1) / 2) * 2 };
+}
 
-    if (!isInBounds(col, row))         return false;
-    if (isPathTile(col, row))          return false;
-    if (isForegroundBlocked(col, row)) return false;
+// Bottom-center of the 2x2 block — matches the tower sprite anchor (bottom of texture)
+sf::Vector2f Map::snapToCell(sf::Vector2f worldPos, float scale) const {
+    float tp = TILE_SIZE * scale;
+    sf::Vector2i o = cellOrigin(worldPos, scale);
+    return { (o.x + 1.f) * tp, (o.y + 2.f) * tp };
+}
 
-    // Prevent stacking towers on the same tile
-    float tilePixels = TILE_SIZE * scale;
-    for (const auto& pos : occupiedPositions) {
-        sf::Vector2i oTile = worldToTile(pos, scale);
-        if (oTile.x == col && oTile.y == row) return false;
+bool Map::canPlaceCell(sf::Vector2f worldPos, float scale,
+                       const std::vector<sf::Vector2f>& occupiedCenters) const {
+    sf::Vector2i o = cellOrigin(worldPos, scale);
+
+    // All 4 tiles of the 2x2 block must be clear
+    for (int dr = 0; dr < 2; ++dr)
+        for (int dc = 0; dc < 2; ++dc)
+            if (isTileBlocked(o.x + dc, o.y + dr)) return false;
+
+    // No existing tower may occupy the same 2x2 block.
+    // Stored positions are bottom-centers: top-left = (tileCol-1, tileRow-2)
+    for (const auto& bottomCenter : occupiedCenters) {
+        sf::Vector2i t = worldToTile(bottomCenter, scale);
+        int existCol = t.x - 1;
+        int existRow = t.y - 2;
+        if (existCol == o.x && existRow == o.y) return false;
     }
 
     return true;
+}
+
+// Builds a per-tile status array for the placement overlay.
+// Tower status is set on the 2x2 block of each placed tower.
+std::array<Map::TileStatus, Map::COLS * Map::ROWS>
+Map::buildPlacementOverlay(const std::vector<sf::Vector2f>& occupiedCenters,
+                            float scale) const {
+    std::array<TileStatus, COLS * ROWS> overlay;
+    overlay.fill(TileStatus::Free);
+
+    for (int row = 0; row < ROWS; ++row) {
+        for (int col = 0; col < COLS; ++col) {
+            int idx = row * COLS + col;
+            if (isPathTile(col, row))
+                overlay[idx] = TileStatus::Path;
+            else if (isBuildingExclusion(col, row))
+                overlay[idx] = TileStatus::Building;
+            else if (isForegroundBlocked(col, row))
+                overlay[idx] = TileStatus::Decor;
+        }
+    }
+
+    // Mark the 2x2 block of each placed tower.
+    // Stored position is bottom-center of the block: col = origin+1, row = origin+2
+    // So top-left origin = (tileCol - 1, tileRow - 2)
+    for (const auto& bottomCenter : occupiedCenters) {
+        sf::Vector2i t = worldToTile(bottomCenter, scale);
+        int originCol = t.x - 1;
+        int originRow = t.y - 2;
+        for (int dr = 0; dr < 2; ++dr)
+            for (int dc = 0; dc < 2; ++dc) {
+                int c = originCol + dc, r = originRow + dr;
+                if (isInBounds(c, r))
+                    overlay[r * COLS + c] = TileStatus::Tower;
+            }
+    }
+
+    return overlay;
 }

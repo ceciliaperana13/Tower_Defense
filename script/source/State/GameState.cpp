@@ -142,9 +142,10 @@ void GameState::handleMouseClick(sf::Vector2f wp) {
                 m_towerController.placeTower(wp);
                 m_showUpgradeRing = false;
             } else {
-                // Spéciale : annule le fantôme, ouvre popup seulement si emplacement valide
+                // Spéciale : snap + annule fantôme + popup
+                sf::Vector2f snapped = m_towerController.getSnappedPosition(wp);
                 m_towerController.clearSelection();
-                m_gameView.showConfirm(sel, false, wp);
+                m_gameView.showConfirm(sel, false, snapped);
             }
         } else {
             int idx = m_towerController.getTowerIndexAt(wp);

@@ -22,6 +22,12 @@ public:
     static constexpr int   FLOOR_COLS   = 22;
     static constexpr int   NATURE_COLS  = 24;
 
+    // Exclusion radius around big buildings (in tiles, from anchor tile)
+    static constexpr int   BUILDING_EXCLUSION = 3;
+
+    // Tile placement status (used for the map overlay)
+    enum class TileStatus { Free, Path, Decor, Building, Tower };
+
     Map();
 
     void update(float dt) {}
@@ -30,12 +36,19 @@ public:
     // Waypoints for enemy path, pre-scaled to the given render scale
     std::vector<sf::Vector2f> getWaypoints(float scale) const;
 
-    // Returns tile coordinates from a world position
+    // Tile/cell coordinate helpers
     sf::Vector2i worldToTile(sf::Vector2f worldPos, float scale) const;
+    sf::Vector2i cellOrigin(sf::Vector2f worldPos, float scale) const;
+    sf::Vector2f snapToCell(sf::Vector2f worldPos, float scale) const;
 
-    // Returns true if a tower can be placed at worldPos
-    bool canPlaceAt(sf::Vector2f worldPos, float scale,
-                    const std::vector<sf::Vector2f>& occupiedPositions) const;
+    // Returns true if the full 2x2 cell is free for tower placement
+    bool canPlaceCell(sf::Vector2f worldPos, float scale,
+                      const std::vector<sf::Vector2f>& occupiedCenters) const;
+
+    // Returns the placement status of every tile (for rendering the overlay)
+    std::array<TileStatus, COLS * ROWS>
+        buildPlacementOverlay(const std::vector<sf::Vector2f>& occupiedCenters,
+                              float scale) const;
 
 private:
     using Layer = std::array<int, COLS * ROWS>;
@@ -49,7 +62,11 @@ private:
 
     bool isPathTile(int col, int row) const;
     bool isForegroundBlocked(int col, int row) const;
+    bool isBuildingExclusion(int col, int row) const;
     bool isInBounds(int col, int row) const;
+
+    // Returns true if the single tile (col,row) is blocked for any reason
+    bool isTileBlocked(int col, int row) const;
 
     sf::Texture m_floorTexture;
     sf::Texture m_natureTexture;

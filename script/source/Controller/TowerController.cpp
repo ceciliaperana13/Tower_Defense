@@ -84,12 +84,12 @@ int TowerController::getCostOf(const std::string& type) const {
 void TowerController::spawnGhost(const std::string& type) {
     auto& def = m_defs.at(type);
     m_ghost.emplace(def.buildingTex);
-    m_ghost->setColor(sf::Color(255, 255, 255, 150));
     m_ghost->setOrigin({
         def.buildingTex.getSize().x / 2.f,
-        def.buildingTex.getSize().y / 2.f
+        def.buildingTex.getSize().y * 1.f   // bottom-center, matches Tower
     });
     m_ghost->setScale({2.f, 2.f});
+    m_ghost->setColor(sf::Color(255, 255, 255, 150));
     m_ghostVisible = true;
 }
 
@@ -106,11 +106,29 @@ std::vector<sf::Vector2f> TowerController::getTowerPositions() const {
     return positions;
 }
 
+sf::Vector2f TowerController::getSnappedPosition(sf::Vector2f pos) const {
+    if (!m_map) return pos;
+    return m_map->snapToCell(pos, m_mapScale);
+}
+
+bool TowerController::isValidPlacement(sf::Vector2f pos) const {
+    if (!m_map) return false;
+    return m_map->canPlaceCell(pos, m_mapScale, getTowerPositions());
+}
+
+sf::FloatRect TowerController::getHoverCellRect(sf::Vector2f pos) const {
+    if (!m_map) return {};
+    float tp = Map::TILE_SIZE * m_mapScale;
+    sf::Vector2i o = m_map->cellOrigin(pos, m_mapScale);
+    return { sf::Vector2f(o.x * tp, o.y * tp),
+             sf::Vector2f(2.f * tp, 2.f * tp) };
+}
+
 void TowerController::updateGhostColor(sf::Vector2f pos) {
     if (!m_ghost.has_value()) return;
-    bool valid = m_map && m_map->canPlaceAt(pos, m_mapScale, getTowerPositions());
-    sf::Color c = valid ? sf::Color(100, 255, 100, 150)
-                        : sf::Color(255, 80,  80,  150);
+    sf::Color c = isValidPlacement(pos)
+        ? sf::Color(100, 255, 100, 160)
+        : sf::Color(255, 80,  80,  160);
     m_ghost->setColor(c);
 }
 
@@ -132,22 +150,20 @@ void TowerController::clearSelection() {
 }
 
 void TowerController::setGhostPosition(sf::Vector2f pos) {
-    if (m_ghostVisible && m_ghost.has_value()) {
-        m_ghost->setPosition(pos);
-        updateGhostColor(pos);
-    }
+    if (!m_ghostVisible || !m_ghost.has_value()) return;
+    m_ghost->setPosition(getSnappedPosition(pos));
+    updateGhostColor(pos);
 }
 //placeTower
 bool TowerController::placeTower(sf::Vector2f pos) {
     if (m_selectedType.empty()) return false;
+    if (!isValidPlacement(pos)) return false;
 
-    if (m_map && !m_map->canPlaceAt(pos, m_mapScale, getTowerPositions()))
-        return false;
-
+    sf::Vector2f snapped = getSnappedPosition(pos);
     auto& def = m_defs[m_selectedType];
     m_coins -= def.cost;
 
-    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, def.soundPath, pos, def.cost);
+    m_towers.emplace_back(def.buildingTex, def.projectileTex, def.attack, def.soundPath, snapped, def.cost);
 
     clearSelection();
     return true;
