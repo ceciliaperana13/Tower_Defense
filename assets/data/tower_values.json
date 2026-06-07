@@ -5,7 +5,7 @@
             "cost": 50,
             "attackdatas": {
                 "damage": 18,
-                "range": 3,
+                "range": 3.0,
                 "firerate": 1.2,
                 "damagepersecond": 0,
                 "slowness": 0,
@@ -23,14 +23,14 @@
     "lvl2": {
         "fire": {
             "id": 2,
-            "cost": 120,
+            "cost": 125,
             "attackdatas": {
-                "damage": 22,
-                "range": 3,
-                "firerate": 1.4,
-                "damagepersecond": 8,
+                "damage": 15,
+                "range": 3.0,
+                "firerate": 1.0,
+                "damagepersecond": 12,
                 "slowness": 0,
-                "effectduration": 3,
+                "effectduration": 4.0,
                 "aoeradius": 0,
                 "nbtarget": 1
             },
@@ -44,12 +44,12 @@
             "id": 3,
             "cost": 100,
             "attackdatas": {
-                "damage": 10,
-                "range": 3,
-                "firerate": 1.0,
+                "damage": 8,
+                "range": 3.5,
+                "firerate": 0.9,
                 "damagepersecond": 0,
-                "slowness": 0.5,
-                "effectduration": 2,
+                "slowness": 0.55,
+                "effectduration": 2.5,
                 "aoeradius": 0,
                 "nbtarget": 1
             },
@@ -63,14 +63,14 @@
             "id": 4,
             "cost": 150,
             "attackdatas": {
-                "damage": 45,
-                "range": 2,
-                "firerate": 0.6,
+                "damage": 50,
+                "range": 2.5,
+                "firerate": 0.5,
                 "damagepersecond": 0,
                 "slowness": 0,
                 "effectduration": 0,
-                "aoeradius": 1,
-                "nbtarget": 3
+                "aoeradius": 1.5,
+                "nbtarget": 5
             },
             "paths": {
                 "building": "../sprites/towers/buildings/rock_tower.png",
@@ -80,11 +80,11 @@
         },
         "arcane": {
             "id": 5,
-            "cost": 130,
+            "cost": 140,
             "attackdatas": {
-                "damage": 8,
-                "range": 4,
-                "firerate": 2.2,
+                "damage": 10,
+                "range": 4.0,
+                "firerate": 2.0,
                 "damagepersecond": 0,
                 "slowness": 0,
                 "effectduration": 0,

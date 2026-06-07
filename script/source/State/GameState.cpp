@@ -30,11 +30,6 @@ GameState::GameState(sf::RenderWindow& window)
     , m_towerController()
     , m_gameView(window, m_map, m_waveManager, m_timer, m_towerController)
 {
-    m_upgradeRing.setRadius(28.f);
-    m_upgradeRing.setOrigin({ 28.f, 28.f });
-    m_upgradeRing.setFillColor(sf::Color::Transparent);
-    m_upgradeRing.setOutlineColor(sf::Color::Yellow);
-    m_upgradeRing.setOutlineThickness(3.f);
 }
 
 void GameState::onEnter() {
@@ -89,74 +84,64 @@ void GameState::handleEvents(const sf::Event& event) {
         if (mb->button == sf::Mouse::Button::Right) {
             m_towerController.clearSelection();
             m_gameView.cancelConfirm();
-            m_showUpgradeRing = false;
         }
     }
 }
 
-// ─── handleMouseClick 
+// ─── handleMouseClick
 void GameState::handleMouseClick(sf::Vector2f wp) {
-    // Popup ouverte : lui déléguer le clic en priorité
+    // Popup open: delegate all clicks to it
     if (m_gameView.hasConfirmPending()) {
         m_gameView.handleConfirmClick(wp);
         return;
     }
 
-    std::string type = m_gameView.getTowerTypeAt(wp);
-
-    if (!type.empty()) {
-        if (type == "basic") {
-            // Tour basic : sélection directe, pas de popup
-            m_towerController.selectTower(type);
-        } else {
-            if (m_towerController.hasUpgradeTarget()) {
-                // Upgrade : popup de confirmation
-                m_gameView.showConfirm(type, true, wp);
-            } else {
-                // Placement : sélectionne le fantôme, popup au clic sur la map
-                m_towerController.selectTower(type);
-            }
-        }
-        return;
-    }
-
+    // UI buttons (back, sell)
     MenuAction act = m_gameView.handleClickAt(wp);
-
     if (act == MenuAction::Exit) {
         flushScore();
         goBackToMenu();
         return;
     }
-
     if (act == MenuAction::SellTower) {
         m_towerController.sellSelectedTower();
-        m_showUpgradeRing = false;
         return;
     }
 
-    if (act == MenuAction::None && wp.y < MAP_H) {
+    // Tower button clicked (basic or upgrade)
+    std::string type = m_gameView.getTowerTypeAt(wp);
+    if (!type.empty()) {
+        if (type == "basic") {
+            // Start placing a new basic tower (ghost follows cursor)
+            m_towerController.clearSelection();
+            m_towerController.selectTower(type);
+        } else if (m_towerController.hasUpgradeTarget()) {
+            // Upgrade the selected tower — confirmation popup
+            m_gameView.showConfirm(type, true, wp);
+        }
+        return;
+    }
+
+    // Click on the map
+    if (wp.y < MAP_H) {
         if (m_towerController.hasSelection()) {
+            // Ghost active: place or popup
             std::string sel = m_towerController.getSelectedType();
             if (sel == "basic") {
-                // Basic : placement direct avec validation
                 m_towerController.placeTower(wp);
-                m_showUpgradeRing = false;
             } else {
-                // Spéciale : snap + annule fantôme + popup
                 sf::Vector2f snapped = m_towerController.getSnappedPosition(wp);
                 m_towerController.clearSelection();
                 m_gameView.showConfirm(sel, false, snapped);
             }
         } else {
+            // No ghost: try to select an existing tower
             int idx = m_towerController.getTowerIndexAt(wp);
             if (idx >= 0) {
                 m_towerController.selectTowerForUpgrade(idx);
-                m_showUpgradeRing = true;
-                m_upgradeRingPos  = wp;
             } else {
                 m_towerController.clearSelection();
                 m_gameView.cancelConfirm();
-                m_showUpgradeRing = false;
             }
         }
     }
@@ -238,11 +223,6 @@ void GameState::render(sf::RenderWindow& window) {
 
     m_gameView.render();
     m_castle.render(window);
-
-    if (m_showUpgradeRing && m_towerController.hasUpgradeTarget()) {
-        m_upgradeRing.setPosition(m_upgradeRingPos);
-        window.draw(m_upgradeRing);
-    }
 
     m_towerController.render(window);
 }

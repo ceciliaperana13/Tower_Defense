@@ -49,6 +49,9 @@ public:
     // Returns placed tower centers (for overlay rendering)
     std::vector<sf::Vector2f> getTowerPositions() const;
 
+    // Returns the world position of the currently selected tower (-1 guard in impl)
+    sf::Vector2f getSelectedTowerPosition() const;
+
     // ─── Loop
     void update(float dt, const std::vector<std::unique_ptr<Enemy>>& enemies);
     void render(sf::RenderWindow& window);

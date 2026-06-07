@@ -20,6 +20,7 @@ Button::Button(const std::string& texturePath,
 
 // ─── contains 
 bool Button::contains(sf::Vector2f point) const {
+    if (!m_visible) return false;
     return m_shape.getGlobalBounds().contains(point);
 }
 
@@ -31,5 +32,6 @@ void Button::setHovered(bool hovered) {
 
 // ─── draw 
 void Button::draw(sf::RenderWindow& window) const {
-    window.draw(m_shape);
+    if (m_visible)
+        window.draw(m_shape);
 }

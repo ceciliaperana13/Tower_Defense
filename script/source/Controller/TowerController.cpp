@@ -14,7 +14,7 @@ static float length(sf::Vector2f v) {
 
 TowerController::TowerController()
     : m_ghostVisible(false)
-    , m_coins(150) // starting gold: enough for 3 basic towers
+    , m_coins(250) // starting gold: enough for 3 basic towers
 {}
 //loadFromJson
 bool TowerController::loadFromJson(const std::string& path) {
@@ -106,6 +106,12 @@ std::vector<sf::Vector2f> TowerController::getTowerPositions() const {
     return positions;
 }
 
+sf::Vector2f TowerController::getSelectedTowerPosition() const {
+    if (m_upgradeTargetIndex < 0 || m_upgradeTargetIndex >= (int)m_towers.size())
+        return {};
+    return m_towers[m_upgradeTargetIndex].getPosition();
+}
+
 sf::Vector2f TowerController::getSnappedPosition(sf::Vector2f pos) const {
     if (!m_map) return pos;
     return m_map->snapToCell(pos, m_mapScale);
@@ -170,10 +176,17 @@ bool TowerController::placeTower(sf::Vector2f pos) {
 }
 
 int TowerController::getTowerIndexAt(sf::Vector2f pos) const {
-    constexpr float CLICK_RADIUS = 32.f;
+    // Tower anchor is bottom-center; sprite is 64x64px at scale 2.
+    // Check a box that covers the visual sprite area.
+    constexpr float HALF_W = 32.f;
+    constexpr float FULL_H = 64.f;
     for (int i = 0; i < (int)m_towers.size(); ++i) {
-        sf::Vector2f d = m_towers[i].getPosition() - pos;
-        if (std::sqrt(d.x*d.x + d.y*d.y) <= CLICK_RADIUS)
+        sf::Vector2f anchor = m_towers[i].getPosition(); // bottom-center
+        float left   = anchor.x - HALF_W;
+        float right  = anchor.x + HALF_W;
+        float top    = anchor.y - FULL_H;
+        float bottom = anchor.y;
+        if (pos.x >= left && pos.x <= right && pos.y >= top && pos.y <= bottom)
             return i;
     }
     return -1;
@@ -217,7 +230,8 @@ bool TowerController::sellSelectedTower() {
         m_upgradeTargetIndex >= (int)m_towers.size())
         return false;
 
-    int refund = int(m_defs["basic"].cost * SELL_REFUND);
+    // Refund half the original purchase cost of this specific tower
+    int refund = int(m_towers[m_upgradeTargetIndex].getCost() * SELL_REFUND);
     m_coins += refund;
     m_towers.erase(m_towers.begin() + m_upgradeTargetIndex);
     clearSelection();
@@ -249,8 +263,8 @@ void TowerController::update(float dt,
             t.resetCooldown();
             m_projectiles.emplace_back(
                 t.getProjectileTexture(),
-                t.getPosition(),
-                best->getPosition(),
+                t.getPosition() - sf::Vector2f(0.f, 64.f), // top of sprite
+                best,                       // tracked enemy pointer
                 t.getSoundPath(),
                 t.getAttack().damage
             );
@@ -258,14 +272,6 @@ void TowerController::update(float dt,
     }
 
     for (auto& p : m_projectiles) p.update(dt);
-
-    for (auto& p : m_projectiles) {
-        if (p.isDead()) continue;
-        for (auto& e : enemies) {
-            if (e->isDead() || e->hasReached()) continue;
-            if (p.checkCollision(*e)) break;
-        }
-    }
 
     m_projectiles.erase(
         std::remove_if(m_projectiles.begin(), m_projectiles.end(),

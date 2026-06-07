@@ -6,7 +6,7 @@ static void loadTex(sf::Texture& tex, const std::string& path) {
     if (!tex.loadFromFile(path))
         std::cerr << "[GameView] Missing texture: " << path << "\n";
 }
-//GameView
+
 GameView::GameView(sf::RenderWindow& window,
                    Map& map,
                    WaveManager& waveManager,
@@ -35,13 +35,14 @@ GameView::GameView(sf::RenderWindow& window,
     m_timerView.setPosition(sf::Vector2f(float(WIN_W) / 2.f - 48.f, 8.f));
     m_waveView.setPosition(sf::Vector2f(float(WIN_W) / 2.f + 180.f, 14.f));
 
-    m_upgradeHighlight.setRadius(28.f);
-    m_upgradeHighlight.setOrigin({ 28.f, 28.f });
-    m_upgradeHighlight.setFillColor(sf::Color::Transparent);
-    m_upgradeHighlight.setOutlineColor(sf::Color::Yellow);
-    m_upgradeHighlight.setOutlineThickness(3.f);
+    // Highlight box drawn around selected tower (2x2 tiles = 64px at scale 2)
+    constexpr float HL = 64.f;
+    m_towerHighlight.setSize({ HL, HL });
+    m_towerHighlight.setOrigin({ HL / 2.f, HL });   // bottom-center matches tower anchor
+    m_towerHighlight.setFillColor(sf::Color::Transparent);
+    m_towerHighlight.setOutlineColor(sf::Color::Yellow);
+    m_towerHighlight.setOutlineThickness(3.f);
 
-    // Hover cell (resized each frame)
     m_hoverCell.setOutlineThickness(2.f);
 }
 
@@ -54,7 +55,7 @@ sf::RectangleShape GameView::makePanelShape(const sf::Texture& tex,
     shape.setFillColor(sf::Color::White);
     return shape;
 }
-//
+
 void GameView::buildUI() {
     loadTex(m_topPanelTex,   "../assets/sprites/buttons/top_panel.png");
     loadTex(m_goldPanelTex,  "../assets/sprites/buttons/gold_pannel.png");
@@ -87,6 +88,7 @@ void GameView::buildUI() {
     m_livesText.setString("20");
     m_livesText.setPosition({ textX, MAP_H + gh + padY });
 
+    // Button layout: basic always at slot 0, upgrades at slots 1-4
     struct BtnDef { const char* path; float x, y, w, h; const char* type; };
     constexpr BtnDef defs[] = {
         { "../assets/sprites/buttons/buy_normal_tower_button.png",  0.f,  0.f, 64.f, 96.f, "basic"  },
@@ -125,7 +127,7 @@ void GameView::buildUI() {
     );
 }
 
-// ─── Popup confirmation 
+// ─── Popup confirmation
 void GameView::showConfirm(const std::string& towerType,
                            bool isUpgrade,
                            sf::Vector2f mapPos) {
@@ -141,11 +143,10 @@ void GameView::cancelConfirm() {
 }
 
 void GameView::buildConfirmPopup() {
-    // Popup juste au-dessus de la barre UI
     constexpr float PW = 320.f;
     constexpr float PH = 90.f;
     float px = (float(WIN_W) - PW) / 2.f;
-    float py = MAP_H - PH - 8.f;   // juste au-dessus de l'UI
+    float py = MAP_H - PH - 8.f;
 
     m_confirmPanel.setSize({ PW, PH });
     m_confirmPanel.setPosition({ px, py });
@@ -156,7 +157,7 @@ void GameView::buildConfirmPopup() {
     int cost = m_towerController.getCostOf(m_confirmType);
     bool canAfford = m_towerController.getCoins() >= cost;
 
-    std::string action = m_confirmIsUpgrade ? "Upgrader" : "Placer";
+    std::string action = m_confirmIsUpgrade ? "Ameliorer" : "Placer";
     std::string title  = action + " " + m_confirmType +
                          " (" + std::to_string(cost) + " coins) ?";
 
@@ -170,7 +171,6 @@ void GameView::buildConfirmPopup() {
         py + 10.f
     });
 
-    // Bouton Oui
     m_confirmYesBtn.setSize({ 110.f, 36.f });
     m_confirmYesBtn.setPosition({ px + 20.f, py + PH - 46.f });
     m_confirmYesBtn.setFillColor(canAfford
@@ -183,7 +183,6 @@ void GameView::buildConfirmPopup() {
     m_confirmYesLabel->setFillColor(sf::Color::White);
     centerText(*m_confirmYesLabel, m_confirmYesBtn);
 
-    // Bouton Non
     m_confirmNoBtn.setSize({ 110.f, 36.f });
     m_confirmNoBtn.setPosition({ px + PW - 130.f, py + PH - 46.f });
     m_confirmNoBtn.setFillColor(sf::Color(120, 40, 40));
@@ -204,7 +203,6 @@ void GameView::handleConfirmClick(sf::Vector2f pos) {
             if (m_confirmIsUpgrade) {
                 m_towerController.upgradeTower(m_confirmType);
             } else {
-                // Sélectionne et place directement
                 m_towerController.selectTower(m_confirmType);
                 m_towerController.placeTower(m_confirmMapPos);
             }
@@ -221,7 +219,6 @@ void GameView::handleConfirmClick(sf::Vector2f pos) {
 
 void GameView::drawConfirmPopup() {
     if (!m_confirmPending) return;
-
     m_window.draw(m_confirmPanel);
     if (m_confirmTitle)    m_window.draw(*m_confirmTitle);
     m_window.draw(m_confirmYesBtn);
@@ -241,7 +238,6 @@ void GameView::centerText(sf::Text& text,
     });
 }
 
-// ─── makeLetterboxView 
 sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     float contentRatio = float(WIN_W) / float(WIN_H);
     float screenRatio  = float(screenW) / float(screenH);
@@ -260,20 +256,17 @@ sf::View GameView::makeLetterboxView(unsigned screenW, unsigned screenH) {
     return view;
 }
 
-// ─── updateTexts 
 void GameView::updateTexts() {
     m_coinsText.setString(std::to_string(m_towerController.getCoins()));
     m_livesText.setString(std::to_string(m_lives));
 }
 
-// ─── update 
 void GameView::update(float /*dt*/) {
     m_timerView.update();
     m_waveView.update();
     updateTexts();
 }
 
-// ─── render 
 void GameView::render() {
     drawMap();
     drawPlacementOverlay();
@@ -281,7 +274,7 @@ void GameView::render() {
     drawEnemies();
     drawUpgradeHighlight();
     drawUIBar();
-    drawConfirmPopup();           //  popup par-dessus l'UI
+    drawConfirmPopup();
     m_window.draw(m_timerView);
     m_waveView.render(m_window);
 }
@@ -290,15 +283,13 @@ void GameView::drawMap() {
     m_map.draw(m_window, { 0.f, 0.f }, MAP_SCALE);
 }
 
-// Full-map overlay: one colored quad per blocked tile, shown while placing a tower.
 void GameView::drawPlacementOverlay() {
     if (!m_towerController.hasSelection()) {
         m_placementOverlay.clear();
-        m_overlayDirty = true;  // rebuild next time selection starts
+        m_overlayDirty = true;
         return;
     }
 
-    // Rebuild the static (non-tower) part whenever the selection just became active
     if (m_overlayDirty) {
         auto positions = m_towerController.getTowerPositions();
         auto statusMap = m_map.buildPlacementOverlay(positions, MAP_SCALE);
@@ -336,7 +327,6 @@ void GameView::drawPlacementOverlay() {
         m_window.draw(r);
 }
 
-// Highlights the 2x2 cell under the cursor (green = valid, red = invalid).
 void GameView::drawHoverCell() {
     if (!m_towerController.hasSelection()) return;
     if (m_lastMousePos.y >= MAP_H) return;
@@ -363,34 +353,49 @@ void GameView::drawEnemies() {
         enemy->render(m_window);
 }
 
+// Draws a yellow box around the currently selected tower on the map.
 void GameView::drawUpgradeHighlight() {
     if (!m_towerController.hasUpgradeTarget()) return;
+    sf::Vector2f pos = m_towerController.getSelectedTowerPosition();
+    m_towerHighlight.setPosition(pos);
+    m_window.draw(m_towerHighlight);
 }
-//UI
+
 void GameView::drawUIBar() {
     m_window.draw(m_topPanel);
     m_window.draw(m_goldPanel);
     m_window.draw(m_heartPanel);
     m_window.draw(m_coinsText);
     m_window.draw(m_livesText);
-    for (const auto& btn : m_towerButtons)
-        btn.draw(m_window);
+
+    // Sync visibility: upgrades and sell only shown when a tower is selected
+    bool upgradeMode = m_towerController.hasUpgradeTarget();
+    for (std::size_t i = 0; i < m_towerButtons.size(); ++i)
+        m_towerButtons[i].setVisible(i == 0 || upgradeMode);
+    if (m_sellButton) m_sellButton->setVisible(upgradeMode);
+
+    for (auto& btn : m_towerButtons) btn.draw(m_window);
     if (m_sellButton) m_sellButton->draw(m_window);
     if (m_backButton) m_backButton->draw(m_window);
 }
 
 std::string GameView::getTowerTypeAt(sf::Vector2f logicalPos) const {
-    for (std::size_t i = 0; i < m_towerButtons.size(); ++i)
+    bool upgradeMode = m_towerController.hasUpgradeTarget();
+    for (std::size_t i = 0; i < m_towerButtons.size(); ++i) {
+        if (i > 0 && !upgradeMode) continue;
         if (m_towerButtons[i].contains(logicalPos))
             return m_towerTypes[i];
+    }
     return "";
 }
-// ─── updateHover 
+
 void GameView::updateHover(sf::Vector2f mousePos) {
     for (auto& btn : m_towerButtons)
-        btn.setHovered(btn.contains(mousePos));
-    if (m_sellButton) m_sellButton->setHovered(m_sellButton->contains(mousePos));
-    if (m_backButton) m_backButton->setHovered(m_backButton->contains(mousePos));
+        btn.setHovered(btn.contains(mousePos));   // contains() checks visibility
+    if (m_sellButton)
+        m_sellButton->setHovered(m_sellButton->contains(mousePos));
+    if (m_backButton)
+        m_backButton->setHovered(m_backButton->contains(mousePos));
 }
 
 void GameView::updateHoverAt(sf::Vector2f logicalPos) {
@@ -399,9 +404,9 @@ void GameView::updateHoverAt(sf::Vector2f logicalPos) {
 }
 
 MenuAction GameView::handleClickAt(sf::Vector2f logicalPos) {
-    for (const auto& btn : m_towerButtons)
-        if (btn.contains(logicalPos)) return MenuAction::None;
-    if (m_sellButton && m_sellButton->contains(logicalPos))
+    // Upgrade buttons and sell handled via getTowerTypeAt / GameState
+    if (m_sellButton && m_towerController.hasUpgradeTarget() &&
+        m_sellButton->contains(logicalPos))
         return m_sellButton->getAction();
     if (m_backButton && m_backButton->contains(logicalPos))
         return m_backButton->getAction();

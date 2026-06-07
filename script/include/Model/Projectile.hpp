@@ -7,20 +7,25 @@ class Projectile {
 public:
     Projectile(const sf::Texture& tex,
                sf::Vector2f start,
-               sf::Vector2f target,
-               const std::string path,
+               Enemy* target,       // tracks the enemy until hit or dead
+               const std::string& soundPath,
                int damage);
 
     void update(float dt);
     void render(sf::RenderWindow& window);
-    bool isDead() const { return m_life <= 0.f; }
+    bool isDead() const { return m_dead; }
 
-    bool checkCollision(Enemy& e);
+    bool checkCollision();
 
 private:
-    sf::Sprite m_sprite;
-    sf::Vector2f m_velocity;
-    std::string m_soundPath;
-    float m_life = 2.f;
-    int m_damage;
+    sf::Vector2f enemyCenter() const;
+
+    sf::Sprite   m_sprite;
+    sf::Vector2f m_velocity;    // fallback direction when target is gone
+    Enemy*       m_target;
+    std::string  m_soundPath;
+    int          m_damage;
+    bool         m_dead = false;
+    float        m_maxLife = 4.f; // safety TTL
+    float        m_life    = 4.f;
 };
