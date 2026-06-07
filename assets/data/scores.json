@@ -1,72 +1,23 @@
 [
   {
-    "playerName": "Player",
-    "score": 250,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-07 22:51"
-  },
-  {
-    "playerName": "Player",
-    "score": 250,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-07 23:11"
-  },
-  {
-    "playerName": "Player",
-    "score": 250,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-07 23:11"
-  },
-  {
-    "playerName": "Player",
-    "score": 250,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-07 23:14"
-  },
-  {
-    "playerName": "Player",
-    "score": 250,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-07 23:15"
-  },
-  {
-    "playerName": "Player",
-    "score": 250,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-07 23:19"
-  },
-  {
-    "playerName": "Player",
-    "score": 224,
-    "enemyCount": 3,
-    "wave": 1,
-    "date": "2026-06-07 22:57"
-  },
-  {
-    "playerName": "Player",
-    "score": 216,
+    "playerName": "Arthur",
+    "score": 1840,
     "enemyCount": 2,
-    "wave": 1,
-    "date": "2026-06-07 22:57"
+    "wave": 12,
+    "date": "2026-06-07 19:34"
   },
   {
-    "playerName": "Player",
-    "score": 206,
-    "enemyCount": 7,
-    "wave": 2,
-    "date": "2026-06-07 22:56"
+    "playerName": "Merlin",
+    "score": 970,
+    "enemyCount": 5,
+    "wave": 8,
+    "date": "2026-06-07 21:15"
   },
   {
-    "playerName": "Player",
-    "score": 200,
-    "enemyCount": 0,
-    "wave": 1,
-    "date": "2026-06-07 22:51"
+    "playerName": "D'Artagnan",
+    "score": 430,
+    "enemyCount": 11,
+    "wave": 4,
+    "date": "2026-06-07 22:02"
   }
 ]
