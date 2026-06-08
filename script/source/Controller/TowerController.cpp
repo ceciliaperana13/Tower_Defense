@@ -14,7 +14,7 @@ static float length(sf::Vector2f v) {
 
 TowerController::TowerController()
     : m_ghostVisible(false)
-    , m_coins(250) // starting gold: enough for 3 basic towers
+    , m_coins(200) // starting gold: enough for 3 basic towers
 {}
 //loadFromJson
 bool TowerController::loadFromJson(const std::string& path) {
@@ -239,7 +239,7 @@ bool TowerController::sellSelectedTower() {
 }
 //update
 void TowerController::update(float dt,
-                             const std::vector<std::unique_ptr<Enemy>>& enemies) {
+                             const std::vector<std::shared_ptr<Enemy>>& enemies) {
     for (auto& t : m_towers) t.update(dt);
 
     for (auto& t : m_towers) {
@@ -258,28 +258,31 @@ void TowerController::update(float dt,
                 if (e->isDead() || e->hasReached()) continue;
                 float d = length(e->getPosition() - t.getPosition());
                 if (d <= rangePx) {
-                    m_projectiles.emplace_back(
-                        t.getProjectileTexture(), origin,
-                        e.get(), t.getSoundPath(), atk, &enemies);
+                    {
+                        std::shared_ptr<Enemy> sp = e;
+                        m_projectiles.emplace_back(
+                            t.getProjectileTexture(), origin,
+                            std::weak_ptr<Enemy>(sp), t.getSoundPath(), atk, &enemies);
+                    }
                     ++count;
                     fired = true;
                 }
             }
         } else {
             // Basic / fire / ice / rock: target nearest enemy in range
-            Enemy* best     = nullptr;
-            float  bestDist = 0.f;
-            for (auto& e : enemies) {
+            std::shared_ptr<Enemy> best;
+            float                  bestDist = 0.f;
+            for (const auto& e : enemies) {
                 if (e->isDead() || e->hasReached()) continue;
                 float d = length(e->getPosition() - t.getPosition());
                 if (d <= rangePx && (!best || d < bestDist)) {
-                    best = e.get(); bestDist = d;
+                    best = e; bestDist = d;
                 }
             }
             if (best) {
                 m_projectiles.emplace_back(
                     t.getProjectileTexture(), origin,
-                    best, t.getSoundPath(), atk, &enemies);
+                    std::weak_ptr<Enemy>(best), t.getSoundPath(), atk, &enemies);
                 fired = true;
             }
         }

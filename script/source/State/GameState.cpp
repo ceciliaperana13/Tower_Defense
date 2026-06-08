@@ -189,17 +189,7 @@ void GameState::checkEndConditions() {
         return;
     }
 
-    if (m_timer.remaining() <= 0.f) {
-        flushScore();
-        m_ended = true;
-        sm.change(std::make_unique<GameOverState>(
-            m_window,
-            m_towerController.getCoins(),
-            m_waveManager.getTotalKills(),
-            m_waveManager.getCurrentWaveId()
-        ));
-        return;
-    }
+    // Timer removed as defeat condition — only losing all lives triggers defeat
 
     if (m_waveManager.isWaveComplete() &&
         m_waveManager.getCurrentWaveId() == m_waveManager.getTotalWaves() &&

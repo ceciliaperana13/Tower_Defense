@@ -69,7 +69,7 @@ void WaveManager::update(float dt) {
     // Supprime les ennemis morts ou arrivés
     m_activeEnemies.erase(
         std::remove_if(m_activeEnemies.begin(), m_activeEnemies.end(),
-            [](const std::unique_ptr<Enemy>& e) {
+            [](const std::shared_ptr<Enemy>& e) {
                 return e->isDead() || e->hasReached();
             }),
         m_activeEnemies.end()
@@ -136,7 +136,7 @@ void WaveManager::spawnNext() {
     const EnemyGroup& group = wave.groups[m_currentGroup];
 
     try {
-        auto enemy = std::make_unique<Enemy>(
+        auto enemy = std::make_shared<Enemy>(
             Enemy::fromJson(m_enemiesJson, group.type, m_waypoints)
         );
         enemy->applySpeedMultiplier(wave.speedMultiplier);

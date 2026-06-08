@@ -37,6 +37,10 @@ Enemy::Enemy(int id, int maxhp, float maxspeed, int reward,
         m_sprite.emplace(m_tex1);
         m_sprite->setScale(sf::Vector2f(2.f, 2.f));
         m_sprite->setTexture(m_tex1, true);
+    } else {
+        // Without a sprite the enemy cannot function — mark reached so it is
+        // discarded immediately without touching any optional members.
+        m_reached = true;
     }
 
     if (!m_waypoints.empty() && m_sprite.has_value())
@@ -138,6 +142,7 @@ void Enemy::tickStatusEffects(float dt) {
 }
 
 void Enemy::moveAlongPath(float dt) {
+    if (!m_sprite.has_value()) return;
     if (m_reached || m_waypointIdx >= (int)m_waypoints.size())
         return;
 

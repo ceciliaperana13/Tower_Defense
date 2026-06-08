@@ -53,7 +53,7 @@ public:
     sf::Vector2f getSelectedTowerPosition() const;
 
     // ─── Loop
-    void update(float dt, const std::vector<std::unique_ptr<Enemy>>& enemies);
+    void update(float dt, const std::vector<std::shared_ptr<Enemy>>& enemies);
     void render(sf::RenderWindow& window);
 
 private:

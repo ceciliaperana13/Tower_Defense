@@ -28,7 +28,7 @@ public:
     void update(float dt);
     void startNextWave();
 
-    std::vector<std::unique_ptr<Enemy>>& getActiveEnemies() { return m_activeEnemies; }
+    std::vector<std::shared_ptr<Enemy>>& getActiveEnemies() { return m_activeEnemies; }
 
     bool isWaveComplete()    const;
     bool allWavesDone()      const { return m_currentWave >= (int)m_waves.size(); }
@@ -49,7 +49,7 @@ private:
     std::string                         m_enemiesJson;
     std::vector<sf::Vector2f>           m_waypoints;
     std::vector<Wave>                   m_waves;
-    std::vector<std::unique_ptr<Enemy>> m_activeEnemies;
+    std::vector<std::shared_ptr<Enemy>> m_activeEnemies;
 
     int   m_currentWave    { -1 };
     int   m_currentGroup   {  0 };
